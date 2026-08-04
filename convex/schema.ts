@@ -71,6 +71,7 @@ export default defineSchema({
     firebaseUid: v.optional(v.string()),
     name: v.string(),
     email: v.string(),
+    avatar: v.optional(v.string()),
     role: v.optional(v.union(v.literal('admin'), v.literal('editor'), v.literal('user'))),
     status: v.optional(v.union(v.literal('active'), v.literal('suspended'))),
     joined: v.optional(v.string()),

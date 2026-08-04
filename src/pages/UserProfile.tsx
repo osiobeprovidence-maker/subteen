@@ -25,23 +25,31 @@ import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 
 export const UserProfile = () => {
-  const { logout } = useAuth();
+  const { user, dbUser, logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+
+  const displayName = dbUser?.name ?? user?.name ?? 'Player';
+  const email = user?.email ?? dbUser?.email ?? '';
+  const avatar = dbUser?.avatar ?? user?.photoURL;
+  const memberSince = dbUser?.joined ? new Date(dbUser.joined).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : null;
+  const daysActive = dbUser?.joined
+    ? Math.max(1, Math.floor((Date.now() - new Date(dbUser.joined).getTime()) / (1000 * 60 * 60 * 24)))
+    : 0;
 
   const settingsSections = [
     {
       title: 'Account Settings',
       items: [
-        { name: 'Email Address', value: 'player.one@example.com', icon: Mail },
-        { name: 'Password', value: '••••••••••••', icon: Key },
+        { name: 'Email Address', value: email || '—', icon: Mail },
+        { name: 'Password', value: 'Managed by Google', icon: Key },
         { name: 'Security', value: 'Two-factor enabled', icon: Shield },
       ]
     },
     {
       title: 'Preferences',
       items: [
-        { name: 'Notifications', value: 'Breaking News, Game Releases', icon: Bell },
-        { name: 'Appearance', value: 'Dark Mode', icon: Palette },
+        { name: 'Notifications', value: dbUser?.preferences?.newsletter ? 'Newsletter On' : 'Newsletter Off', icon: Bell },
+        { name: 'Appearance', value: dbUser?.preferences?.darkMode ? 'Dark Mode' : 'Light Mode', icon: Palette },
       ]
     }
   ];
@@ -108,11 +116,11 @@ export const UserProfile = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Display Name</label>
-                    <input type="text" defaultValue="Player One" className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-3 text-white text-sm focus:outline-none focus:border-[#B8FF4D] transition-colors" />
+                    <input type="text" defaultValue={displayName} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-3 text-white text-sm focus:outline-none focus:border-[#B8FF4D] transition-colors" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Username</label>
-                    <input type="text" defaultValue="playerone" className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-3 text-white text-sm focus:outline-none focus:border-[#B8FF4D] transition-colors" />
+                    <input type="text" defaultValue={email?.split('@')[0] ?? ''} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-3 text-white text-sm focus:outline-none focus:border-[#B8FF4D] transition-colors" />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -209,8 +217,12 @@ export const UserProfile = () => {
         {/* Profile Header */}
         <div className="text-center space-y-8">
           <div className="relative inline-block">
-            <div className="w-32 h-32 bg-zinc-900 rounded-full mx-auto border-4 border-[#B8FF4D]/10 flex items-center justify-center text-zinc-700">
-              <UserIcon size={56} />
+            <div className="w-32 h-32 bg-zinc-900 rounded-full mx-auto border-4 border-[#B8FF4D]/10 flex items-center justify-center text-zinc-700 overflow-hidden">
+              {avatar ? (
+                <img src={avatar} alt={displayName} className="w-full h-full object-cover" />
+              ) : (
+                <UserIcon size={56} />
+              )}
             </div>
             <button className="absolute bottom-0 right-0 p-2 bg-[#B8FF4D] text-black rounded-full shadow-xl hover:scale-110 transition-transform">
               <Palette size={16} />
@@ -218,8 +230,9 @@ export const UserProfile = () => {
           </div>
           
           <div className="space-y-2">
-            <h1 className="text-4xl font-black text-white tracking-tight">Player One</h1>
-            <p className="text-zinc-500 font-medium">Member since March 2024</p>
+            <h1 className="text-4xl font-black text-white tracking-tight">{displayName}</h1>
+            <p className="text-zinc-500 font-medium">{memberSince ? `Member since ${memberSince}` : 'Member'}</p>
+            <p className="text-sm text-zinc-600">{email}</p>
           </div>
 
           <div className="w-full h-px bg-white/5 my-8" />
@@ -250,11 +263,11 @@ export const UserProfile = () => {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-zinc-950 border border-white/5 p-6 rounded-3xl text-center">
             <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Articles Read</p>
-            <p className="text-2xl font-black text-white">124</p>
+            <p className="text-2xl font-black text-white">{dbUser?.readingHistory?.length ?? 0}</p>
           </div>
           <div className="bg-zinc-950 border border-white/5 p-6 rounded-3xl text-center">
             <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Days Active</p>
-            <p className="text-2xl font-black text-white">42</p>
+            <p className="text-2xl font-black text-white">{daysActive}</p>
           </div>
         </div>
 
@@ -294,7 +307,7 @@ export const UserProfile = () => {
               Sign Out from Device
             </button>
             <p className="text-center text-[10px] text-zinc-700 uppercase tracking-widest mt-8">
-              Subteen ID: user_928374293847
+              Subteen ID: {dbUser?._id ?? '—'}
             </p>
           </div>
         </div>

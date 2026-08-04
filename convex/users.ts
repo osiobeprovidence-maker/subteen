@@ -33,6 +33,7 @@ export const upsertFromFirebase = mutation({
     firebaseUid: v.string(),
     name: v.string(),
     email: v.optional(v.string()),
+    avatar: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -43,13 +44,15 @@ export const upsertFromFirebase = mutation({
       await ctx.db.patch(existing._id, {
         name: args.name,
         email: args.email ?? existing.email,
+        avatar: args.avatar ?? existing.avatar,
       });
-      return { id: existing._id, created: false };
+      return (await ctx.db.get(existing._id))!;
     }
     const id = await ctx.db.insert('users', {
       firebaseUid: args.firebaseUid,
       name: args.name,
       email: args.email ?? '',
+      avatar: args.avatar,
       role: 'user',
       status: 'active',
       joined: new Date().toISOString().slice(0, 10),
@@ -58,7 +61,7 @@ export const upsertFromFirebase = mutation({
       readingHistory: [],
       preferences: { darkMode: true, newsletter: false },
     });
-    return { id, created: true };
+    return (await ctx.db.get(id))!;
   },
 });
 

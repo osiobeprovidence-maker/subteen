@@ -9,8 +9,9 @@ import {
   signOut,
   User,
 } from 'firebase/auth';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+import { Doc } from '../../convex/_generated/dataModel';
 import { auth } from '../lib/firebase';
 
 interface AuthUser {
@@ -24,6 +25,7 @@ interface AuthContextType {
   isLoggedIn: boolean;
   loading: boolean;
   user: AuthUser | null;
+  dbUser: Doc<'users'> | null;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -43,7 +45,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [dbUser, setDbUser] = useState<Doc<'users'> | null>(null);
   const syncUser = useMutation(api.users.upsertFromFirebase);
+
+  const convexUser = useQuery(
+    api.users.getByFirebaseUid,
+    user ? { firebaseUid: user.uid } : 'skip',
+  );
+
+  useEffect(() => {
+    if (convexUser) {
+      setDbUser(convexUser);
+    }
+  }, [convexUser]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -51,10 +65,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const u = toAuthUser(firebaseUser);
         setUser(u);
         setIsLoggedIn(true);
-        syncUser({ firebaseUid: u.uid, name: u.name, email: u.email }).catch(() => {});
+        syncUser({
+          firebaseUid: u.uid,
+          name: u.name,
+          email: u.email,
+          avatar: u.photoURL,
+        })
+          .then((doc) => setDbUser(doc))
+          .catch(() => {});
       } else {
         setUser(null);
         setIsLoggedIn(false);
+        setDbUser(null);
       }
       setLoading(false);
     });
@@ -82,7 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, loading, user, signUp, signIn, signInWithGoogle, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, loading, user, dbUser, signUp, signIn, signInWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );
