@@ -1,0 +1,6 @@
+{
+  "name": "Subteen",
+  "description": "A premium gaming news platform featuring breaking news, reviews, guides, and culture.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
