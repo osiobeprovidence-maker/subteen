@@ -7,21 +7,45 @@ import { useAuth } from '../context/AuthContext';
 export const Auth = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { signIn, signUp, signInWithGoogle } = useAuth();
   const isSignUp = location.pathname === '/signup';
   const [method, setMethod] = useState<'selection' | 'email'>('selection');
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(); // Mock login
-    if (isSignUp) {
-      navigate('/onboarding');
-    } else {
+    setSubmitting(true);
+    setError(null);
+    try {
+      if (isSignUp) {
+        await signUp(email, password, name);
+        navigate('/onboarding');
+      } else {
+        await signIn(email, password);
+        navigate('/');
+      }
+    } catch (err: any) {
+      setError(err?.message ?? 'Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await signInWithGoogle();
       navigate('/');
+    } catch (err: any) {
+      setError(err?.message ?? 'Google sign-in failed. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -78,8 +102,9 @@ export const Auth = () => {
                   </button>
 
                   <button 
-                    onClick={handleSubmit}
-                    className="w-full group flex items-center justify-between h-[56px] sm:h-[68px] lg:h-[76px] px-4 sm:px-6 bg-zinc-900 rounded-2xl border border-zinc-800 hover:border-[#B8FF4D] transition-all"
+                    onClick={handleGoogle}
+                    disabled={submitting}
+                    className="w-full group flex items-center justify-between h-[56px] sm:h-[68px] lg:h-[76px] px-4 sm:px-6 bg-zinc-900 rounded-2xl border border-zinc-800 hover:border-[#B8FF4D] transition-all disabled:opacity-50"
                   >
                     <div className="flex items-center gap-3 sm:gap-4">
                       <div className="text-zinc-400 group-hover:text-[#B8FF4D] transition-colors shrink-0">
@@ -153,9 +178,12 @@ export const Auth = () => {
                         className="w-full h-[56px] bg-zinc-900 border border-zinc-800 rounded-2xl px-5 text-white text-[15px] sm:text-[16px] focus:outline-none focus:border-[#B8FF4D] transition-colors"
                       />
                     </div>
-                    <button className="w-full bg-[#B8FF4D] text-black h-[56px] sm:h-[68px] lg:h-[76px] rounded-[24px] font-black text-[16px] lg:text-[20px] hover:bg-white transition-all shadow-xl shadow-[#B8FF4D]/10 mt-4 sm:mt-6">
-                      {isSignUp ? 'Create Account' : 'Sign In'}
+                    <button disabled={submitting} className="w-full bg-[#B8FF4D] text-black h-[56px] sm:h-[68px] lg:h-[76px] rounded-[24px] font-black text-[16px] lg:text-[20px] hover:bg-white transition-all shadow-xl shadow-[#B8FF4D]/10 mt-4 sm:mt-6 disabled:opacity-50">
+                      {submitting ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}
                     </button>
+                    {error && (
+                      <p className="text-xs text-red-400 font-medium text-center pt-2">{error}</p>
+                    )}
                   </form>
                 </motion.div>
               )}

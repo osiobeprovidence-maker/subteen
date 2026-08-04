@@ -1,30 +1,88 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  updateProfile,
+  signOut,
+  User,
+} from 'firebase/auth';
+import { useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { auth } from '../lib/firebase';
+
+interface AuthUser {
+  uid: string;
+  name: string;
+  email: string;
+  photoURL?: string;
+}
 
 interface AuthContextType {
   isLoggedIn: boolean;
-  login: () => void;
-  logout: () => void;
-  user: { name: string; email: string } | null;
+  loading: boolean;
+  user: AuthUser | null;
+  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const toAuthUser = (u: User): AuthUser => ({
+  uid: u.uid,
+  name: u.displayName ?? (u.email?.split('@')[0] ?? 'Player'),
+  email: u.email ?? '',
+  photoURL: u.photoURL ?? undefined,
+});
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const syncUser = useMutation(api.users.upsertFromFirebase);
 
-  const login = () => {
-    setIsLoggedIn(true);
-    setUser({ name: 'Player One', email: 'player@subteen.com' });
-  };
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        const u = toAuthUser(firebaseUser);
+        setUser(u);
+        setIsLoggedIn(true);
+        syncUser({ firebaseUid: u.uid, name: u.name, email: u.email }).catch(() => {});
+      } else {
+        setUser(null);
+        setIsLoggedIn(false);
+      }
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, [syncUser]);
 
-  const logout = () => {
-    setIsLoggedIn(false);
-    setUser(null);
-  };
+  const signUp = useCallback(async (email: string, password: string, name: string) => {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    if (name) {
+      await updateProfile(cred.user, { displayName: name });
+    }
+  }, []);
+
+  const signIn = useCallback(async (email: string, password: string) => {
+    await signInWithEmailAndPassword(auth, email, password);
+  }, []);
+
+  const signInWithGoogle = useCallback(async () => {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  }, []);
+
+  const logout = useCallback(async () => {
+    await signOut(auth);
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, login, logout, user }}>
+    <AuthContext.Provider value={{ isLoggedIn, loading, user, signUp, signIn, signInWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );

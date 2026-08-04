@@ -68,6 +68,7 @@ export default defineSchema({
     .searchIndex('search_content', { searchField: 'title' }),
 
   users: defineTable({
+    firebaseUid: v.optional(v.string()),
     name: v.string(),
     email: v.string(),
     role: v.optional(v.union(v.literal('admin'), v.literal('editor'), v.literal('user'))),
@@ -81,7 +82,8 @@ export default defineSchema({
       newsletter: v.boolean(),
     }),
   })
-    .index('by_email', ['email']),
+    .index('by_email', ['email'])
+    .index('by_firebase_uid', ['firebaseUid']),
 
   categories: defineTable({
     name: v.string(),

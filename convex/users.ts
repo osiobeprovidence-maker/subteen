@@ -18,6 +18,50 @@ export const getByEmail = query({
   },
 });
 
+export const getByFirebaseUid = query({
+  args: { firebaseUid: v.string() },
+  handler: async (ctx, { firebaseUid }) => {
+    return ctx.db
+      .query('users')
+      .withIndex('by_firebase_uid', (q) => q.eq('firebaseUid', firebaseUid))
+      .unique();
+  },
+});
+
+export const upsertFromFirebase = mutation({
+  args: {
+    firebaseUid: v.string(),
+    name: v.string(),
+    email: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query('users')
+      .withIndex('by_firebase_uid', (q) => q.eq('firebaseUid', args.firebaseUid))
+      .unique();
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        name: args.name,
+        email: args.email ?? existing.email,
+      });
+      return { id: existing._id, created: false };
+    }
+    const id = await ctx.db.insert('users', {
+      firebaseUid: args.firebaseUid,
+      name: args.name,
+      email: args.email ?? '',
+      role: 'user',
+      status: 'active',
+      joined: new Date().toISOString().slice(0, 10),
+      articleCount: 0,
+      bookmarks: [],
+      readingHistory: [],
+      preferences: { darkMode: true, newsletter: false },
+    });
+    return { id, created: true };
+  },
+});
+
 export const create = mutation({
   args: {
     name: v.string(),
