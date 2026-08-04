@@ -4,6 +4,7 @@ import { Clock, User as UserIcon } from 'lucide-react';
 import { Article, Author } from '../../types';
 import { AUTHORS } from '../../data/mockData';
 import { cn } from '../../lib/utils';
+import { Avatar } from './Avatar';
 
 interface ArticleCardProps {
   article: Article;
@@ -99,9 +100,7 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'la
         )}
         
         <div className="flex items-center gap-3 sm:gap-4 pt-1 sm:pt-2">
-          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full overflow-hidden bg-zinc-800">
-            <img src={author?.avatar} alt={author?.name} className="w-full h-full object-cover" />
-          </div>
+          <Avatar src={author?.avatar} name={author?.name} size={22} />
           <span className="text-[10px] sm:text-xs font-bold text-zinc-300 uppercase tracking-wider">{author?.name}</span>
           <span className="w-1 h-1 rounded-full bg-zinc-700" />
           <span className="text-[10px] sm:text-xs text-zinc-500 flex items-center gap-1.5">

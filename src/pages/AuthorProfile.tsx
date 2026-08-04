@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Twitter, Instagram, Globe, Mail, Clock } from 'lucide-react';
 import { ARTICLES, AUTHORS } from '../data/mockData';
 import { ArticleCard } from '../components/common/ArticleCard';
+import { Avatar } from '../components/common/Avatar';
 
 export const AuthorProfile = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,9 +25,7 @@ export const AuthorProfile = () => {
       {/* Header */}
       <header className="pt-40 pb-20 bg-zinc-950 border-b border-white/5 px-6">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row gap-12 items-center text-center md:text-left">
-          <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-[#B8FF4D]/20 shrink-0">
-            <img src={author.avatar} alt={author.name} className="w-full h-full object-cover" />
-          </div>
+          <Avatar src={author.avatar} name={author.name} size={160} className="border-4 border-[#B8FF4D]/20" />
           
           <div className="space-y-6">
             <div className="space-y-2">

@@ -1,6 +1,5 @@
 import React from 'react';
 import { 
-  Users, 
   Search, 
   Filter, 
   ShieldCheck,
@@ -12,6 +11,7 @@ import type { Id } from '../../../convex/_generated/dataModel';
 import { useAuth } from '../../context/AuthContext';
 import { cn } from '../../lib/utils';
 import { ROLE_ORDER, Role, roleLabel } from '../../lib/roles';
+import { Avatar } from '../common/Avatar';
 
 export const AdminUsers = () => {
   const [activeTab, setActiveTab] = React.useState<'All Users' | 'Editors' | 'Permissions'>('All Users');
@@ -112,13 +112,7 @@ export const AdminUsers = () => {
                 <tr key={user._id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-600 border border-white/5 group-hover:border-[#B8FF4D]/30 transition-colors overflow-hidden">
-                        {user.avatar ? (
-                          <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <Users size={18} />
-                        )}
-                      </div>
+                      <Avatar src={user.avatar} name={user.name} size={40} />
                       <div>
                         <p className="text-sm font-bold text-white">{user.name}</p>
                         <p className="text-[10px] text-zinc-500 uppercase tracking-widest">{user.email}</p>

@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { 
-  User as UserIcon, 
   LogOut, 
   Bell, 
   Shield, 
@@ -25,6 +24,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { ImageCropModal } from '../components/profile/ImageCropModal';
+import { Avatar } from '../components/common/Avatar';
 import { useUploadImage, useRemoveImage, useResolvedMedia, MediaField } from '../hooks/useImageUpload';
 import { useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
@@ -46,7 +46,6 @@ export const UserProfile = () => {
   const removeImage = useRemoveImage();
   const updateProfile = useMutation(api.users.updateProfile);
 
-  const avatar = useResolvedMedia(dbUser?.avatar ?? user?.photoURL);
   const cover = useResolvedMedia(dbUser?.coverImage);
 
   const email = user?.email ?? dbUser?.email ?? '';
@@ -174,13 +173,7 @@ export const UserProfile = () => {
                   <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Profile Picture</label>
                   <div className="flex items-center gap-6">
                     <div className="relative group">
-                      <div className="w-24 h-24 bg-zinc-900 rounded-full border-4 border-white/5 flex items-center justify-center text-zinc-700 overflow-hidden">
-                        {avatar ? (
-                          <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
-                        ) : (
-                          <UserIcon size={40} />
-                        )}
-                      </div>
+                      <Avatar src={dbUser?.avatar ?? user?.photoURL} name={displayName} size={96} />
                       <button type="button" onClick={() => avatarInputRef.current?.click()} className="absolute bottom-0 right-0 p-2 bg-[#B8FF4D] text-black rounded-full shadow-xl hover:scale-110 transition-transform">
                         <Camera size={14} />
                       </button>
@@ -326,13 +319,7 @@ export const UserProfile = () => {
           </div>
 
           <div className="relative -mt-14 px-6 flex flex-col sm:flex-row items-center sm:items-end gap-5">
-            <div className="w-28 h-28 bg-zinc-900 rounded-full border-4 border-[#0A0A0A] flex items-center justify-center text-zinc-700 overflow-hidden shrink-0">
-              {avatar ? (
-                <img src={avatar} alt={displayName} className="w-full h-full object-cover" />
-              ) : (
-                <UserIcon size={48} />
-              )}
-            </div>
+            <Avatar src={dbUser?.avatar ?? user?.photoURL} name={displayName} size={112} className="border-4 border-[#0A0A0A]" />
             <div className="flex-1 text-center sm:text-left space-y-2 pb-1">
               <div className="flex items-center justify-center sm:justify-start gap-3">
                 <h1 className="text-3xl font-black text-white tracking-tight">{displayName}</h1>

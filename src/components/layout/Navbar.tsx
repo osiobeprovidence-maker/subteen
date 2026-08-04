@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Search, Bookmark, History, User, Bell } from 'lucide-react';
+import { Menu, X, Search, Bookmark, History, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
 import { SearchOverlay } from '../common/SearchOverlay';
+import { Avatar } from '../common/Avatar';
 import { useAuth } from '../../context/AuthContext';
 import { canAccessAdmin, canAccessEditor, Role } from '../../lib/roles';
 
@@ -60,7 +61,6 @@ export const Navbar = () => {
   const isEditorPath = location.pathname.startsWith('/editor');
 
   const currentLinks = isAdminPath ? ADMIN_LINKS : isEditorPath ? EDITOR_LINKS : navLinksFor(role);
-  const avatarUrl = dbUser?.avatar ?? user?.photoURL;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -129,12 +129,8 @@ export const Navbar = () => {
                 <Link to="/history" className="hidden md:block text-zinc-400 hover:text-white transition-colors">
                   <History size={20} />
                 </Link>
-                <Link to="/profile" className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-[#B8FF4D] transition-colors overflow-hidden">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt={user?.name ?? 'Profile'} className="w-full h-full object-cover" />
-                  ) : (
-                    <User size={18} />
-                  )}
+                <Link to="/profile" className="block">
+                  <Avatar src={dbUser?.avatar ?? user?.photoURL} name={user?.name} size={34} />
                 </Link>
               </div>
             ) : (

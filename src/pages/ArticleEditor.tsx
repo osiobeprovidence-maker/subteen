@@ -28,12 +28,18 @@ import {
   Settings,
   ChevronRight,
   Plus,
-  FileText
+  FileText,
+  Check,
+  RefreshCw,
+  Scissors,
+  Loader2,
+  X
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { GAMES } from '../data/mockData';
+import { ImageCropModal } from '../components/profile/ImageCropModal';
 
 export const ArticleEditor = () => {
   const navigate = useNavigate();
@@ -51,6 +57,13 @@ export const ArticleEditor = () => {
   const [isSeoOpen, setIsSeoOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [wordCount, setWordCount] = useState(0);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [coverMeta, setCoverMeta] = useState<{ width: number; height: number; sizeKB: number; format: string } | null>(null);
+  const [isCoverLoading, setIsCoverLoading] = useState(false);
+  const [isCoverPreviewOpen, setIsCoverPreviewOpen] = useState(false);
+  const [isCropOpen, setIsCropOpen] = useState(false);
+  const [cropSource, setCropSource] = useState<string | null>(null);
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -82,6 +95,54 @@ export const ArticleEditor = () => {
   };
 
   const readingTime = Math.ceil(wordCount / 200);
+
+  const applyCover = (blob: Blob, file?: File) => {
+    const url = URL.createObjectURL(blob);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        if (coverUrl) URL.revokeObjectURL(coverUrl);
+        setCoverUrl(url);
+        setCoverMeta({
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+          sizeKB: Math.max(1, Math.round(blob.size / 1024)),
+          format: (file?.type ?? blob.type).split('/')[1]?.toUpperCase() ?? 'IMG',
+        });
+        setIsCoverLoading(false);
+      };
+      img.onerror = () => setIsCoverLoading(false);
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(blob);
+  };
+
+  const handleCoverSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setIsCoverLoading(true);
+    applyCover(file, file);
+  };
+
+  const handleCropConfirm = (blob: Blob) => {
+    setIsCropOpen(false);
+    setCropSource(null);
+    applyCover(blob);
+  };
+
+  const openCrop = () => {
+    if (!coverUrl) return;
+    setCropSource(coverUrl);
+    setIsCropOpen(true);
+  };
+
+  const handleRemoveCover = () => {
+    if (coverUrl) URL.revokeObjectURL(coverUrl);
+    setCoverUrl(null);
+    setCoverMeta(null);
+  };
 
   const toolbarTools = [
     { icon: Bold, label: 'Bold' },
@@ -143,9 +204,9 @@ export const ArticleEditor = () => {
       <main className="pt-24 pb-32">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-12">
           {/* Content Area */}
-          <div className="space-y-12">
+          <div className="max-w-[760px] mx-auto w-full space-y-6">
             {/* Title & Meta */}
-            <div className="space-y-6">
+            <div className="space-y-5">
               <textarea
                 value={title}
                 onChange={(e) => handleChange(setTitle, e.target.value)}
@@ -153,7 +214,7 @@ export const ArticleEditor = () => {
                 className="w-full bg-transparent border-none text-4xl sm:text-6xl font-black text-white focus:outline-none placeholder:text-zinc-900 tracking-tighter resize-none"
                 rows={1}
               />
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <input
                   type="text"
                   value={subtitle}
@@ -183,16 +244,116 @@ export const ArticleEditor = () => {
             </div>
 
             {/* Featured Image */}
-            <div className="group relative aspect-[21/9] bg-zinc-950 border-2 border-dashed border-white/5 rounded-[40px] overflow-hidden hover:border-[#B8FF4D]/30 transition-all">
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-zinc-600 group-hover:text-white transition-colors cursor-pointer">
-                <div className="w-16 h-16 rounded-3xl bg-zinc-900 flex items-center justify-center text-[#B8FF4D] shadow-xl group-hover:scale-110 transition-transform">
-                  <Plus size={32} />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-black uppercase tracking-widest">Upload Cover Image</p>
-                  <p className="text-[10px] uppercase tracking-widest mt-1 opacity-50">Drag & Drop or Browse (1920x820px recommended)</p>
-                </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Cover Image</label>
+                {coverMeta && (
+                  <span className="flex items-center gap-1.5 text-[10px] font-black text-[#B8FF4D] uppercase tracking-widest">
+                    <Check size={12} /> Cover uploaded
+                  </span>
+                )}
               </div>
+
+              <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverSelect} />
+
+              {coverUrl ? (
+                <>
+                  <div className="group relative h-[360px] rounded-2xl overflow-hidden border border-white/5 bg-zinc-950">
+                    <img
+                      src={coverUrl}
+                      alt="Cover"
+                      className="w-full h-full object-cover cursor-zoom-in transition-transform duration-500 group-hover:scale-[1.02]"
+                      onClick={() => setIsCoverPreviewOpen(true)}
+                    />
+                    <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 px-4 py-3 bg-gradient-to-t from-black/85 via-black/40 to-transparent">
+                      <span className="text-[10px] font-black text-zinc-300 uppercase tracking-widest truncate">
+                        {coverMeta ? `${coverMeta.width} × ${coverMeta.height} · ${coverMeta.sizeKB} KB · ${coverMeta.format}` : 'Cover'}
+                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button onClick={() => coverInputRef.current?.click()} title="Replace" className="p-2 rounded-lg bg-black/50 backdrop-blur-sm text-zinc-300 hover:text-black hover:bg-[#B8FF4D] transition-colors">
+                          <RefreshCw size={14} />
+                        </button>
+                        <button onClick={openCrop} title="Crop" className="p-2 rounded-lg bg-black/50 backdrop-blur-sm text-zinc-300 hover:text-black hover:bg-[#B8FF4D] transition-colors">
+                          <Scissors size={14} />
+                        </button>
+                        <button onClick={handleRemoveCover} title="Remove" className="p-2 rounded-lg bg-black/50 backdrop-blur-sm text-zinc-300 hover:text-red-400 hover:bg-red-500/20 transition-colors">
+                          <Trash2 size={14} />
+                        </button>
+                        <button onClick={() => setIsCoverPreviewOpen(true)} title="Preview" className="p-2 rounded-lg bg-black/50 backdrop-blur-sm text-zinc-300 hover:text-black hover:bg-[#B8FF4D] transition-colors">
+                          <Eye size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {coverMeta && (
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] font-bold uppercase tracking-widest">
+                      <span className="text-zinc-500">
+                        {coverMeta.width} × {coverMeta.height} · {coverMeta.sizeKB} KB · {coverMeta.format}
+                      </span>
+                      <span className="w-1 h-1 rounded-full bg-zinc-700" />
+                      <div className="flex items-center gap-3">
+                        <button onClick={() => coverInputRef.current?.click()} className="text-[#B8FF4D] hover:text-white transition-colors">Replace</button>
+                        <button onClick={openCrop} className="text-[#B8FF4D] hover:text-white transition-colors">Crop</button>
+                        <button onClick={handleRemoveCover} className="text-red-500 hover:text-red-400 transition-colors">Remove</button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <button
+                  onClick={() => coverInputRef.current?.click()}
+                  className="w-full h-40 rounded-2xl border-2 border-dashed border-white/10 bg-zinc-950 flex flex-col items-center justify-center gap-3 text-zinc-600 hover:text-white hover:border-[#B8FF4D]/30 transition-all"
+                >
+                  {isCoverLoading ? (
+                    <Loader2 size={20} className="animate-spin text-[#B8FF4D]" />
+                  ) : (
+                    <>
+                      <div className="w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center text-[#B8FF4D]">
+                        <Plus size={24} />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-black uppercase tracking-widest">Upload Cover Image</p>
+                        <p className="text-[10px] uppercase tracking-widest mt-1 opacity-50">320-420px tall · 1920x820px recommended</p>
+                      </div>
+                    </>
+                  )}
+                </button>
+              )}
+
+              {/* Fullscreen Preview */}
+              <AnimatePresence>
+                {isCoverPreviewOpen && coverUrl && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[70] bg-black/95 flex items-center justify-center p-4"
+                    onClick={() => setIsCoverPreviewOpen(false)}
+                  >
+                    <button className="absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors">
+                      <X size={20} />
+                    </button>
+                    <motion.img
+                      initial={{ scale: 0.95 }}
+                      animate={{ scale: 1 }}
+                      src={coverUrl}
+                      alt="Cover preview"
+                      className="max-w-full max-h-[90vh] rounded-lg object-contain"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <ImageCropModal
+                open={isCropOpen}
+                src={cropSource ?? ''}
+                aspect={21 / 9}
+                title="Crop Cover Image"
+                onCancel={() => { setIsCropOpen(false); setCropSource(null); }}
+                onConfirm={handleCropConfirm}
+              />
             </div>
 
             {/* Editor Toolbar */}
@@ -214,12 +375,12 @@ export const ArticleEditor = () => {
             </div>
 
             {/* Rich Text Editor Body */}
-            <div className="min-h-[600px] py-8">
+            <div className="min-h-[600px] py-4">
               <textarea
                 value={content}
                 onChange={(e) => handleChange(setContent, e.target.value)}
                 placeholder="Start writing your story..."
-                className="w-full h-full bg-transparent border-none text-xl text-zinc-300 leading-relaxed focus:outline-none resize-none placeholder:text-zinc-900"
+                className="w-full h-full bg-transparent border-none text-[18px] sm:text-[19px] text-zinc-300 leading-[1.8] focus:outline-none resize-none placeholder:text-zinc-900"
               />
             </div>
 
@@ -435,8 +596,12 @@ export const ArticleEditor = () => {
                       {/* Image Preview if uploaded */}
                       <div className="space-y-4 pt-6 border-t border-white/5">
                         <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Cover Preview</label>
-                        <div className="aspect-[16/9] bg-zinc-900 rounded-2xl border border-white/5 flex items-center justify-center">
-                          <ImageIcon size={24} className="text-zinc-800" />
+                        <div className={cn("rounded-2xl overflow-hidden border border-white/5 bg-zinc-900 flex items-center justify-center", coverUrl ? "h-32" : "aspect-[16/9]")}>
+                          {coverUrl ? (
+                            <img src={coverUrl} alt="Cover preview" className="w-full h-full object-cover" />
+                          ) : (
+                            <ImageIcon size={24} className="text-zinc-800" />
+                          )}
                         </div>
                       </div>
                     </motion.div>

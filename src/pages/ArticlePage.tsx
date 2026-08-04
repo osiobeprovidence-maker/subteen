@@ -1,8 +1,9 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { Clock, Calendar, Share2, Bookmark, User, ChevronRight } from 'lucide-react';
+import { Clock, Calendar, Share2, Bookmark, ChevronRight } from 'lucide-react';
 import { ARTICLES, AUTHORS, GAMES } from '../data/mockData';
+import { Avatar } from '../components/common/Avatar';
 
 export const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -48,9 +49,7 @@ export const ArticlePage = () => {
 
           <div className="flex flex-wrap items-center justify-between gap-6 pt-4 border-y border-white/5 py-6 sm:py-8">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-zinc-800">
-                <img src={author?.avatar} alt={author?.name} className="w-full h-full object-cover" />
-              </div>
+              <Avatar src={author?.avatar} name={author?.name} size={44} />
               <div>
                 <p className="text-[10px] sm:text-xs font-black text-white uppercase tracking-widest">{author?.name}</p>
                 <p className="text-[10px] sm:text-xs text-zinc-500 flex items-center gap-1.5 mt-1">
