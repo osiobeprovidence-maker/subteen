@@ -13,6 +13,7 @@ import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Doc } from '../../convex/_generated/dataModel';
 import { auth } from '../lib/firebase';
+import type { Role } from '../lib/roles';
 
 interface AuthUser {
   uid: string;
@@ -26,6 +27,7 @@ interface AuthContextType {
   loading: boolean;
   user: AuthUser | null;
   dbUser: Doc<'users'> | null;
+  role: Role;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -104,7 +106,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, loading, user, dbUser, signUp, signIn, signInWithGoogle, logout }}>
+    <AuthContext.Provider
+      value={{
+        isLoggedIn,
+        loading,
+        user,
+        dbUser,
+        role: (dbUser?.role as Role | undefined) ?? 'member',
+        signUp,
+        signIn,
+        signInWithGoogle,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

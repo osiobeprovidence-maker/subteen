@@ -16,7 +16,9 @@ import { AdminPanel } from './pages/AdminPanel';
 import { ArticleEditor } from './pages/ArticleEditor';
 import { Auth } from './pages/Auth';
 import { Onboarding } from './pages/Onboarding';
+import { Forbidden } from './pages/Forbidden';
 import { AuthProvider } from './context/AuthContext';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -40,16 +42,17 @@ export default function App() {
             <Route path="/game/:id" element={<GameHub />} />
             <Route path="/author/:id" element={<AuthorProfile />} />
             <Route path="/category/:category" element={<CategoryPage />} />
-            <Route path="/profile" element={<UserProfile />} />
-            <Route path="/bookmarks" element={<Bookmarks />} />
-            <Route path="/history" element={<ReadingHistory />} />
-            <Route path="/editor/new" element={<ArticleEditor />} />
-            <Route path="/editor/edit/:id" element={<ArticleEditor />} />
-            <Route path="/editor/*" element={<EditorStudio />} />
-            <Route path="/admin/*" element={<AdminPanel />} />
+            <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+            <Route path="/bookmarks" element={<ProtectedRoute><Bookmarks /></ProtectedRoute>} />
+            <Route path="/history" element={<ProtectedRoute><ReadingHistory /></ProtectedRoute>} />
+            <Route path="/editor/new" element={<ProtectedRoute roles={['editor', 'admin', 'super_admin']}><ArticleEditor /></ProtectedRoute>} />
+            <Route path="/editor/edit/:id" element={<ProtectedRoute roles={['editor', 'admin', 'super_admin']}><ArticleEditor /></ProtectedRoute>} />
+            <Route path="/editor/*" element={<ProtectedRoute roles={['editor', 'admin', 'super_admin']}><EditorStudio /></ProtectedRoute>} />
+            <Route path="/admin/*" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminPanel /></ProtectedRoute>} />
             <Route path="/signin" element={<Auth />} />
             <Route path="/signup" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/403" element={<Forbidden />} />
           </Routes>
         </main>
         <Footer />

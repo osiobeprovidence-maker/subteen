@@ -139,7 +139,7 @@ export const seedExtras = mutation({
     for (const user of [
       { name: 'John Doe', email: 'john@example.com', role: 'admin' as const, status: 'active' as const, joined: 'Mar 2024', articleCount: 0 },
       { name: 'Jane Smith', email: 'jane@example.com', role: 'editor' as const, status: 'active' as const, joined: 'Apr 2024', articleCount: 42 },
-      { name: 'Bob Wilson', email: 'bob@example.com', role: 'user' as const, status: 'suspended' as const, joined: 'May 2024', articleCount: 0 },
+      { name: 'Bob Wilson', email: 'bob@example.com', role: 'member' as const, status: 'suspended' as const, joined: 'May 2024', articleCount: 0 },
       { name: 'Sarah Connor', email: 'sarah@skynet.com', role: 'editor' as const, status: 'active' as const, joined: 'Jun 2024', articleCount: 12 },
       { name: 'Marcus Thorne', email: 'marcus@gaming.com', role: 'editor' as const, status: 'active' as const, joined: 'Feb 2024', articleCount: 84 },
     ]) {

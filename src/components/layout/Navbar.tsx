@@ -5,15 +5,28 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
 import { SearchOverlay } from '../common/SearchOverlay';
 import { useAuth } from '../../context/AuthContext';
+import { canAccessAdmin, canAccessEditor, Role } from '../../lib/roles';
 
 const NAV_LINKS = [
   { name: 'News', path: '/category/news' },
   { name: 'Reviews', path: '/category/reviews' },
   { name: 'Guides', path: '/category/guides' },
-  { name: 'Esports', path: '/category/esports' },
-  { name: 'Deals', path: '/category/deals' },
-  { name: 'Trailers', path: '/category/trailers' },
 ];
+
+const ROLE_LINKS: { roles: (Role | undefined)[]; name: string; path: string }[] = [
+  { roles: ['editor', 'admin', 'super_admin'], name: 'Editor Studio', path: '/editor' },
+  { roles: ['admin', 'super_admin'], name: 'Admin Panel', path: '/admin' },
+];
+
+const navLinksFor = (role: Role | undefined) => {
+  const links = [...NAV_LINKS];
+  for (const entry of ROLE_LINKS) {
+    if (entry.roles.includes(role)) {
+      links.push({ name: entry.name, path: entry.path });
+    }
+  }
+  return links;
+};
 
 const ADMIN_LINKS = [
   { name: 'Dashboard', path: '/admin' },
@@ -40,13 +53,14 @@ export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, logout, role, user, dbUser } = useAuth();
   const location = useLocation();
 
   const isAdminPath = location.pathname.startsWith('/admin');
   const isEditorPath = location.pathname.startsWith('/editor');
 
-  const currentLinks = isAdminPath ? ADMIN_LINKS : isEditorPath ? EDITOR_LINKS : NAV_LINKS;
+  const currentLinks = isAdminPath ? ADMIN_LINKS : isEditorPath ? EDITOR_LINKS : navLinksFor(role);
+  const avatarUrl = dbUser?.avatar ?? user?.photoURL;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -98,7 +112,7 @@ export const Navbar = () => {
               </button>
             )}
 
-            {isEditorPath && (
+            {isEditorPath && canAccessEditor(role) && (
               <Link 
                 to="/editor/new"
                 className="hidden md:flex items-center gap-2 px-5 py-2 rounded-full bg-[#B8FF4D] text-black text-sm font-bold hover:bg-white transition-colors"
@@ -116,7 +130,11 @@ export const Navbar = () => {
                   <History size={20} />
                 </Link>
                 <Link to="/profile" className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-[#B8FF4D] transition-colors overflow-hidden">
-                  <User size={18} />
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={user?.name ?? 'Profile'} className="w-full h-full object-cover" />
+                  ) : (
+                    <User size={18} />
+                  )}
                 </Link>
               </div>
             ) : (
@@ -175,6 +193,11 @@ export const Navbar = () => {
                   <Link to="/profile" onClick={() => setIsOpen(false)} className="text-sm font-bold uppercase tracking-widest text-zinc-400">Profile</Link>
                   <Link to="/bookmarks" onClick={() => setIsOpen(false)} className="text-sm font-bold uppercase tracking-widest text-zinc-400">Bookmarks</Link>
                   <Link to="/history" onClick={() => setIsOpen(false)} className="text-sm font-bold uppercase tracking-widest text-zinc-400">Reading History</Link>
+                  {navLinksFor(role)
+                    .filter((link) => link.path === '/editor' || link.path === '/admin')
+                    .map((link) => (
+                      <Link key={link.name} to={link.path} onClick={() => setIsOpen(false)} className="text-sm font-bold uppercase tracking-widest text-zinc-400">{link.name}</Link>
+                    ))}
                   <button onClick={() => { logout(); setIsOpen(false); }} className="text-left text-sm font-bold uppercase tracking-widest text-red-500">Sign Out</button>
                 </div>
               )}

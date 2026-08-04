@@ -1,36 +1,46 @@
 import React from 'react';
 import { 
   Users, 
-  UserSquare2, 
-  Shield, 
-  MoreVertical, 
-  Ban, 
-  UserPlus, 
   Search, 
   Filter, 
-  ChevronRight,
-  TrendingUp,
-  Mail,
-  UserCheck
+  ShieldCheck,
+  Loader2
 } from 'lucide-react';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import type { Id } from '../../../convex/_generated/dataModel';
+import { useAuth } from '../../context/AuthContext';
 import { cn } from '../../lib/utils';
+import { ROLE_ORDER, Role, roleLabel } from '../../lib/roles';
 
 export const AdminUsers = () => {
   const [activeTab, setActiveTab] = React.useState<'All Users' | 'Editors' | 'Permissions'>('All Users');
+  const { role } = useAuth();
+  const users = useQuery(api.users.list);
+  const setRole = useMutation(api.users.setRole);
+  const [error, setError] = React.useState<string | null>(null);
+  const [savingId, setSavingId] = React.useState<Id<'users'> | null>(null);
 
-  const users = [
-    { name: 'John Doe', email: 'john@example.com', role: 'Super Admin', joined: 'Mar 2024', status: 'Active', articles: 0 },
-    { name: 'Jane Smith', email: 'jane@example.com', role: 'Editor', joined: 'Apr 2024', status: 'Active', articles: 42 },
-    { name: 'Bob Wilson', email: 'bob@example.com', role: 'User', joined: 'May 2024', status: 'Suspended', articles: 0 },
-    { name: 'Sarah Connor', email: 'sarah@skynet.com', role: 'Editor', joined: 'Jun 2024', status: 'Active', articles: 12 },
-    { name: 'Marcus Thorne', email: 'marcus@gaming.com', role: 'Editor', joined: 'Feb 2024', status: 'Active', articles: 84 },
-  ];
+  const isSuperAdmin = role === 'super_admin';
 
-  const editors = users.filter(u => u.role === 'Editor');
+  const handleSetRole = async (userId: Id<'users'>, next: Role) => {
+    setSavingId(userId);
+    setError(null);
+    try {
+      await setRole({ userId, role: next });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to update role.');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const rows = users ?? [];
+  const visible = activeTab === 'Editors' ? rows.filter((u) => u.role === 'editor') : rows;
 
   return (
     <div className="space-y-12">
-      <div className="flex items-center gap-2 p-1 bg-zinc-900 border border-white/5 rounded-2xl w-fit">
+      <div className="flex flex-wrap items-center gap-2 p-1 bg-zinc-900 border border-white/5 rounded-2xl w-fit">
         {['All Users', 'Editors', 'Permissions'].map((tab) => (
           <button
             key={tab}
@@ -60,25 +70,54 @@ export const AdminUsers = () => {
           </button>
         </div>
 
+        {activeTab === 'Permissions' && (
+          <div className="flex items-center gap-3 p-5 bg-[#B8FF4D]/5 border border-[#B8FF4D]/15 rounded-3xl">
+            <ShieldCheck size={18} className="text-[#B8FF4D] shrink-0" />
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              {isSuperAdmin
+                ? 'You can assign or change user roles. Role changes take effect immediately.'
+                : 'Only the super admin can assign or change roles. You have read-only access here.'}
+            </p>
+          </div>
+        )}
+
+        {error && (
+          <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-xs font-bold text-red-400">
+            {error}
+          </div>
+        )}
+
         <div className="bg-zinc-950 border border-white/5 rounded-[40px] overflow-hidden">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-white/5 bg-white/[0.02]">
                 <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">User</th>
                 <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Role</th>
-                {activeTab === 'Editors' && <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Articles</th>}
                 <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Joined</th>
                 <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</th>
-                <th className="px-8 py-6"></th>
               </tr>
             </thead>
             <tbody>
-              {(activeTab === 'Editors' ? editors : users).map((user, i) => (
-                <tr key={i} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
+              {users === undefined && (
+                <tr>
+                  <td colSpan={4} className="px-8 py-16 text-center text-zinc-500 text-sm">Loading users...</td>
+                </tr>
+              )}
+              {users !== undefined && visible.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-8 py-16 text-center text-zinc-500 text-sm">No users found.</td>
+                </tr>
+              )}
+              {visible.map((user) => (
+                <tr key={user._id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-600 border border-white/5 group-hover:border-[#B8FF4D]/30 transition-colors">
-                        <Users size={18} />
+                      <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-600 border border-white/5 group-hover:border-[#B8FF4D]/30 transition-colors overflow-hidden">
+                        {user.avatar ? (
+                          <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <Users size={18} />
+                        )}
                       </div>
                       <div>
                         <p className="text-sm font-bold text-white">{user.name}</p>
@@ -87,25 +126,32 @@ export const AdminUsers = () => {
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <span className="text-xs font-bold text-zinc-400">{user.role}</span>
+                    {activeTab === 'Permissions' && isSuperAdmin ? (
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={user.role ?? 'member'}
+                          disabled={savingId === user._id}
+                          onChange={(e) => handleSetRole(user._id, e.target.value as Role)}
+                          className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-[#B8FF4D] disabled:opacity-50"
+                        >
+                          {ROLE_ORDER.map((r) => (
+                            <option key={r} value={r}>{roleLabel(r)}</option>
+                          ))}
+                        </select>
+                        {savingId === user._id && <Loader2 size={14} className="text-[#B8FF4D] animate-spin" />}
+                      </div>
+                    ) : (
+                      <span className="text-xs font-bold text-zinc-400">{roleLabel(user.role)}</span>
+                    )}
                   </td>
-                  {activeTab === 'Editors' && (
-                    <td className="px-8 py-6">
-                      <p className="text-sm font-mono text-zinc-400">{user.articles}</p>
-                    </td>
-                  )}
                   <td className="px-8 py-6 text-sm text-zinc-500">{user.joined}</td>
                   <td className="px-8 py-6">
                     <span className={cn(
                       "text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest",
-                      user.status === 'Active' ? "text-[#B8FF4D]" : "text-red-500"
+                      user.status === 'active' ? "text-[#B8FF4D]" : "text-red-500"
                     )}>
                       {user.status}
                     </span>
-                  </td>
-                  <td className="px-8 py-6 text-right space-x-2">
-                    <button className="text-[10px] font-black text-zinc-500 hover:text-white uppercase tracking-widest">Manage</button>
-                    <button className="text-[10px] font-black text-red-500/50 hover:text-red-500 uppercase tracking-widest">Ban</button>
                   </td>
                 </tr>
               ))}

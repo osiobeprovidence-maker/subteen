@@ -72,7 +72,15 @@ export default defineSchema({
     name: v.string(),
     email: v.string(),
     avatar: v.optional(v.string()),
-    role: v.optional(v.union(v.literal('admin'), v.literal('editor'), v.literal('user'))),
+    coverImage: v.optional(v.string()),
+    role: v.optional(
+      v.union(
+        v.literal('member'),
+        v.literal('editor'),
+        v.literal('admin'),
+        v.literal('super_admin'),
+      ),
+    ),
     status: v.optional(v.union(v.literal('active'), v.literal('suspended'))),
     joined: v.optional(v.string()),
     articleCount: v.optional(v.number()),
