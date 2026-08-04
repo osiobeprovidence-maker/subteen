@@ -35,14 +35,18 @@ import {
   Loader2,
   X
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { GAMES } from '../data/mockData';
 import { ImageCropModal } from '../components/profile/ImageCropModal';
+import { StoredArticle, generateId, getArticle, upsertArticle, deleteArticle, slugify, objectUrlToDataUrl } from '../lib/articleStore';
 
 export const ArticleEditor = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [createdAt, setCreatedAt] = useState<number>(Date.now());
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [excerpt, setExcerpt] = useState('');
@@ -78,16 +82,25 @@ export const ArticleEditor = () => {
     setWordCount(content.trim() === '' ? 0 : words);
   }, [content]);
 
-  // Mock autosave
+  // Load an existing article when editing
   useEffect(() => {
-    if (saveStatus === 'Unsaved') {
-      const timer = setTimeout(() => {
-        setSaveStatus('Saving');
-        setTimeout(() => setSaveStatus('Saved'), 1000);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [saveStatus]);
+    if (!id) return;
+    const stored = getArticle(id);
+    if (!stored) return;
+    setDraftId(stored.id);
+    setCreatedAt(stored.createdAt);
+    setTitle(stored.title);
+    setSubtitle(stored.subtitle);
+    setExcerpt(stored.excerpt);
+    setSlug(stored.slug);
+    setContent(stored.content);
+    setCategory(stored.category);
+    setSelectedGame(stored.selectedGame);
+    setStatus(stored.status);
+    setIsFeatured(stored.isFeatured);
+    setIsHomepage(stored.isHomepage);
+    setCoverUrl(stored.coverData || null);
+  }, [id]);
 
   const handleChange = (setter: any, value: any) => {
     setter(value);
@@ -95,6 +108,55 @@ export const ArticleEditor = () => {
   };
 
   const readingTime = Math.ceil(wordCount / 200);
+
+  const persistArticle = async (nextStatus: 'Draft' | 'Published' | 'Scheduled'): Promise<StoredArticle> => {
+    const finalId = draftId ?? generateId();
+    const coverData = coverUrl ? await objectUrlToDataUrl(coverUrl) : '';
+    const finalSlug = slug.trim() || slugify(title) || finalId;
+    const article: StoredArticle = {
+      id: finalId,
+      title: title.trim() || 'Untitled',
+      subtitle,
+      excerpt,
+      slug: finalSlug,
+      content,
+      category,
+      selectedGame,
+      status: nextStatus,
+      isFeatured,
+      isHomepage,
+      coverData,
+      createdAt,
+      updatedAt: Date.now(),
+    };
+    upsertArticle(article);
+    setDraftId(finalId);
+    setStatus(nextStatus);
+    setSaveStatus('Saved');
+    return article;
+  };
+
+  const handleSaveDraft = async () => {
+    setSaveStatus('Saving');
+    await persistArticle('Draft');
+  };
+
+  const handlePublish = async () => {
+    setSaveStatus('Saving');
+    await persistArticle(status === 'Scheduled' ? 'Scheduled' : 'Published');
+    navigate('/editor/published');
+  };
+
+  const handlePreview = async () => {
+    setSaveStatus('Saving');
+    const article = await persistArticle(status === 'Scheduled' ? 'Scheduled' : status);
+    navigate(`/article/${article.slug}`);
+  };
+
+  const handleDeleteDraft = () => {
+    if (draftId) deleteArticle(draftId);
+    navigate('/editor/drafts');
+  };
 
   const applyCover = (blob: Blob, file?: File) => {
     const url = URL.createObjectURL(blob);
@@ -175,7 +237,7 @@ export const ArticleEditor = () => {
             </button>
             <div className="h-4 w-px bg-zinc-800 hidden sm:block" />
             <div className="flex flex-col">
-              <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest leading-none">New Article</span>
+              <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest leading-none">{draftId ? 'Edit Article' : 'New Article'}</span>
               <div className="flex items-center gap-2 mt-1">
                 <span className={cn(
                   "text-[10px] font-bold uppercase tracking-widest",
@@ -188,13 +250,13 @@ export const ArticleEditor = () => {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4">
-            <button className="hidden sm:flex items-center gap-2 px-6 py-2 rounded-full text-[10px] font-black text-zinc-400 hover:bg-zinc-900 uppercase tracking-widest transition-all">
+            <button onClick={handleSaveDraft} disabled={saveStatus === 'Saving'} className="hidden sm:flex items-center gap-2 px-6 py-2 rounded-full text-[10px] font-black text-zinc-400 hover:bg-zinc-900 uppercase tracking-widest transition-all disabled:opacity-50">
               <Save size={14} /> Save Draft
             </button>
-            <button className="flex items-center gap-2 px-6 py-2 rounded-full text-[10px] font-black text-zinc-400 hover:bg-zinc-900 uppercase tracking-widest transition-all">
+            <button onClick={handlePreview} disabled={saveStatus === 'Saving'} className="flex items-center gap-2 px-6 py-2 rounded-full text-[10px] font-black text-zinc-400 hover:bg-zinc-900 uppercase tracking-widest transition-all disabled:opacity-50">
               <Eye size={14} /> Preview
             </button>
-            <button className="flex items-center gap-2 px-8 py-2 rounded-full bg-[#B8FF4D] text-black text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_20px_rgba(184,255,77,0.2)]">
+            <button onClick={handlePublish} disabled={saveStatus === 'Saving'} className="flex items-center gap-2 px-8 py-2 rounded-full bg-[#B8FF4D] text-black text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_20px_rgba(184,255,77,0.2)] disabled:opacity-50">
               <Send size={14} /> Publish
             </button>
           </div>
@@ -485,7 +547,7 @@ export const ArticleEditor = () => {
                           ].map(item => (
                             <button
                               key={item.id}
-                              onClick={() => setStatus(item.id as any)}
+                              onClick={() => handleChange(setStatus, item.id as any)}
                               className={cn(
                                 "w-full flex items-center justify-between p-4 rounded-2xl border transition-all",
                                 status === item.id 
@@ -611,7 +673,7 @@ export const ArticleEditor = () => {
 
               {/* Bottom Actions */}
               <div className="space-y-3">
-                <button className="w-full py-4 rounded-3xl border border-white/5 bg-zinc-950 text-zinc-500 font-bold text-xs uppercase tracking-widest hover:text-red-500 hover:bg-red-500/5 hover:border-red-500/20 transition-all flex items-center justify-center gap-2">
+                <button onClick={handleDeleteDraft} className="w-full py-4 rounded-3xl border border-white/5 bg-zinc-950 text-zinc-500 font-bold text-xs uppercase tracking-widest hover:text-red-500 hover:bg-red-500/5 hover:border-red-500/20 transition-all flex items-center justify-center gap-2">
                   <Trash2 size={14} /> Delete Draft
                 </button>
               </div>
@@ -620,10 +682,15 @@ export const ArticleEditor = () => {
         </div>
       </main>
 
-      {/* Floating Action Menu (Mobile Only) */}
+      {/* Floating Save (Mobile Only) */}
       <div className="lg:hidden fixed bottom-8 right-8 z-50">
-        <button className="w-14 h-14 rounded-full bg-[#B8FF4D] text-black shadow-2xl flex items-center justify-center">
-          <Settings size={24} />
+        <button
+          onClick={handleSaveDraft}
+          disabled={saveStatus === 'Saving'}
+          title="Save Draft"
+          className="w-14 h-14 rounded-full bg-[#B8FF4D] text-black shadow-2xl flex items-center justify-center disabled:opacity-50"
+        >
+          <Save size={24} />
         </button>
       </div>
     </div>

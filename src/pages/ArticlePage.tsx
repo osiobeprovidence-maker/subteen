@@ -4,10 +4,27 @@ import ReactMarkdown from 'react-markdown';
 import { Clock, Calendar, Share2, Bookmark, ChevronRight } from 'lucide-react';
 import { ARTICLES, AUTHORS, GAMES } from '../data/mockData';
 import { Avatar } from '../components/common/Avatar';
+import { getArticleBySlug } from '../lib/articleStore';
+import type { Article } from '../types';
 
 export const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
-  const article = ARTICLES.find(a => a.slug === slug);
+  const stored = slug ? getArticleBySlug(slug) : null;
+  const article: Article | undefined = stored
+    ? {
+        id: stored.id,
+        title: stored.title,
+        subtitle: stored.subtitle || undefined,
+        slug: stored.slug,
+        content: stored.content,
+        heroImage: stored.coverData,
+        category: stored.category as Article['category'],
+        authorId: 'stored',
+        publishDate: new Date(stored.createdAt).toISOString(),
+        readingTime: Math.max(1, Math.ceil(stored.content.trim().split(/\s+/).filter(Boolean).length / 200)),
+        tags: [],
+      }
+    : ARTICLES.find((a) => a.slug === slug);
   
   if (!article) {
     return (
@@ -18,9 +35,11 @@ export const ArticlePage = () => {
     );
   }
 
-  const author = AUTHORS.find(a => a.id === article.authorId);
-  const game = article.gameId ? GAMES.find(g => g.id === article.gameId) : null;
-  const relatedArticles = ARTICLES.filter(a => a.category === article.category && a.id !== article.id).slice(0, 3);
+  const author = stored
+    ? { id: 'stored', name: 'Staff Writer', avatar: '' }
+    : AUTHORS.find((a) => a.id === article.authorId);
+  const game = article.gameId ? GAMES.find((g) => g.id === article.gameId) : null;
+  const relatedArticles = ARTICLES.filter((a) => a.category === article.category && a.id !== article.id).slice(0, 3);
 
   return (
     <div className="pb-20 sm:pb-32">
@@ -73,7 +92,13 @@ export const ArticlePage = () => {
       {/* Hero Image */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-12 sm:mb-20">
         <div className="aspect-[16/10] sm:aspect-[21/9] rounded-[24px] sm:rounded-[40px] overflow-hidden bg-zinc-900 shadow-2xl">
-          <img src={article.heroImage} alt={article.title} className="w-full h-full object-cover" />
+          {article.heroImage ? (
+            <img src={article.heroImage} alt={article.title} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <ChevronRight size={48} className="text-zinc-800 rotate-180" />
+            </div>
+          )}
         </div>
       </div>
 

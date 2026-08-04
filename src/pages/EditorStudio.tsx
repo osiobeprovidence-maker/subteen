@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Plus, 
   FileText, 
@@ -9,6 +9,7 @@ import {
   Search,
   Filter,
   MoreVertical,
+  Trash2,
   Megaphone,
   TrendingUp,
   Eye,
@@ -17,10 +18,37 @@ import {
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../lib/utils';
+import { StoredArticle, deleteArticle, loadArticles } from '../lib/articleStore';
+
+const relativeTime = (ts: number) => {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+};
 
 export const EditorStudio = () => {
   const location = useLocation();
   const path = location.pathname;
+  const [articles, setArticles] = useState<StoredArticle[]>([]);
+
+  useEffect(() => {
+    setArticles(loadArticles());
+  }, [path]);
+
+  const handleDelete = (id: string) => {
+    deleteArticle(id);
+    setArticles(loadArticles());
+  };
+
+  const counts = {
+    published: articles.filter((a) => a.status === 'Published').length,
+    drafts: articles.filter((a) => a.status === 'Draft').length,
+    scheduled: articles.filter((a) => a.status === 'Scheduled').length,
+  };
 
   const getSection = () => {
     if (path.startsWith('/editor/articles')) return 'articles';
@@ -39,9 +67,9 @@ export const EditorStudio = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Total Views', value: '1.2M', icon: BarChart3, change: '+12%' },
-          { label: 'Published', value: '42', icon: CheckCircle, change: '+2' },
-          { label: 'Drafts', value: '5', icon: FileText, change: '-1' },
-          { label: 'Scheduled', value: '2', icon: Clock, change: '0' },
+          { label: 'Published', value: String(counts.published), icon: CheckCircle, change: '' },
+          { label: 'Drafts', value: String(counts.drafts), icon: FileText, change: '' },
+          { label: 'Scheduled', value: String(counts.scheduled), icon: Clock, change: '' },
         ].map(stat => (
           <div key={stat.label} className="bg-zinc-950 border border-white/5 p-8 rounded-[32px] space-y-4">
             <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center text-[#B8FF4D]">
@@ -106,36 +134,46 @@ export const EditorStudio = () => {
             </tr>
           </thead>
           <tbody>
-            {[
-              { title: 'The Future of VR Gaming', status: 'Published', views: '24k', time: '4:20', date: '2h ago' },
-              { title: 'Top 10 Indie Games of 2024', status: 'Published', views: '18k', time: '3:45', date: '1d ago' },
-              { title: 'Why Handhelds are Winning', status: 'Draft', views: '0', time: '0:00', date: '3d ago' },
-            ].filter(a => !statusFilter || a.status === statusFilter).map((article, i) => (
-              <tr key={i} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
+            {articles.filter(a => !statusFilter || a.status === statusFilter).length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-8 py-16 text-center text-zinc-500 text-sm">
+                  No {statusFilter ? `${statusFilter.toLowerCase()} articles` : 'articles'} yet. Create one to get started.
+                </td>
+              </tr>
+            )}
+            {articles.filter(a => !statusFilter || a.status === statusFilter).map((article) => (
+              <tr key={article.id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
                 <td className="px-8 py-6">
-                  <p className="text-sm font-bold text-white group-hover:text-[#B8FF4D] transition-colors cursor-pointer">{article.title}</p>
+                  <Link to={`/editor/edit/${article.id}`} className="text-sm font-bold text-white group-hover:text-[#B8FF4D] transition-colors cursor-pointer">
+                    {article.title}
+                  </Link>
                 </td>
                 <td className="px-8 py-6">
                   <span className={cn(
                     "text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest",
-                    article.status === 'Published' ? "bg-[#B8FF4D]/10 text-[#B8FF4D]" : "bg-zinc-800 text-zinc-500"
+                    article.status === 'Published' ? "bg-[#B8FF4D]/10 text-[#B8FF4D]" : article.status === 'Scheduled' ? "bg-blue-400/10 text-blue-400" : "bg-zinc-800 text-zinc-500"
                   )}>
                     {article.status}
                   </span>
                 </td>
                 <td className="px-8 py-6">
-                  <p className="text-sm text-zinc-400 font-mono">{article.views}</p>
+                  <p className="text-sm text-zinc-400 font-mono">—</p>
                 </td>
                 <td className="px-8 py-6">
-                  <p className="text-sm text-zinc-400 font-mono">{article.time}</p>
+                  <p className="text-sm text-zinc-400 font-mono">—</p>
                 </td>
                 <td className="px-8 py-6">
-                  <p className="text-sm text-zinc-500">{article.date}</p>
+                  <p className="text-sm text-zinc-500">{relativeTime(article.updatedAt)}</p>
                 </td>
                 <td className="px-8 py-6 text-right">
-                  <button className="p-2 text-zinc-600 hover:text-white transition-colors">
-                    <MoreVertical size={16} />
-                  </button>
+                  <div className="flex items-center justify-end gap-1">
+                    <Link to={`/editor/edit/${article.id}`} className="p-2 text-zinc-600 hover:text-white transition-colors" title="Edit">
+                      <MoreVertical size={16} />
+                    </Link>
+                    <button onClick={() => handleDelete(article.id)} className="p-2 text-zinc-600 hover:text-red-500 transition-colors" title="Delete">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -219,8 +257,16 @@ export const EditorStudio = () => {
             </h1>
             <p className="text-zinc-500 font-medium text-lg">Manage your content and track performance.</p>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-[#B8FF4D]/10 border border-[#B8FF4D]/20 rounded-full text-[#B8FF4D] text-[10px] font-black uppercase tracking-widest">
-            <TrendingUp size={14} /> Peak Writing Hours
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 px-4 py-2 bg-[#B8FF4D]/10 border border-[#B8FF4D]/20 rounded-full text-[#B8FF4D] text-[10px] font-black uppercase tracking-widest">
+              <TrendingUp size={14} /> Peak Writing Hours
+            </div>
+            <Link
+              to="/editor/new"
+              className="flex items-center gap-2 px-6 py-3 rounded-full bg-[#B8FF4D] text-black text-xs font-black uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_20px_rgba(184,255,77,0.2)]"
+            >
+              <Plus size={16} /> New Article
+            </Link>
           </div>
         </div>
 
