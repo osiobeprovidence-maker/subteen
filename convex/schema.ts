@@ -59,6 +59,8 @@ export default defineSchema({
     isTrending: v.optional(v.boolean()),
     reviewScore: v.optional(v.number()),
     videoUrl: v.optional(v.string()),
+    status: v.optional(v.union(v.literal('published'), v.literal('draft'))),
+    views: v.optional(v.number()),
   })
     .index('by_slug', ['slug'])
     .index('by_category', ['category'])
@@ -68,6 +70,10 @@ export default defineSchema({
   users: defineTable({
     name: v.string(),
     email: v.string(),
+    role: v.optional(v.union(v.literal('admin'), v.literal('editor'), v.literal('user'))),
+    status: v.optional(v.union(v.literal('active'), v.literal('suspended'))),
+    joined: v.optional(v.string()),
+    articleCount: v.optional(v.number()),
     bookmarks: v.array(v.id('articles')),
     readingHistory: v.array(v.id('articles')),
     preferences: v.object({
@@ -76,4 +82,51 @@ export default defineSchema({
     }),
   })
     .index('by_email', ['email']),
+
+  categories: defineTable({
+    name: v.string(),
+    slug: v.string(),
+    icon: v.string(),
+    description: v.optional(v.string()),
+    status: v.union(v.literal('Active'), v.literal('Disabled')),
+  })
+    .index('by_slug', ['slug']),
+
+  tags: defineTable({
+    name: v.string(),
+    slug: v.string(),
+    status: v.union(v.literal('Active'), v.literal('Disabled')),
+  })
+    .index('by_slug', ['slug'])
+    .index('by_name', ['name']),
+
+  adCampaigns: defineTable({
+    advertiser: v.string(),
+    campaignName: v.string(),
+    status: v.union(v.literal('Active'), v.literal('Paused'), v.literal('Ended')),
+    clicks: v.number(),
+    views: v.number(),
+    ctr: v.string(),
+    revenue: v.number(),
+    startDate: v.optional(v.string()),
+    endDate: v.optional(v.string()),
+  }),
+
+  adPlacements: defineTable({
+    name: v.string(),
+    enabled: v.boolean(),
+    platform: v.string(),
+    size: v.string(),
+  }),
+
+  settings: defineTable({
+    siteName: v.string(),
+    siteDescription: v.string(),
+    language: v.string(),
+    timezone: v.string(),
+    accentColor: v.string(),
+    featuredLayout: v.string(),
+    trendingLimit: v.number(),
+    latestLimit: v.number(),
+  }),
 });
