@@ -1,4 +1,4 @@
-import { query, mutation, QueryCtx, MutationCtx } from './_generated/server';
+import { query, mutation, internalMutation, QueryCtx, MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
 import { canAccessEditor } from './lib/roles';
@@ -219,6 +219,7 @@ export const create = mutation({
     readingTime: v.optional(v.number()),
     publishDate: v.optional(v.string()),
     status: v.optional(statusSchema),
+    scheduledFor: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     await requireEditor(ctx);
@@ -255,6 +256,7 @@ export const create = mutation({
       reviewScore: args.reviewScore,
       videoUrl: args.videoUrl,
       status: args.status ?? 'draft',
+      scheduledFor: args.scheduledFor,
       views: 0,
     });
     return ctx.db.get(id);
@@ -279,6 +281,7 @@ export const update = mutation({
     readingTime: v.optional(v.number()),
     publishDate: v.optional(v.string()),
     status: v.optional(statusSchema),
+    scheduledFor: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     await requireEditor(ctx);
@@ -327,6 +330,26 @@ export const incrementViews = mutation({
     const article = await ctx.db.get(id);
     if (!article) return;
     await ctx.db.patch(id, { views: (article.views ?? 0) + 1 });
+  },
+});
+
+export const publishScheduled = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const all = await ctx.db.query('articles').collect();
+    let published = 0;
+    for (const a of all) {
+      if (a.status !== 'scheduled') continue;
+      if (a.scheduledFor !== undefined && a.scheduledFor > now) continue;
+      await ctx.db.patch(a._id, {
+        status: 'published',
+        publishDate: a.publishDate || new Date(now).toISOString().slice(0, 10),
+        scheduledFor: undefined,
+      });
+      published += 1;
+    }
+    return { published };
   },
 });
 

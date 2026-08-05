@@ -13,6 +13,7 @@ import type * as ads from "../ads.js";
 import type * as articles from "../articles.js";
 import type * as authors from "../authors.js";
 import type * as categories from "../categories.js";
+import type * as crons from "../crons.js";
 import type * as lib_roles from "../lib/roles.js";
 import type * as media from "../media.js";
 import type * as seed from "../seed.js";
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   articles: typeof articles;
   authors: typeof authors;
   categories: typeof categories;
+  crons: typeof crons;
   "lib/roles": typeof lib_roles;
   media: typeof media;
   seed: typeof seed;

@@ -64,6 +64,7 @@ export const ArticleEditor = () => {
   const [category, setCategory] = useState('News');
   const [selectedGame, setSelectedGame] = useState('');
   const [status, setStatus] = useState<'Draft' | 'Published' | 'Scheduled'>('Draft');
+  const [scheduledFor, setScheduledFor] = useState('');
   const [isFeatured, setIsFeatured] = useState(false);
   const [isHomepage, setIsHomepage] = useState(true);
   const [saveStatus, setSaveStatus] = useState<'Saved' | 'Saving' | 'Unsaved'>('Saved');
@@ -105,6 +106,7 @@ export const ArticleEditor = () => {
     setCategory(editable.category);
     setSelectedGame(editable.gameId ?? '');
     setStatus(editable.status === 'scheduled' ? 'Scheduled' : editable.status === 'published' ? 'Published' : 'Draft');
+    setScheduledFor(editable.scheduledFor ? new Date(editable.scheduledFor).toISOString().slice(0, 16) : '');
     setIsFeatured(!!editable.isFeatured);
     setCoverUrl(editable.heroImage || null);
   }, [editable, hydrated]);
@@ -133,6 +135,7 @@ export const ArticleEditor = () => {
       readingTime,
       status: dbStatus,
       publishDate: dbStatus === 'published' ? new Date().toISOString().slice(0, 10) : undefined,
+      scheduledFor: dbStatus === 'scheduled' && scheduledFor ? new Date(scheduledFor).getTime() : undefined,
     };
 
     if (draftId) {
@@ -573,6 +576,20 @@ export const ArticleEditor = () => {
                           ))}
                         </div>
                       </div>
+
+                      {/* Schedule Date */}
+                      {status === 'Scheduled' && (
+                        <div className="space-y-4">
+                          <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Publish Date & Time</label>
+                          <input
+                            type="datetime-local"
+                            value={scheduledFor}
+                            min={new Date().toISOString().slice(0, 16)}
+                            onChange={(e) => handleChange(setScheduledFor, e.target.value)}
+                            className="w-full bg-zinc-900 border border-white/5 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#B8FF4D] transition-all [color-scheme:dark]"
+                          />
+                        </div>
+                      )}
 
                       {/* Category */}
                       <div className="space-y-4">

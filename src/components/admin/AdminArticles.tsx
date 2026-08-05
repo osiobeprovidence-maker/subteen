@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   FileText, 
   Trash2, 
@@ -10,12 +10,14 @@ import {
   Plus, 
   MoreVertical,
   Eye,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Loader2
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Link } from 'react-router-dom';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
+import type { Id } from '../../../convex/_generated/dataModel';
 
 const STATUS_LABEL: Record<string, string> = {
   published: 'Published',
@@ -26,6 +28,20 @@ const STATUS_LABEL: Record<string, string> = {
 export const AdminArticles = () => {
   const articlesQuery = useQuery(api.articles.listAll, {});
   const articles = articlesQuery ?? [];
+  const removeArticle = useMutation(api.articles.remove);
+  const [deleteTarget, setDeleteTarget] = useState<Id<'articles'> | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await removeArticle({ id: deleteTarget });
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -112,7 +128,11 @@ export const AdminArticles = () => {
                     <button className="p-2 text-zinc-500 hover:text-[#B8FF4D] transition-colors" title="Feature">
                       <Star size={16} />
                     </button>
-                    <button className="p-2 text-zinc-500 hover:text-red-500 transition-colors" title="Delete">
+                    <button
+                      onClick={() => setDeleteTarget(article._id)}
+                      className="p-2 text-zinc-500 hover:text-red-500 transition-colors"
+                      title="Delete"
+                    >
                       <Trash2 size={16} />
                     </button>
                   </div>
@@ -122,6 +142,46 @@ export const AdminArticles = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Delete Confirmation */}
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          onClick={() => setDeleteTarget(null)}
+        >
+          <div
+            className="bg-zinc-950 border border-white/10 rounded-[32px] p-8 max-w-sm w-full space-y-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500">
+                <Trash2 size={22} />
+              </div>
+              <div>
+                <h3 className="text-lg font-black uppercase tracking-tight">Delete article?</h3>
+                <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-1">This cannot be undone</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                className="flex-1 py-3 rounded-2xl bg-zinc-900 text-zinc-400 font-bold text-xs uppercase tracking-widest hover:text-white transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 py-3 rounded-2xl bg-red-500 text-white font-bold text-xs uppercase tracking-widest hover:bg-red-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {deleting && <Loader2 size={14} className="animate-spin" />}
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

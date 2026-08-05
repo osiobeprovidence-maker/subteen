@@ -62,6 +62,7 @@ export default defineSchema({
     reviewScore: v.optional(v.number()),
     videoUrl: v.optional(v.string()),
     status: v.optional(v.union(v.literal('published'), v.literal('draft'), v.literal('scheduled'))),
+    scheduledFor: v.optional(v.number()),
     views: v.optional(v.number()),
   })
     .index('by_slug', ['slug'])
