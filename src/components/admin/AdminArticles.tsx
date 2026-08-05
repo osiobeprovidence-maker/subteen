@@ -14,15 +14,18 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Link } from 'react-router-dom';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+
+const STATUS_LABEL: Record<string, string> = {
+  published: 'Published',
+  draft: 'Draft',
+  scheduled: 'Scheduled',
+};
 
 export const AdminArticles = () => {
-  const articles = [
-    { id: 1, title: 'GTA VI Release Date Leaked?', author: 'Marcus Thorne', category: 'News', views: '124k', status: 'Published', date: 'Oct 24, 2024' },
-    { id: 2, title: 'Elden Ring DLC Guide', author: 'Elena Vance', category: 'Guides', views: '18k', status: 'Draft', date: 'Oct 23, 2024' },
-    { id: 3, title: 'New PS5 Slim Review', author: 'Sarah Connor', category: 'Reviews', views: '82k', status: 'Published', date: 'Oct 22, 2024' },
-    { id: 4, title: 'The Future of VR Gaming', author: 'Marcus Thorne', category: 'News', views: '45k', status: 'Published', date: 'Oct 21, 2024' },
-    { id: 5, title: 'Top 10 Indie Games of 2024', author: 'Elena Vance', category: 'Guides', views: '12k', status: 'Scheduled', date: 'Oct 20, 2024' },
-  ];
+  const articlesQuery = useQuery(api.articles.listAll, {});
+  const articles = articlesQuery ?? [];
 
   return (
     <div className="space-y-8">
@@ -67,39 +70,43 @@ export const AdminArticles = () => {
           </thead>
           <tbody>
             {articles.map((article) => (
-              <tr key={article.id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
+              <tr key={article._id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
                 <td className="px-8 py-6">
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-10 rounded-lg bg-zinc-900 border border-white/5 flex items-center justify-center text-zinc-800">
-                      <ImageIcon size={20} />
+                    <div className="w-16 h-10 rounded-lg bg-zinc-900 border border-white/5 flex items-center justify-center text-zinc-800 overflow-hidden">
+                      {article.heroImage ? (
+                        <img src={article.heroImage} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <ImageIcon size={20} />
+                      )}
                     </div>
                     <div>
                       <p className="text-sm font-bold text-white group-hover:text-[#B8FF4D] transition-colors cursor-pointer">{article.title}</p>
-                      <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-0.5">{article.category} • {article.date}</p>
+                      <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-0.5">{article.category} • {article.publishDate}</p>
                     </div>
                   </div>
                 </td>
                 <td className="px-8 py-6">
-                  <p className="text-sm text-zinc-400">{article.author}</p>
+                  <p className="text-sm text-zinc-400">{article.authorName ?? 'Staff Writer'}</p>
                 </td>
                 <td className="px-8 py-6">
                    <div className="flex items-center gap-2">
                      <Eye size={12} className="text-zinc-600" />
-                     <p className="text-sm text-zinc-400 font-mono">{article.views}</p>
+                     <p className="text-sm text-zinc-400 font-mono">{article.views ?? 0}</p>
                    </div>
                 </td>
                 <td className="px-8 py-6">
                   <span className={cn(
                     "text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest",
-                    article.status === 'Published' ? "bg-[#B8FF4D]/10 text-[#B8FF4D]" : 
-                    article.status === 'Draft' ? "bg-zinc-800 text-zinc-500" : "bg-blue-500/10 text-blue-400"
+                    article.status === 'published' ? "bg-[#B8FF4D]/10 text-[#B8FF4D]" : 
+                    article.status === 'draft' ? "bg-zinc-800 text-zinc-500" : "bg-blue-500/10 text-blue-400"
                   )}>
-                    {article.status}
+                    {STATUS_LABEL[article.status ?? 'draft'] ?? 'Draft'}
                   </span>
                 </td>
                 <td className="px-8 py-6">
                   <div className="flex items-center gap-2">
-                    <Link to={`/editor/edit/${article.id}`} className="p-2 text-zinc-500 hover:text-white transition-colors" title="Edit">
+                    <Link to={`/editor/edit/${article._id}`} className="p-2 text-zinc-500 hover:text-white transition-colors" title="Edit">
                       <Edit3 size={16} />
                     </Link>
                     <button className="p-2 text-zinc-500 hover:text-[#B8FF4D] transition-colors" title="Feature">

@@ -217,6 +217,57 @@ export const ensureSuperAdmin = mutation({
   },
 });
 
+export const toggleBookmark = mutation({
+  args: {
+    userId: v.id('users'),
+    articleId: v.id('articles'),
+  },
+  handler: async (ctx, { userId, articleId }) => {
+    await requireOwnUser(ctx, userId);
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error('User not found.');
+    const bookmarks = user.bookmarks ?? [];
+    const has = bookmarks.some((id) => id === articleId);
+    await ctx.db.patch(userId, {
+      bookmarks: has
+        ? bookmarks.filter((id) => id !== articleId)
+        : [...bookmarks, articleId],
+    });
+  },
+});
+
+export const clearBookmarks = mutation({
+  args: { userId: v.id('users') },
+  handler: async (ctx, { userId }) => {
+    await requireOwnUser(ctx, userId);
+    await ctx.db.patch(userId, { bookmarks: [] });
+  },
+});
+
+export const markRead = mutation({
+  args: {
+    userId: v.id('users'),
+    articleId: v.id('articles'),
+  },
+  handler: async (ctx, { userId, articleId }) => {
+    await requireOwnUser(ctx, userId);
+    const user = await ctx.db.get(userId);
+    if (!user) return;
+    const history = (user.readingHistory ?? []).filter((id) => id !== articleId);
+    await ctx.db.patch(userId, {
+      readingHistory: [articleId, ...history].slice(0, 50),
+    });
+  },
+});
+
+export const clearHistory = mutation({
+  args: { userId: v.id('users') },
+  handler: async (ctx, { userId }) => {
+    await requireOwnUser(ctx, userId);
+    await ctx.db.patch(userId, { readingHistory: [] });
+  },
+});
+
 export const remove = mutation({
   args: { id: v.id('users') },
   handler: async (ctx, { id }) => {

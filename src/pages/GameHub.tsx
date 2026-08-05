@@ -1,7 +1,9 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ARTICLES, GAMES } from '../data/mockData';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { ArticleCard } from '../components/common/ArticleCard';
+import type { Article } from '../types';
 import { 
   Gamepad2, 
   Info, 
@@ -29,8 +31,11 @@ import { motion, AnimatePresence } from 'motion/react';
 
 export const GameHub = () => {
   const { id } = useParams<{ id: string }>();
+  const games = useQuery(api.articles.listGames);
+  const publishedQuery = useQuery(api.articles.listPublished, { take: 100 });
+  const articles = (publishedQuery ?? []) as unknown as Article[];
   // Match by ID or Slug
-  const game = GAMES.find(g => g.id === id || g.slug === id);
+  const game = games?.find(g => g._id === id || g.slug === id);
   const [activeTab, setActiveTab] = React.useState('Overview');
   
   if (!game) {
@@ -42,7 +47,7 @@ export const GameHub = () => {
     );
   }
 
-  const relatedArticles = ARTICLES.filter(a => a.gameId === game.id);
+  const relatedArticles = articles.filter(a => a.gameId === game._id || a.gameId === game.slug);
   const news = relatedArticles.filter(a => a.category === 'News');
   const reviews = relatedArticles.filter(a => a.category === 'Reviews');
   const guides = relatedArticles.filter(a => a.category === 'Guides');

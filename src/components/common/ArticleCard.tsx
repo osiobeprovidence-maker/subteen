@@ -1,8 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, User as UserIcon } from 'lucide-react';
-import { Article, Author } from '../../types';
-import { AUTHORS } from '../../data/mockData';
+import { Article } from '../../types';
 import { cn } from '../../lib/utils';
 import { Avatar } from './Avatar';
 
@@ -12,7 +11,8 @@ interface ArticleCardProps {
 }
 
 export const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'large' }) => {
-  const author = AUTHORS.find(a => a.id === article.authorId);
+  const authorName = article.authorName ?? 'Staff Writer';
+  const authorAvatar = article.authorAvatar;
 
   if (variant === 'minimal') {
     return (
@@ -100,8 +100,8 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'la
         )}
         
         <div className="flex items-center gap-3 sm:gap-4 pt-1 sm:pt-2">
-          <Avatar src={author?.avatar} name={author?.name} size={22} />
-          <span className="text-[10px] sm:text-xs font-bold text-zinc-300 uppercase tracking-wider">{author?.name}</span>
+          <Avatar src={authorAvatar} name={authorName} size={22} />
+          <span className="text-[10px] sm:text-xs font-bold text-zinc-300 uppercase tracking-wider">{authorName}</span>
           <span className="w-1 h-1 rounded-full bg-zinc-700" />
           <span className="text-[10px] sm:text-xs text-zinc-500 flex items-center gap-1.5">
             <Clock size={12} /> {article.readingTime} min read

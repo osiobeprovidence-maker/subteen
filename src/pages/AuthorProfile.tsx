@@ -1,13 +1,20 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Twitter, Instagram, Globe, Mail, Clock } from 'lucide-react';
-import { ARTICLES, AUTHORS } from '../data/mockData';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { ArticleCard } from '../components/common/ArticleCard';
 import { Avatar } from '../components/common/Avatar';
+import type { Article } from '../types';
 
 export const AuthorProfile = () => {
   const { id } = useParams<{ id: string }>();
-  const author = AUTHORS.find(a => a.id === id);
+  const author = useQuery(api.authors.get, id ? { id: id as any } : 'skip');
+  const authorArticlesQuery = useQuery(
+    api.articles.byAuthor,
+    author ? { authorId: author._id } : 'skip',
+  );
+  const authorArticles = (authorArticlesQuery ?? []) as unknown as Article[];
   
   if (!author) {
     return (
@@ -17,8 +24,6 @@ export const AuthorProfile = () => {
       </div>
     );
   }
-
-  const authorArticles = ARTICLES.filter(a => a.authorId === author.id);
 
   return (
     <div className="pb-32">

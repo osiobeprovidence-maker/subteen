@@ -58,7 +58,9 @@ export interface Article {
   content: string;
   heroImage: string;
   category: Category;
-  authorId: string;
+  authorId?: string;
+  authorName?: string;
+  authorAvatar?: string;
   publishDate: string;
   readingTime: number;
   tags: string[];
@@ -67,6 +69,8 @@ export interface Article {
   isTrending?: boolean;
   reviewScore?: number;
   videoUrl?: string;
+  status?: 'draft' | 'published' | 'scheduled';
+  views?: number;
 }
 
 export interface User {

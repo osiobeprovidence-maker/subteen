@@ -48,9 +48,11 @@ export default defineSchema({
     subtitle: v.optional(v.string()),
     slug: v.string(),
     content: v.string(),
-    heroImage: v.string(),
+    heroImage: v.optional(v.string()),
     category: v.string(),
-    authorId: v.id('authors'),
+    authorId: v.optional(v.id('authors')),
+    authorName: v.optional(v.string()),
+    authorAvatar: v.optional(v.string()),
     publishDate: v.string(),
     readingTime: v.number(),
     tags: v.array(v.string()),
@@ -59,12 +61,13 @@ export default defineSchema({
     isTrending: v.optional(v.boolean()),
     reviewScore: v.optional(v.number()),
     videoUrl: v.optional(v.string()),
-    status: v.optional(v.union(v.literal('published'), v.literal('draft'))),
+    status: v.optional(v.union(v.literal('published'), v.literal('draft'), v.literal('scheduled'))),
     views: v.optional(v.number()),
   })
     .index('by_slug', ['slug'])
     .index('by_category', ['category'])
     .index('by_author', ['authorId'])
+    .index('by_status', ['status'])
     .searchIndex('search_content', { searchField: 'title' }),
 
   users: defineTable({

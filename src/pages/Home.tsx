@@ -1,22 +1,37 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, ChevronRight, Play, Trophy, Cpu, Gamepad2, Layers } from 'lucide-react';
-import { ARTICLES, GAMES } from '../data/mockData';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { ArticleCard } from '../components/common/ArticleCard';
 import { Link } from 'react-router-dom';
+import type { Article } from '../types';
 
 export const Home = () => {
-  const featuredArticle = ARTICLES.find(a => a.isFeatured) || ARTICLES[0];
-  const latestNews = ARTICLES.filter(a => a.category === 'News').slice(0, 4);
-  const trendingStories = ARTICLES.filter(a => a.isTrending).slice(0, 4);
-  const latestReviews = ARTICLES.filter(a => a.category === 'Reviews').slice(0, 3);
+  const publishedQuery = useQuery(api.articles.listPublished, {});
+  const featuredQuery = useQuery(api.articles.featured, {});
+  const games = useQuery(api.articles.listGames);
+  const articles = (publishedQuery ?? []) as unknown as Article[];
+  const featuredArticles = (featuredQuery ?? []) as unknown as Article[];
+
+  const featuredArticle = featuredArticles[0] ?? articles[0];
+  const latestNews = articles.filter(a => a.category === 'News').slice(0, 4);
+  const trendingStories = articles.filter(a => a.isTrending).slice(0, 4);
+  const latestReviews = articles.filter(a => a.category === 'Reviews').slice(0, 3);
 
   return (
     <div className="space-y-16 sm:space-y-24 lg:space-y-32 pb-20 sm:pb-32">
       {/* Hero Story */}
       <section className="relative pt-24 sm:pt-32 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
-          <ArticleCard article={featuredArticle} />
+          {featuredArticle ? (
+            <ArticleCard article={featuredArticle} />
+          ) : (
+            <div className="py-24 text-center space-y-6 bg-zinc-950 rounded-[40px] border border-white/5">
+              <h2 className="text-3xl font-black text-white">No articles published yet</h2>
+              <p className="text-zinc-500">Publish your first story and it will appear here instantly.</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -35,9 +50,11 @@ export const Home = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10">
-              {latestNews.map(article => (
+              {latestNews.length > 0 ? latestNews.map(article => (
                 <ArticleCard key={article.id} article={article} variant="compact" />
-              ))}
+              )) : (
+                <p className="text-zinc-600 text-sm col-span-full">No articles published yet.</p>
+              )}
             </div>
           </div>
 
@@ -47,7 +64,7 @@ export const Home = () => {
             </div>
             
             <div className="space-y-6 sm:space-y-8">
-              {trendingStories.map((article, index) => (
+              {trendingStories.length > 0 ? trendingStories.map((article, index) => (
                 <div key={article.id} className="flex gap-4 sm:gap-6 items-start group">
                   <span className="text-4xl sm:text-5xl font-black text-zinc-900 group-hover:text-zinc-800 transition-colors shrink-0">
                     0{index + 1}
@@ -63,7 +80,9 @@ export const Home = () => {
                     </Link>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <p className="text-zinc-600 text-sm">No trending stories yet.</p>
+              )}
             </div>
 
             {/* Newsletter Mini */}
@@ -96,9 +115,11 @@ export const Home = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
-            {latestReviews.map(article => (
+            {latestReviews.length > 0 ? latestReviews.map(article => (
               <ArticleCard key={article.id} article={article} variant="compact" />
-            ))}
+            )) : (
+              <p className="text-zinc-600 text-sm">No reviews published yet.</p>
+            )}
           </div>
         </div>
       </section>
@@ -149,8 +170,8 @@ export const Home = () => {
             <Link to="/games" className="text-sm font-bold text-zinc-500 hover:text-white transition-colors">EXPLORE ALL</Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            {GAMES.map(game => (
-              <Link key={game.id} to={`/game/${game.slug}`} className="group space-y-4">
+            {(games ?? []).map(game => (
+              <Link key={game._id} to={`/game/${game.slug}`} className="group space-y-4">
                 <div className="aspect-[2/3] rounded-2xl overflow-hidden border border-white/5 relative">
                   <img src={game.coverImage} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={game.title} />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />

@@ -1,11 +1,22 @@
 import React from 'react';
 import { History as HistoryIcon, Trash2, Clock } from 'lucide-react';
-import { ARTICLES } from '../data/mockData';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import type { Article } from '../types';
 
 export const ReadingHistory = () => {
-  // Mock data for user history
-  const historyArticles = ARTICLES.slice(2, 7);
+  const { dbUser } = useAuth();
+  const ids = (dbUser?.readingHistory ?? []) as any[];
+  const savedQuery = useQuery(api.articles.byIds, { ids });
+  const clearHistory = useMutation(api.users.clearHistory);
+  const historyArticles = (savedQuery ?? []) as unknown as Article[];
+
+  const handleClear = async () => {
+    if (!dbUser) return;
+    await clearHistory({ userId: dbUser._id });
+  };
 
   return (
     <div className="pb-32 pt-32 px-4 sm:px-6">
@@ -16,7 +27,7 @@ export const ReadingHistory = () => {
             <p className="text-zinc-500 mt-2 font-medium">Keep track of everything you've read.</p>
           </div>
           {historyArticles.length > 0 && (
-            <button className="flex items-center gap-2 text-xs font-black text-zinc-500 hover:text-red-500 uppercase tracking-widest transition-colors">
+            <button onClick={handleClear} className="flex items-center gap-2 text-xs font-black text-zinc-500 hover:text-red-500 uppercase tracking-widest transition-colors">
               <Trash2 size={14} /> Clear History
             </button>
           )}

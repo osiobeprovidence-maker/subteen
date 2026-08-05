@@ -11,6 +11,7 @@
 import type * as admin from "../admin.js";
 import type * as ads from "../ads.js";
 import type * as articles from "../articles.js";
+import type * as authors from "../authors.js";
 import type * as categories from "../categories.js";
 import type * as lib_roles from "../lib/roles.js";
 import type * as media from "../media.js";
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   ads: typeof ads;
   articles: typeof articles;
+  authors: typeof authors;
   categories: typeof categories;
   "lib/roles": typeof lib_roles;
   media: typeof media;

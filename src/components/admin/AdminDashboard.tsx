@@ -12,20 +12,21 @@ import {
   Activity
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 
 export const AdminDashboard = () => {
+  const articles = useQuery(api.articles.listAll, {}) ?? [];
+  const counts = useQuery(api.articles.counts);
+
   const stats = [
-    { label: 'Published Today', value: '14', change: '+2', icon: FileText },
-    { label: 'Drafts Waiting', value: '8', change: '-1', icon: Clock },
-    { label: 'Pending Reviews', value: '3', change: '+3', icon: Activity },
+    { label: 'Published Today', value: String(counts?.published ?? 0), change: '+2', icon: FileText },
+    { label: 'Drafts Waiting', value: String(counts?.drafts ?? 0), change: '-1', icon: Clock },
+    { label: 'Scheduled', value: String(counts?.scheduled ?? 0), change: '+3', icon: Activity },
     { label: 'Daily Revenue', value: '$842', change: '+12%', icon: DollarSign },
   ];
 
-  const recentArticles = [
-    { title: 'GTA VI Release Date Leaked?', author: 'Marcus Thorne', category: 'News', views: '12.4k', status: 'Published' },
-    { title: 'New PS5 Slim Review', author: 'Sarah Connor', category: 'Reviews', views: '8.2k', status: 'Published' },
-    { title: 'Elden Ring DLC Guide', author: 'Elena Vance', category: 'Guides', views: '0', status: 'Draft' },
-  ];
+  const recentArticles = articles.slice(0, 5);
 
   return (
     <div className="space-y-12">
@@ -70,18 +71,18 @@ export const AdminDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {recentArticles.map((article, i) => (
-                  <tr key={i} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors">
+                {recentArticles.map((article) => (
+                  <tr key={article._id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors">
                     <td className="px-8 py-6">
                       <p className="text-sm font-bold text-white truncate max-w-[200px]">{article.title}</p>
                     </td>
-                    <td className="px-8 py-6 text-sm text-zinc-400">{article.author}</td>
-                    <td className="px-8 py-6 text-sm font-mono text-zinc-500">{article.views}</td>
+                    <td className="px-8 py-6 text-sm text-zinc-400">{article.authorName ?? 'Staff Writer'}</td>
+                    <td className="px-8 py-6 text-sm font-mono text-zinc-500">{article.views ?? 0}</td>
                     <td className="px-8 py-6">
                       <span className={cn(
                         "text-[10px] font-black uppercase tracking-widest",
-                        article.status === 'Published' ? "text-[#B8FF4D]" : "text-zinc-600"
-                      )}>{article.status}</span>
+                        article.status === 'published' ? "text-[#B8FF4D]" : "text-zinc-600"
+                      )}>{article.status ?? 'draft'}</span>
                     </td>
                   </tr>
                 ))}

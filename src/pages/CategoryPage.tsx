@@ -1,15 +1,19 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ARTICLES } from '../data/mockData';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { ArticleCard } from '../components/common/ArticleCard';
 import { Filter, SlidersHorizontal } from 'lucide-react';
+import type { Article } from '../types';
 
 export const CategoryPage = () => {
   const { category } = useParams<{ category: string }>();
+  const publishedQuery = useQuery(api.articles.listPublished, { take: 100 });
+  const articles = (publishedQuery ?? []) as unknown as Article[];
   
   // Normalize category string for filtering
   const displayCategory = category?.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  const filteredArticles = ARTICLES.filter(a => 
+  const filteredArticles = articles.filter(a => 
     a.category.toLowerCase() === category?.toLowerCase() || 
     a.tags.some(t => t.toLowerCase() === category?.toLowerCase())
   );
@@ -56,7 +60,7 @@ export const CategoryPage = () => {
           </div>
         ) : (
           <div className="py-40 text-center space-y-6 bg-zinc-950 rounded-[40px] border border-white/5">
-            <h3 className="text-2xl font-black text-white">No stories found in this category</h3>
+            <h3 className="text-2xl font-black text-white">No articles published yet</h3>
             <p className="text-zinc-500">Check back later for fresh updates.</p>
             <Link to="/" className="inline-block px-8 py-3 bg-white text-black rounded-full font-bold hover:bg-[#B8FF4D] transition-all">
               Return Home
@@ -65,14 +69,9 @@ export const CategoryPage = () => {
         )}
       </div>
 
-      {/* Pagination Mock */}
       {filteredArticles.length > 0 && (
-        <div className="max-w-7xl mx-auto px-6 mt-24 flex items-center justify-center gap-4">
-           <button className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-zinc-500 hover:text-white hover:border-white transition-all">1</button>
-           <button className="w-12 h-12 rounded-full flex items-center justify-center text-zinc-500 hover:text-white transition-all">2</button>
-           <button className="w-12 h-12 rounded-full flex items-center justify-center text-zinc-500 hover:text-white transition-all">3</button>
-           <span className="text-zinc-700">...</span>
-           <button className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-zinc-500 hover:text-white hover:border-white transition-all">Next</button>
+        <div className="max-w-7xl mx-auto px-6 mt-16 text-center text-[10px] font-black text-zinc-600 uppercase tracking-widest">
+          Showing {filteredArticles.length} published {filteredArticles.length === 1 ? 'story' : 'stories'}
         </div>
       )}
     </div>

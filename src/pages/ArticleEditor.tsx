@@ -37,15 +37,24 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { cn } from '../lib/utils';
-import { GAMES } from '../data/mockData';
 import { ImageCropModal } from '../components/profile/ImageCropModal';
-import { StoredArticle, generateId, getArticle, upsertArticle, deleteArticle, slugify, objectUrlToDataUrl } from '../lib/articleStore';
+import { useAuth } from '../context/AuthContext';
+import { slugify, objectUrlToDataUrl, readingTimeFor } from '../lib/articleHelpers';
 
 export const ArticleEditor = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const games = useQuery(api.articles.listGames);
+  const editable = useQuery(api.articles.getEditable, id ? { id: id as any } : 'skip');
+  const createArticle = useMutation(api.articles.create);
+  const updateArticle = useMutation(api.articles.update);
+  const removeArticle = useMutation(api.articles.remove);
   const [draftId, setDraftId] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
   const [createdAt, setCreatedAt] = useState<number>(Date.now());
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
@@ -84,77 +93,77 @@ export const ArticleEditor = () => {
 
   // Load an existing article when editing
   useEffect(() => {
-    if (!id) return;
-    const stored = getArticle(id);
-    if (!stored) return;
-    setDraftId(stored.id);
-    setCreatedAt(stored.createdAt);
-    setTitle(stored.title);
-    setSubtitle(stored.subtitle);
-    setExcerpt(stored.excerpt);
-    setSlug(stored.slug);
-    setContent(stored.content);
-    setCategory(stored.category);
-    setSelectedGame(stored.selectedGame);
-    setStatus(stored.status);
-    setIsFeatured(stored.isFeatured);
-    setIsHomepage(stored.isHomepage);
-    setCoverUrl(stored.coverData || null);
-  }, [id]);
+    if (!editable || hydrated) return;
+    setHydrated(true);
+    setDraftId(editable._id as any);
+    setCreatedAt(Date.now());
+    setTitle(editable.title);
+    setSubtitle(editable.subtitle ?? '');
+    setExcerpt('');
+    setSlug(editable.slug);
+    setContent(editable.content);
+    setCategory(editable.category);
+    setSelectedGame(editable.gameId ?? '');
+    setStatus(editable.status === 'scheduled' ? 'Scheduled' : editable.status === 'published' ? 'Published' : 'Draft');
+    setIsFeatured(!!editable.isFeatured);
+    setCoverUrl(editable.heroImage || null);
+  }, [editable, hydrated]);
 
   const handleChange = (setter: any, value: any) => {
     setter(value);
     setSaveStatus('Unsaved');
   };
 
-  const readingTime = Math.ceil(wordCount / 200);
+  const readingTime = Math.max(1, readingTimeFor(content));
 
-  const persistArticle = async (nextStatus: 'Draft' | 'Published' | 'Scheduled'): Promise<StoredArticle> => {
-    const finalId = draftId ?? generateId();
-    const coverData = coverUrl ? await objectUrlToDataUrl(coverUrl) : '';
-    const finalSlug = slug.trim() || slugify(title) || finalId;
-    const article: StoredArticle = {
-      id: finalId,
+  const persistArticle = async (nextStatus: 'Draft' | 'Published' | 'Scheduled'): Promise<{ slug: string }> => {
+    setSaveStatus('Saving');
+    const dbStatus = nextStatus.toLowerCase() as 'draft' | 'published' | 'scheduled';
+    const finalSlug = slug.trim() || slugify(title) || `article-${Date.now()}`;
+    const heroImage = coverUrl ? await objectUrlToDataUrl(coverUrl) : '';
+    const payload: Record<string, unknown> = {
       title: title.trim() || 'Untitled',
-      subtitle,
-      excerpt,
+      subtitle: subtitle || undefined,
       slug: finalSlug,
       content,
+      heroImage: heroImage || undefined,
       category,
-      selectedGame,
-      status: nextStatus,
+      gameId: selectedGame || undefined,
       isFeatured,
-      isHomepage,
-      coverData,
-      createdAt,
-      updatedAt: Date.now(),
+      readingTime,
+      status: dbStatus,
+      publishDate: dbStatus === 'published' ? new Date().toISOString().slice(0, 10) : undefined,
     };
-    upsertArticle(article);
-    setDraftId(finalId);
+
+    if (draftId) {
+      await updateArticle({ id: draftId as any, ...(payload as any) });
+    } else {
+      const created = await createArticle(payload as any);
+      if (created) setDraftId(created._id as any);
+    }
     setStatus(nextStatus);
     setSaveStatus('Saved');
-    return article;
+    return { slug: finalSlug };
   };
 
   const handleSaveDraft = async () => {
-    setSaveStatus('Saving');
     await persistArticle('Draft');
   };
 
   const handlePublish = async () => {
-    setSaveStatus('Saving');
-    await persistArticle(status === 'Scheduled' ? 'Scheduled' : 'Published');
+    await persistArticle('Published');
     navigate('/editor/published');
   };
 
   const handlePreview = async () => {
-    setSaveStatus('Saving');
-    const article = await persistArticle(status === 'Scheduled' ? 'Scheduled' : status);
-    navigate(`/article/${article.slug}`);
+    const { slug: finalSlug } = await persistArticle(status === 'Draft' ? 'Draft' : status === 'Scheduled' ? 'Scheduled' : 'Published');
+    navigate(`/article/${finalSlug}?preview=1`);
   };
 
-  const handleDeleteDraft = () => {
-    if (draftId) deleteArticle(draftId);
+  const handleDeleteDraft = async () => {
+    if (draftId) {
+      await removeArticle({ id: draftId as any });
+    }
     navigate('/editor/drafts');
   };
 
@@ -592,8 +601,8 @@ export const ArticleEditor = () => {
                             className="w-full appearance-none bg-zinc-900 border border-white/5 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#B8FF4D] transition-all cursor-pointer"
                           >
                             <option value="">None</option>
-                            {GAMES.map(game => (
-                              <option key={game.id} value={game.id}>{game.title}</option>
+                            {(games ?? []).map(game => (
+                              <option key={game._id} value={game._id}>{game.title}</option>
                             ))}
                           </select>
                           <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none group-hover:text-white transition-colors" />
@@ -603,13 +612,17 @@ export const ArticleEditor = () => {
                       {/* Author */}
                       <div className="space-y-4">
                         <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Author</label>
-                        <div className="flex items-center gap-4 p-4 bg-zinc-900 border border-white/5 rounded-2xl">
-                          <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-600">
-                            <Settings size={18} />
+                          <div className="flex items-center gap-4 p-4 bg-zinc-900 border border-white/5 rounded-2xl">
+                          <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center overflow-hidden">
+                            {user?.photoURL ? (
+                              <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <Settings size={18} className="text-zinc-600" />
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-white truncate">Player One</p>
-                            <p className="text-[10px] text-zinc-500 uppercase tracking-widest">Editor-in-Chief</p>
+                            <p className="text-sm font-bold text-white truncate">{user?.name ?? 'Player One'}</p>
+                            <p className="text-[10px] text-zinc-500 uppercase tracking-widest">Staff Writer</p>
                           </div>
                           <MoreVertical size={16} className="text-zinc-700" />
                         </div>

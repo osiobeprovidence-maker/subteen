@@ -1,9 +1,20 @@
 import React from 'react';
 import { LayoutDashboard, FileText, Gamepad, Settings, Plus, BarChart3, Users, Image as ImageIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { ARTICLES, GAMES } from '../data/mockData';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+
+const STATUS_LABEL: Record<string, string> = {
+  published: 'Published',
+  draft: 'Draft',
+  scheduled: 'Scheduled',
+};
 
 export const AdminCMS = () => {
+  const articles = useQuery(api.articles.listAll, {});
+  const games = useQuery(api.articles.listGames);
+  const articleList = articles ?? [];
+  const gameCount = games?.length ?? 0;
   return (
     <div className="min-h-screen bg-black flex pt-20">
       {/* Sidebar */}
@@ -58,8 +69,8 @@ export const AdminCMS = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { label: 'Total Views', value: '1.2M', trend: '+12%', icon: BarChart3 },
-            { label: 'Articles', value: ARTICLES.length, icon: FileText },
-            { label: 'Games Tracked', value: GAMES.length, icon: Gamepad },
+            { label: 'Articles', value: articleList.length, icon: FileText },
+            { label: 'Games Tracked', value: gameCount, icon: Gamepad },
             { label: 'Subscribers', value: '42.5K', trend: '+5%', icon: Users },
           ].map(stat => (
             <div key={stat.label} className="bg-zinc-950 border border-white/5 p-8 rounded-3xl space-y-4">
@@ -95,12 +106,18 @@ export const AdminCMS = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {ARTICLES.map(article => (
-                  <tr key={article.id} className="group hover:bg-zinc-900/50 transition-colors">
+                {articleList.map(article => (
+                  <tr key={article._id} className="group hover:bg-zinc-900/50 transition-colors">
                     <td className="p-8">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-lg overflow-hidden bg-zinc-900 shrink-0">
-                           <img src={article.heroImage} className="w-full h-full object-cover" />
+                          {article.heroImage ? (
+                            <img src={article.heroImage} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-zinc-700">
+                              <ImageIcon size={18} />
+                            </div>
+                          )}
                         </div>
                         <p className="font-bold text-white leading-tight">{article.title}</p>
                       </div>
@@ -113,7 +130,7 @@ export const AdminCMS = () => {
                     </td>
                     <td className="p-8">
                       <span className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                        Published
+                        {STATUS_LABEL[article.status ?? 'draft'] ?? 'Draft'}
                       </span>
                     </td>
                     <td className="p-8 text-right">

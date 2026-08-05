@@ -1,11 +1,22 @@
 import React from 'react';
 import { Bookmark, Trash2 } from 'lucide-react';
-import { ARTICLES } from '../data/mockData';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { ArticleCard } from '../components/common/ArticleCard';
+import { useAuth } from '../context/AuthContext';
+import type { Article } from '../types';
 
 export const Bookmarks = () => {
-  // Mock data for user
-  const bookmarkedArticles = ARTICLES.slice(0, 4);
+  const { dbUser } = useAuth();
+  const ids = (dbUser?.bookmarks ?? []) as any[];
+  const savedQuery = useQuery(api.articles.byIds, { ids });
+  const clearBookmarks = useMutation(api.users.clearBookmarks);
+  const bookmarkedArticles = (savedQuery ?? []) as unknown as Article[];
+
+  const handleClear = async () => {
+    if (!dbUser) return;
+    await clearBookmarks({ userId: dbUser._id });
+  };
 
   return (
     <div className="pb-32 pt-32 px-4 sm:px-6">
@@ -16,7 +27,7 @@ export const Bookmarks = () => {
             <p className="text-zinc-500 mt-2 font-medium">Stories you've saved to read later.</p>
           </div>
           {bookmarkedArticles.length > 0 && (
-            <button className="flex items-center gap-2 text-xs font-black text-zinc-500 hover:text-red-500 uppercase tracking-widest transition-colors">
+            <button onClick={handleClear} className="flex items-center gap-2 text-xs font-black text-zinc-500 hover:text-red-500 uppercase tracking-widest transition-colors">
               <Trash2 size={14} /> Clear All
             </button>
           )}

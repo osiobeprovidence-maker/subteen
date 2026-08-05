@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search as SearchIcon, X, ArrowRight, Gamepad2, FileText, User as UserIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { ARTICLES, GAMES, AUTHORS } from '../../data/mockData';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import type { Article } from '../../types';
 
 interface SearchOverlayProps {
   isOpen: boolean;
@@ -11,6 +13,9 @@ interface SearchOverlayProps {
 
 export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
+  const publishedQuery = useQuery(api.articles.listPublished, { take: 100 });
+  const games = useQuery(api.articles.listGames);
+  const articles = (publishedQuery ?? []) as unknown as Article[];
   
   useEffect(() => {
     if (isOpen) {
@@ -22,10 +27,10 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
   }, [isOpen]);
 
   const filteredArticles = query 
-    ? ARTICLES.filter(a => a.title.toLowerCase().includes(query.toLowerCase())) 
+    ? articles.filter(a => a.title.toLowerCase().includes(query.toLowerCase())) 
     : [];
   const filteredGames = query 
-    ? GAMES.filter(g => g.title.toLowerCase().includes(query.toLowerCase())) 
+    ? (games ?? []).filter(g => g.title.toLowerCase().includes(query.toLowerCase())) 
     : [];
 
   return (
@@ -91,8 +96,8 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                   {filteredGames.length > 0 ? (
                     filteredGames.map(game => (
                       <Link 
-                        key={game.id} 
-                        to={`/game/${game.id}`}
+                        key={game._id} 
+                        to={`/game/${game.slug}`}
                         onClick={onClose}
                         className="group flex items-center gap-4"
                       >

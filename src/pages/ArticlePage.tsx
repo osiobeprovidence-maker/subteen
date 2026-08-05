@@ -1,31 +1,56 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { Clock, Calendar, Share2, Bookmark, ChevronRight } from 'lucide-react';
-import { ARTICLES, AUTHORS, GAMES } from '../data/mockData';
+import { Clock, Share2, Bookmark, ChevronRight } from 'lucide-react';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { Avatar } from '../components/common/Avatar';
-import { getArticleBySlug } from '../lib/articleStore';
+import { useAuth } from '../context/AuthContext';
+import { cn } from '../lib/utils';
 import type { Article } from '../types';
 
 export const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
-  const stored = slug ? getArticleBySlug(slug) : null;
-  const article: Article | undefined = stored
-    ? {
-        id: stored.id,
-        title: stored.title,
-        subtitle: stored.subtitle || undefined,
-        slug: stored.slug,
-        content: stored.content,
-        heroImage: stored.coverData,
-        category: stored.category as Article['category'],
-        authorId: 'stored',
-        publishDate: new Date(stored.createdAt).toISOString(),
-        readingTime: Math.max(1, Math.ceil(stored.content.trim().split(/\s+/).filter(Boolean).length / 200)),
-        tags: [],
-      }
-    : ARTICLES.find((a) => a.slug === slug);
-  
+  const [searchParams] = useSearchParams();
+  const isPreview = searchParams.get('preview') === '1';
+  const { user, dbUser, role } = useAuth();
+  const canEdit = role === 'editor' || role === 'admin' || role === 'super_admin';
+
+  const articleQuery = isPreview && canEdit ? api.articles.getEditableBySlug : api.articles.getBySlug;
+  const articleDoc = useQuery(articleQuery, slug ? { slug } : 'skip');
+  const article = articleDoc as unknown as Article | null | undefined;
+  const articleId = articleDoc?._id as any;
+
+  const games = useQuery(api.articles.listGames);
+  const relatedQuery = useQuery(
+    api.articles.related,
+    articleDoc && articleDoc.status === 'published' ? { category: articleDoc.category, excludeId: articleDoc._id } : 'skip',
+  );
+  const relatedArticles = (relatedQuery ?? []) as unknown as Article[];
+
+  const incrementViews = useMutation(api.articles.incrementViews);
+  const markRead = useMutation(api.users.markRead);
+  const toggleBookmark = useMutation(api.users.toggleBookmark);
+
+  useEffect(() => {
+    if (!articleDoc || articleDoc.status !== 'published' || isPreview) return;
+    incrementViews({ id: articleDoc._id });
+    if (dbUser) {
+      markRead({ userId: dbUser._id, articleId: articleDoc._id }).catch(() => {});
+    }
+  }, [articleDoc?._id, isPreview, dbUser?._id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const bookmarked = !!dbUser && !!articleId && (dbUser.bookmarks ?? []).includes(articleId);
+
+  const handleToggleBookmark = async () => {
+    if (!dbUser || !articleId) return;
+    try {
+      await toggleBookmark({ userId: dbUser._id, articleId });
+    } catch {
+      // ignore
+    }
+  };
+
   if (!article) {
     return (
       <div className="pt-40 pb-40 text-center space-y-6">
@@ -35,11 +60,9 @@ export const ArticlePage = () => {
     );
   }
 
-  const author = stored
-    ? { id: 'stored', name: 'Staff Writer', avatar: '' }
-    : AUTHORS.find((a) => a.id === article.authorId);
-  const game = article.gameId ? GAMES.find((g) => g.id === article.gameId) : null;
-  const relatedArticles = ARTICLES.filter((a) => a.category === article.category && a.id !== article.id).slice(0, 3);
+  const authorName = article.authorName ?? 'Staff Writer';
+  const authorAvatar = article.authorAvatar;
+  const game = article.gameId ? (games ?? []).find((g) => g._id === article.gameId || g.slug === article.gameId) : null;
 
   return (
     <div className="pb-20 sm:pb-32">
@@ -68,9 +91,9 @@ export const ArticlePage = () => {
 
           <div className="flex flex-wrap items-center justify-between gap-6 pt-4 border-y border-white/5 py-6 sm:py-8">
             <div className="flex items-center gap-4">
-              <Avatar src={author?.avatar} name={author?.name} size={44} />
+              <Avatar src={authorAvatar} name={authorName} size={44} />
               <div>
-                <p className="text-[10px] sm:text-xs font-black text-white uppercase tracking-widest">{author?.name}</p>
+                <p className="text-[10px] sm:text-xs font-black text-white uppercase tracking-widest">{authorName}</p>
                 <p className="text-[10px] sm:text-xs text-zinc-500 flex items-center gap-1.5 mt-1">
                   <Clock size={12} /> {article.readingTime} min read
                 </p>
@@ -78,10 +101,10 @@ export const ArticlePage = () => {
             </div>
 
             <div className="flex items-center gap-3 sm:gap-4">
-              <button className="p-2.5 sm:p-3 bg-zinc-900 rounded-full text-zinc-400 hover:text-white transition-colors">
-                <Bookmark className="w-5 h-5" />
+              <button onClick={handleToggleBookmark} className="p-2.5 sm:p-3 bg-zinc-900 rounded-full text-zinc-400 hover:text-white transition-colors" title="Bookmark">
+                <Bookmark className={cn("w-5 h-5", bookmarked && "fill-[#B8FF4D] text-[#B8FF4D]")} />
               </button>
-              <button className="p-2.5 sm:p-3 bg-zinc-900 rounded-full text-zinc-400 hover:text-white transition-colors">
+              <button className="p-2.5 sm:p-3 bg-zinc-900 rounded-full text-zinc-400 hover:text-white transition-colors" title="Share">
                 <Share2 className="w-5 h-5" />
               </button>
             </div>
@@ -110,13 +133,15 @@ export const ArticlePage = () => {
           </div>
 
           {/* Tags */}
-          <div className="mt-12 sm:mt-20 pt-8 sm:pt-10 border-t border-white/5 flex flex-wrap gap-2 sm:gap-3">
-            {article.tags.map(tag => (
-              <span key={tag} className="px-3 py-1.5 sm:px-4 sm:py-2 bg-zinc-900 rounded-lg text-xs sm:text-sm text-zinc-400 hover:text-white cursor-pointer transition-colors">
-                #{tag}
-              </span>
-            ))}
-          </div>
+          {article.tags.length > 0 && (
+            <div className="mt-12 sm:mt-20 pt-8 sm:pt-10 border-t border-white/5 flex flex-wrap gap-2 sm:gap-3">
+              {article.tags.map(tag => (
+                <span key={tag} className="px-3 py-1.5 sm:px-4 sm:py-2 bg-zinc-900 rounded-lg text-xs sm:text-sm text-zinc-400 hover:text-white cursor-pointer transition-colors">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
         </article>
 
         <aside className="lg:col-span-4 space-y-10 sm:space-y-12">
@@ -130,7 +155,7 @@ export const ArticlePage = () => {
                   <h3 className="text-xl font-black text-white leading-tight">{game.title}</h3>
                   <p className="text-xs text-zinc-500 mt-2 uppercase font-bold tracking-widest">{game.publisher}</p>
                   <Link 
-                    to={`/game/${game.id}`}
+                    to={`/game/${game.slug}`}
                     className="inline-block mt-6 text-sm font-bold text-[#B8FF4D] hover:underline"
                   >
                     View Game Hub →
@@ -140,21 +165,27 @@ export const ArticlePage = () => {
             </div>
           )}
 
-          <div className="space-y-8">
-            <h4 className="text-xl font-black text-white">RELATED STORIES</h4>
+          {relatedArticles.length > 0 && (
             <div className="space-y-8">
-              {relatedArticles.map(a => (
-                <Link key={a.id} to={`/article/${a.slug}`} className="group block space-y-3">
-                   <div className="aspect-video rounded-xl overflow-hidden bg-zinc-900">
-                     <img src={a.heroImage} alt={a.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                   </div>
-                   <h5 className="font-bold text-white group-hover:text-[#B8FF4D] transition-colors leading-tight">
-                     {a.title}
-                   </h5>
-                </Link>
-              ))}
+              <h4 className="text-xl font-black text-white">RELATED STORIES</h4>
+              <div className="space-y-8">
+                {relatedArticles.map(a => (
+                  <Link key={a.id} to={`/article/${a.slug}`} className="group block space-y-3">
+                     <div className="aspect-video rounded-xl overflow-hidden bg-zinc-900">
+                       {a.heroImage ? (
+                         <img src={a.heroImage} alt={a.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                       ) : (
+                         <div className="w-full h-full flex items-center justify-center text-zinc-800"><ChevronRight size={24} /></div>
+                       )}
+                     </div>
+                     <h5 className="font-bold text-white group-hover:text-[#B8FF4D] transition-colors leading-tight">
+                       {a.title}
+                     </h5>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </aside>
       </div>
     </div>

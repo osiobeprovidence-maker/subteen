@@ -1,5 +1,62 @@
 import { mutation } from './_generated/server';
-import { AUTHORS, GAMES, ARTICLES } from '../src/data/mockData';
+import { AUTHORS, GAMES } from '../src/data/mockData';
+
+const SEED_ARTICLES = [
+  {
+    title: 'Grand Theft Auto VI: Everything We Know So Far',
+    subtitle: 'From Leonida to the latest trailer leaks, here is the ultimate breakdown.',
+    slug: 'gta-vi-everything-we-know',
+    content: `# The Return to Vice City\n\nThe wait for Grand Theft Auto VI has been the longest in the series' history. Rockstar Games finally broke the silence with a trailer that shattered records, introducing us to Lucia and Jason in the vibrant, chaotic state of Leonida.\n\n## A New Era of Technical Prowess\nThe level of detail shown in the first trailer is staggering. Rockstar is clearly pushing the limits of current-gen hardware.\n\n> "Leonida is the most ambitious evolution of the Grand Theft Auto series yet." - Rockstar Games\n\n### Key Features\n*   **Dual Protagonists**: A Bonnie and Clyde inspired story.\n*   **Vast Open World**: Leonida encompasses Vice City and surrounding regions.\n*   **Enhanced AI**: Smarter NPCs and reactive environments.`,
+    heroImage: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=1600&h=900&auto=format&fit=crop',
+    category: 'News',
+    authorId: '1',
+    publishDate: '2024-03-20',
+    readingTime: 8,
+    tags: ['GTA VI', 'Rockstar Games', 'Open World'],
+    gameId: 'gta-vi',
+    isFeatured: true,
+  },
+  {
+    title: 'Elden Ring: Shadow of the Erdtree Review',
+    subtitle: 'A masterpiece expanded into something even more terrifying and beautiful.',
+    slug: 'elden-ring-shadow-erdtree-review',
+    content: 'Full review content here...\n\nA masterpiece expanded into something even more terrifying and beautiful.',
+    heroImage: 'https://images.unsplash.com/photo-1612285335132-13674681329c?q=80&w=1600&h=900&auto=format&fit=crop',
+    category: 'Reviews',
+    authorId: '1',
+    publishDate: '2024-06-21',
+    readingTime: 12,
+    tags: ['Elden Ring', 'FromSoftware', 'Souls-like'],
+    gameId: 'elden-ring',
+    reviewScore: 10,
+    isTrending: true,
+  },
+  {
+    title: 'Mastering the New Meta in Valorant',
+    subtitle: 'Patch 8.0 changed everything. Here is how to stay ahead of the pack.',
+    slug: 'valorant-meta-guide',
+    content: 'Guide content here...\n\nPatch 8.0 changed everything. Here is how to stay ahead of the pack.',
+    heroImage: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&h=450&auto=format&fit=crop',
+    category: 'Guides',
+    authorId: '2',
+    publishDate: '2024-08-01',
+    readingTime: 5,
+    tags: ['Valorant', 'Esports', 'Guide'],
+    isTrending: true,
+  },
+  {
+    title: 'The Future of VR Gaming in 2024',
+    subtitle: 'Where the next generation of headsets is taking us.',
+    slug: 'future-vr-2024',
+    content: 'Feature content here...\n\nWhere the next generation of headsets is taking us.',
+    heroImage: 'https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?q=80&w=800&h=450&auto=format&fit=crop',
+    category: 'Features',
+    authorId: '1',
+    publishDate: '2024-07-15',
+    readingTime: 15,
+    tags: ['VR', 'Technology', 'Industry'],
+  },
+];
 
 export const init = mutation({
   args: {},
@@ -45,7 +102,7 @@ export const init = mutation({
       gameIds.set(game.id, id);
     }
 
-    for (const article of ARTICLES) {
+    for (const article of SEED_ARTICLES) {
       await ctx.db.insert('articles', {
         title: article.title,
         subtitle: article.subtitle,
@@ -61,7 +118,6 @@ export const init = mutation({
         isFeatured: article.isFeatured,
         isTrending: article.isTrending,
         reviewScore: article.reviewScore,
-        videoUrl: article.videoUrl,
         status: 'published',
         views: Math.floor(Math.random() * 9000) + 1000,
       });
@@ -71,7 +127,7 @@ export const init = mutation({
       seeded: true,
       authors: AUTHORS.length,
       games: GAMES.length,
-      articles: ARTICLES.length,
+      articles: SEED_ARTICLES.length,
     };
   },
 });

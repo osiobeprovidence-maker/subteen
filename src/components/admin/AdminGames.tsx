@@ -13,10 +13,13 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { GAMES } from '../../data/mockData';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 
 export const AdminGames = () => {
   const [isAdding, setIsAdding] = React.useState(false);
+  const games = useQuery(api.articles.listGames);
+  const gameList = games ?? [];
 
   if (isAdding) {
     return (
@@ -130,8 +133,8 @@ export const AdminGames = () => {
             </tr>
           </thead>
           <tbody>
-            {GAMES.map((game) => (
-              <tr key={game.id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
+            {gameList.map((game) => (
+              <tr key={game._id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
                 <td className="px-8 py-6">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-16 rounded-lg overflow-hidden bg-zinc-900 border border-white/5">
