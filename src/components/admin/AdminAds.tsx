@@ -16,22 +16,20 @@ import {
   XCircle
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 
 export const AdminAds = () => {
   const [activeView, setActiveView] = React.useState<'Campaigns' | 'Placements'>('Campaigns');
+  const campaigns = useQuery(api.ads.listCampaigns) ?? [];
+  const placements = useQuery(api.ads.listPlacements) ?? [];
+  const stats = useQuery(api.ads.stats);
 
-  const campaigns = [
-    { advertiser: 'Razer', name: 'Kraken V4 Launch', status: 'Active', clicks: '12.4k', views: '142k', ctr: '8.7%', rev: '$1,240' },
-    { advertiser: 'Samsung', name: 'Odyssey G9 Promo', status: 'Active', clicks: '45.2k', views: '820k', ctr: '5.5%', rev: '$4,520' },
-    { advertiser: 'Logitech', name: 'G Pro Wireless', status: 'Paused', clicks: '8.1k', views: '120k', ctr: '6.7%', rev: '$810' },
-  ];
-
-  const placements = [
-    { name: 'Homepage Hero', status: true, platform: 'Desktop / Mobile', size: '1920x450' },
-    { name: 'Sidebar Sticky', status: true, platform: 'Desktop', size: '300x600' },
-    { name: 'Article Inline', status: true, platform: 'Desktop / Mobile', size: '728x90' },
-    { name: 'Mobile Banner', status: false, platform: 'Mobile', size: '320x50' },
-    { name: 'Search Results', status: true, platform: 'Desktop / Mobile', size: 'Native' },
+  const statCards = [
+    { label: 'Total Revenue', value: `$${(stats?.totalRevenue ?? 0).toLocaleString()}`, icon: DollarSign },
+    { label: 'Impressions', value: (stats?.totalViews ?? 0).toLocaleString(), icon: Eye },
+    { label: 'Avg. CTR', value: stats?.avgCtr ?? '0.0%', icon: MousePointer2 },
+    { label: 'Active Ads', value: String(stats?.activeAds ?? 0), icon: Megaphone },
   ];
 
   return (
@@ -55,12 +53,7 @@ export const AdminAds = () => {
         <div className="space-y-12">
           {/* Ad Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[
-              { label: 'Total Revenue', value: '$12,840', icon: DollarSign, change: '+18%' },
-              { label: 'Impressions', value: '2.4M', icon: Eye, change: '+12%' },
-              { label: 'Avg. CTR', value: '6.4%', icon: MousePointer2, change: '+0.5%' },
-              { label: 'Active Ads', value: '14', icon: Megaphone, change: '0%' },
-            ].map(stat => (
+            {statCards.map(stat => (
               <div key={stat.label} className="bg-zinc-950 border border-white/5 p-8 rounded-[32px] space-y-4">
                 <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center text-[#B8FF4D]">
                   <stat.icon size={20} />
@@ -69,7 +62,6 @@ export const AdminAds = () => {
                   <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{stat.label}</p>
                   <div className="flex items-baseline gap-2">
                     <p className="text-3xl font-black text-white">{stat.value}</p>
-                    <span className="text-[10px] font-bold text-[#B8FF4D]">{stat.change}</span>
                   </div>
                 </div>
               </div>
@@ -94,8 +86,15 @@ export const AdminAds = () => {
                 </tr>
               </thead>
               <tbody>
-                {campaigns.map((camp, i) => (
-                  <tr key={i} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
+                {campaigns.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-8 py-16 text-center text-zinc-500 text-sm">
+                      No campaigns yet. Create one to get started.
+                    </td>
+                  </tr>
+                )}
+                {campaigns.map((camp) => (
+                  <tr key={camp._id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-8 rounded-lg bg-zinc-900 border border-white/5 flex items-center justify-center text-zinc-800">
@@ -103,7 +102,7 @@ export const AdminAds = () => {
                         </div>
                         <div>
                           <p className="text-sm font-bold text-white group-hover:text-[#B8FF4D] transition-colors cursor-pointer">{camp.advertiser}</p>
-                          <p className="text-xs text-zinc-500">{camp.name}</p>
+                          <p className="text-xs text-zinc-500">{camp.campaignName}</p>
                         </div>
                       </div>
                     </td>
@@ -118,12 +117,12 @@ export const AdminAds = () => {
                     </td>
                     <td className="px-8 py-6">
                       <div className="space-y-1">
-                        <p className="text-xs font-mono text-white">{camp.views} views</p>
+                        <p className="text-xs font-mono text-white">{camp.views.toLocaleString()} views</p>
                         <p className="text-[10px] text-zinc-500 uppercase tracking-widest">{camp.ctr} CTR</p>
                       </div>
                     </td>
                     <td className="px-8 py-6">
-                      <p className="text-sm font-black text-white">{camp.rev}</p>
+                      <p className="text-sm font-black text-white">${camp.revenue.toLocaleString()}</p>
                     </td>
                     <td className="px-8 py-6 text-right">
                       <button className="text-zinc-600 hover:text-white transition-colors">
@@ -138,8 +137,13 @@ export const AdminAds = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {placements.map((p, i) => (
-            <div key={i} className="bg-zinc-950 border border-white/5 p-8 rounded-[40px] space-y-6 group hover:border-[#B8FF4D]/30 transition-all">
+          {placements.length === 0 && (
+            <div className="col-span-full bg-zinc-950 border border-white/5 rounded-[40px] py-16 text-center text-sm text-zinc-500">
+              No placements yet. Create one to get started.
+            </div>
+          )}
+          {placements.map((p) => (
+            <div key={p._id} className="bg-zinc-950 border border-white/5 p-8 rounded-[40px] space-y-6 group hover:border-[#B8FF4D]/30 transition-all">
               <div className="flex items-center justify-between">
                 <div className="w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center text-[#B8FF4D]">
                   <LayoutGrid size={24} />
@@ -147,10 +151,10 @@ export const AdminAds = () => {
                 <button 
                   className={cn(
                     "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
-                    p.status ? "bg-[#B8FF4D]/10 text-[#B8FF4D]" : "bg-zinc-900 text-zinc-600"
+                    p.enabled ? "bg-[#B8FF4D]/10 text-[#B8FF4D]" : "bg-zinc-900 text-zinc-600"
                   )}
                 >
-                  {p.status ? 'Enabled' : 'Disabled'}
+                  {p.enabled ? 'Enabled' : 'Disabled'}
                 </button>
               </div>
               <div>
@@ -158,7 +162,7 @@ export const AdminAds = () => {
                 <p className="text-xs text-zinc-500 uppercase tracking-widest">{p.platform} • {p.size}</p>
               </div>
               <div className="pt-6 border-t border-white/5 flex items-center justify-between">
-                <span className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">Active Ads: 2</span>
+                <span className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">Active Ads: 0</span>
                 <button className="text-[10px] font-black text-[#B8FF4D] uppercase tracking-widest hover:text-white transition-colors">Configure</button>
               </div>
             </div>

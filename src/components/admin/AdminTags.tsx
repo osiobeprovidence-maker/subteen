@@ -8,18 +8,11 @@ import {
   MoreVertical
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 
 export const AdminTags = () => {
-  const tags = [
-    { name: 'PlayStation', count: 428, status: 'Active' },
-    { name: 'Xbox', count: 312, status: 'Active' },
-    { name: 'Nintendo', count: 284, status: 'Active' },
-    { name: 'Steam', count: 1240, status: 'Active' },
-    { name: 'Rockstar', count: 86, status: 'Active' },
-    { name: 'EA', count: 54, status: 'Active' },
-    { name: 'Ubisoft', count: 72, status: 'Active' },
-    { name: 'Indie', count: 512, status: 'Active' },
-  ];
+  const tags = useQuery(api.tags.list) ?? [];
 
   return (
     <div className="space-y-8">
@@ -43,8 +36,13 @@ export const AdminTags = () => {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {tags.length === 0 && (
+          <div className="col-span-full bg-zinc-950 border border-white/5 rounded-3xl py-16 text-center text-sm text-zinc-500">
+            No tags yet. Add one to get started.
+          </div>
+        )}
         {tags.map((tag) => (
-          <div key={tag.name} className="bg-zinc-950 border border-white/5 p-6 rounded-3xl group hover:border-[#B8FF4D]/30 transition-all flex flex-col justify-between gap-4">
+          <div key={tag._id} className="bg-zinc-950 border border-white/5 p-6 rounded-3xl group hover:border-[#B8FF4D]/30 transition-all flex flex-col justify-between gap-4">
             <div className="flex items-center justify-between">
               <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center text-[#B8FF4D]">
                 <TagIcon size={18} />
@@ -55,7 +53,7 @@ export const AdminTags = () => {
             </div>
             <div>
               <p className="text-sm font-bold text-white group-hover:text-[#B8FF4D] transition-colors">{tag.name}</p>
-              <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-1">{tag.count} Articles</p>
+              <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-1">{tag.status}</p>
             </div>
           </div>
         ))}

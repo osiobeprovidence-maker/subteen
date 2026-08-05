@@ -13,8 +13,11 @@ const STATUS_LABEL: Record<string, string> = {
 export const AdminCMS = () => {
   const articles = useQuery(api.articles.listAll, {});
   const games = useQuery(api.articles.listGames);
+  const users = useQuery(api.users.list);
   const articleList = articles ?? [];
   const gameCount = games?.length ?? 0;
+  const userCount = users?.length ?? 0;
+  const totalViews = articleList.reduce((sum, a) => sum + (a.views ?? 0), 0);
   return (
     <div className="min-h-screen bg-black flex pt-20">
       {/* Sidebar */}
@@ -68,17 +71,16 @@ export const AdminCMS = () => {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: 'Total Views', value: '1.2M', trend: '+12%', icon: BarChart3 },
+            { label: 'Total Views', value: totalViews.toLocaleString(), icon: BarChart3 },
             { label: 'Articles', value: articleList.length, icon: FileText },
             { label: 'Games Tracked', value: gameCount, icon: Gamepad },
-            { label: 'Subscribers', value: '42.5K', trend: '+5%', icon: Users },
+            { label: 'Members', value: userCount, icon: Users },
           ].map(stat => (
             <div key={stat.label} className="bg-zinc-950 border border-white/5 p-8 rounded-3xl space-y-4">
               <div className="flex items-center justify-between">
                 <div className="p-3 bg-zinc-900 rounded-2xl text-zinc-400">
                   <stat.icon size={20} />
                 </div>
-                {stat.trend && <span className="text-xs font-bold text-[#B8FF4D]">{stat.trend}</span>}
               </div>
               <div>
                 <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">{stat.label}</p>

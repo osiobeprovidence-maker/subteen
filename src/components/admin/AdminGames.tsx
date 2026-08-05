@@ -161,7 +161,7 @@ export const AdminGames = () => {
                 <td className="px-8 py-6">
                   <div className="flex items-center gap-2">
                     <Eye size={12} className="text-zinc-600" />
-                    <p className="text-sm font-mono text-zinc-400">1.2M</p>
+                    <p className="text-sm font-mono text-zinc-400">—</p>
                   </div>
                 </td>
                 <td className="px-8 py-6 text-right">

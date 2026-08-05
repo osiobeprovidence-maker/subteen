@@ -10,17 +10,12 @@ import {
   FileText
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 
 export const AdminCategories = () => {
   const [isCreating, setIsCreating] = React.useState(false);
-
-  const categories = [
-    { name: 'News', slug: 'news', icon: '🎮', count: 124, status: 'Active' },
-    { name: 'Reviews', slug: 'reviews', icon: '🕹', count: 54, status: 'Active' },
-    { name: 'Guides', slug: 'guides', icon: '⚔', count: 82, status: 'Active' },
-    { name: 'Esports', slug: 'esports', icon: '🏆', count: 42, status: 'Active' },
-    { name: 'Hardware', slug: 'hardware', icon: '💻', count: 28, status: 'Disabled' },
-  ];
+  const categories = useQuery(api.categories.list) ?? [];
 
   if (isCreating) {
     return (
@@ -103,8 +98,15 @@ export const AdminCategories = () => {
             </tr>
           </thead>
           <tbody>
-            {categories.map((cat, i) => (
-              <tr key={i} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
+            {categories.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-8 py-16 text-center text-zinc-500 text-sm">
+                  No categories yet. Create one to get started.
+                </td>
+              </tr>
+            )}
+            {categories.map((cat) => (
+              <tr key={cat._id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
                 <td className="px-8 py-6 text-2xl">{cat.icon}</td>
                 <td className="px-8 py-6">
                   <p className="text-sm font-bold text-white">{cat.name}</p>
@@ -115,7 +117,7 @@ export const AdminCategories = () => {
                 <td className="px-8 py-6">
                   <div className="flex items-center gap-2 text-zinc-400">
                     <FileText size={14} className="text-zinc-700" />
-                    <span className="text-sm font-mono">{cat.count}</span>
+                    <span className="text-sm font-mono">—</span>
                   </div>
                 </td>
                 <td className="px-8 py-6">
