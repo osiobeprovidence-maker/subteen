@@ -121,32 +121,32 @@ export const AdminGames = () => {
       </div>
 
       {/* Games List */}
-      <div className="bg-zinc-950 border border-white/5 rounded-[40px] overflow-hidden">
-        <table className="w-full text-left">
+      <div className="bg-zinc-950 border border-white/5 rounded-[40px] overflow-x-auto">
+        <table className="w-full text-left min-w-[720px]">
           <thead className="bg-white/[0.02] border-b border-white/5">
             <tr>
-              <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Game</th>
-              <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Platforms</th>
-              <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</th>
-              <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Performance</th>
-              <th className="px-8 py-6"></th>
+              <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Game</th>
+              <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Platforms</th>
+              <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</th>
+              <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Performance</th>
+              <th className="px-6 sm:px-8 py-6"></th>
             </tr>
           </thead>
           <tbody>
             {gameList.map((game) => (
               <tr key={game._id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
-                <td className="px-8 py-6">
+                <td className="px-6 sm:px-8 py-6">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-16 rounded-lg overflow-hidden bg-zinc-900 border border-white/5">
+                    <div className="w-12 h-16 rounded-lg overflow-hidden bg-zinc-900 border border-white/5 shrink-0">
                       <img src={game.coverImage} className="w-full h-full object-cover" />
                     </div>
-                    <div>
-                      <p className="text-sm font-bold text-white group-hover:text-[#B8FF4D] transition-colors cursor-pointer">{game.title}</p>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-white group-hover:text-[#B8FF4D] transition-colors cursor-pointer truncate">{game.title}</p>
                       <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-0.5">{game.developer}</p>
                     </div>
                   </div>
                 </td>
-                <td className="px-8 py-6">
+                <td className="px-6 sm:px-8 py-6">
                   <div className="flex flex-wrap gap-1">
                     {game.platforms.map(p => (
                       <span key={p} className="text-[8px] font-black px-1.5 py-0.5 bg-zinc-900 border border-white/5 rounded-md text-zinc-400 uppercase tracking-tighter">
@@ -155,16 +155,16 @@ export const AdminGames = () => {
                     ))}
                   </div>
                 </td>
-                <td className="px-8 py-6">
+                <td className="px-6 sm:px-8 py-6">
                   <span className="text-[10px] font-black text-[#B8FF4D] uppercase tracking-widest">Live Hub</span>
                 </td>
-                <td className="px-8 py-6">
+                <td className="px-6 sm:px-8 py-6">
                   <div className="flex items-center gap-2">
                     <Eye size={12} className="text-zinc-600" />
                     <p className="text-sm font-mono text-zinc-400">—</p>
                   </div>
                 </td>
-                <td className="px-8 py-6 text-right">
+                <td className="px-6 sm:px-8 py-6 text-right">
                   <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button className="p-2 text-zinc-500 hover:text-white transition-colors" title="Edit">
                       <Edit3 size={16} />

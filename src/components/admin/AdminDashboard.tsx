@@ -60,25 +60,25 @@ export const AdminDashboard = () => {
             <h2 className="text-xl font-black text-white uppercase tracking-tight">Recent Content</h2>
             <button className="text-[10px] font-black text-zinc-500 hover:text-white uppercase tracking-widest">View All</button>
           </div>
-          <div className="bg-zinc-950 border border-white/5 rounded-[40px] overflow-hidden">
-            <table className="w-full text-left">
+          <div className="bg-zinc-950 border border-white/5 rounded-[40px] overflow-x-auto">
+            <table className="w-full text-left min-w-[640px]">
               <thead className="bg-white/[0.02] border-b border-white/5">
                 <tr>
-                  <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Title</th>
-                  <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Author</th>
-                  <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Views</th>
-                  <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</th>
+                  <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Title</th>
+                  <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Author</th>
+                  <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Views</th>
+                  <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {recentArticles.map((article) => (
                   <tr key={article._id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors">
-                    <td className="px-8 py-6">
+                    <td className="px-6 sm:px-8 py-6">
                       <p className="text-sm font-bold text-white truncate max-w-[200px]">{article.title}</p>
                     </td>
-                    <td className="px-8 py-6 text-sm text-zinc-400">{article.authorName ?? 'Staff Writer'}</td>
-                    <td className="px-8 py-6 text-sm font-mono text-zinc-500">{article.views ?? 0}</td>
-                    <td className="px-8 py-6">
+                    <td className="px-6 sm:px-8 py-6 text-sm text-zinc-400 whitespace-nowrap">{article.authorName ?? 'Staff Writer'}</td>
+                    <td className="px-6 sm:px-8 py-6 text-sm font-mono text-zinc-500">{article.views ?? 0}</td>
+                    <td className="px-6 sm:px-8 py-6">
                       <span className={cn(
                         "text-[10px] font-black uppercase tracking-widest",
                         article.status === 'published' ? "text-[#B8FF4D]" : "text-zinc-600"

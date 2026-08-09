@@ -68,63 +68,63 @@ export const AdminAds = () => {
             ))}
           </div>
 
-          <div className="bg-zinc-950 border border-white/5 rounded-[40px] overflow-hidden">
-            <div className="p-8 border-b border-white/5 flex items-center justify-between">
+          <div className="bg-zinc-950 border border-white/5 rounded-[40px] overflow-x-auto">
+            <div className="p-6 sm:p-8 border-b border-white/5 flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
               <h3 className="text-xl font-black text-white uppercase tracking-tight">Active Campaigns</h3>
-              <button className="px-6 py-2 bg-[#B8FF4D] text-black rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-[#B8FF4D]/10">
+              <button className="px-6 py-2 bg-[#B8FF4D] text-black rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-[#B8FF4D]/10 w-fit">
                 + New Campaign
               </button>
             </div>
-            <table className="w-full text-left">
+            <table className="w-full text-left min-w-[760px]">
               <thead className="bg-white/[0.02]">
                 <tr>
-                  <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Advertiser / Campaign</th>
-                  <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</th>
-                  <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Performance</th>
-                  <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Revenue</th>
-                  <th className="px-8 py-6"></th>
+                  <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Advertiser / Campaign</th>
+                  <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</th>
+                  <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Performance</th>
+                  <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Revenue</th>
+                  <th className="px-6 sm:px-8 py-6"></th>
                 </tr>
               </thead>
               <tbody>
                 {campaigns.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-8 py-16 text-center text-zinc-500 text-sm">
+                    <td colSpan={5} className="px-6 sm:px-8 py-16 text-center text-zinc-500 text-sm">
                       No campaigns yet. Create one to get started.
                     </td>
                   </tr>
                 )}
                 {campaigns.map((camp) => (
                   <tr key={camp._id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
-                    <td className="px-8 py-6">
+                    <td className="px-6 sm:px-8 py-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-8 rounded-lg bg-zinc-900 border border-white/5 flex items-center justify-center text-zinc-800">
+                        <div className="w-12 h-8 rounded-lg bg-zinc-900 border border-white/5 flex items-center justify-center text-zinc-800 shrink-0">
                           <ImageIcon size={18} />
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-white group-hover:text-[#B8FF4D] transition-colors cursor-pointer">{camp.advertiser}</p>
-                          <p className="text-xs text-zinc-500">{camp.campaignName}</p>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-white group-hover:text-[#B8FF4D] transition-colors cursor-pointer truncate">{camp.advertiser}</p>
+                          <p className="text-xs text-zinc-500 truncate">{camp.campaignName}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-8 py-6">
+                    <td className="px-6 sm:px-8 py-6">
                       <span className={cn(
-                        "text-[10px] font-black uppercase tracking-widest flex items-center gap-2",
+                        "text-[10px] font-black uppercase tracking-widest flex items-center gap-2 whitespace-nowrap",
                         camp.status === 'Active' ? "text-[#B8FF4D]" : "text-zinc-600"
                       )}>
                         <div className={cn("w-1.5 h-1.5 rounded-full", camp.status === 'Active' ? "bg-[#B8FF4D]" : "bg-zinc-600")} />
                         {camp.status}
                       </span>
                     </td>
-                    <td className="px-8 py-6">
+                    <td className="px-6 sm:px-8 py-6">
                       <div className="space-y-1">
-                        <p className="text-xs font-mono text-white">{camp.views.toLocaleString()} views</p>
+                        <p className="text-xs font-mono text-white whitespace-nowrap">{camp.views.toLocaleString()} views</p>
                         <p className="text-[10px] text-zinc-500 uppercase tracking-widest">{camp.ctr} CTR</p>
                       </div>
                     </td>
-                    <td className="px-8 py-6">
-                      <p className="text-sm font-black text-white">${camp.revenue.toLocaleString()}</p>
+                    <td className="px-6 sm:px-8 py-6">
+                      <p className="text-sm font-black text-white whitespace-nowrap">${camp.revenue.toLocaleString()}</p>
                     </td>
-                    <td className="px-8 py-6 text-right">
+                    <td className="px-6 sm:px-8 py-6 text-right">
                       <button className="text-zinc-600 hover:text-white transition-colors">
                         <MoreVertical size={16} />
                       </button>

@@ -87,39 +87,39 @@ export const AdminUsers = () => {
           </div>
         )}
 
-        <div className="bg-zinc-950 border border-white/5 rounded-[40px] overflow-hidden">
-          <table className="w-full text-left border-collapse">
+        <div className="bg-zinc-950 border border-white/5 rounded-[40px] overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[680px]">
             <thead>
               <tr className="border-b border-white/5 bg-white/[0.02]">
-                <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">User</th>
-                <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Role</th>
-                <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Joined</th>
-                <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</th>
+                <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">User</th>
+                <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Role</th>
+                <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Joined</th>
+                <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</th>
               </tr>
             </thead>
             <tbody>
               {users === undefined && (
                 <tr>
-                  <td colSpan={4} className="px-8 py-16 text-center text-zinc-500 text-sm">Loading users...</td>
+                  <td colSpan={4} className="px-6 sm:px-8 py-16 text-center text-zinc-500 text-sm">Loading users...</td>
                 </tr>
               )}
               {users !== undefined && visible.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-8 py-16 text-center text-zinc-500 text-sm">No users found.</td>
+                  <td colSpan={4} className="px-6 sm:px-8 py-16 text-center text-zinc-500 text-sm">No users found.</td>
                 </tr>
               )}
               {visible.map((user) => (
                 <tr key={user._id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
-                  <td className="px-8 py-6">
+                  <td className="px-6 sm:px-8 py-6">
                     <div className="flex items-center gap-4">
                       <Avatar src={user.avatar} name={user.name} size={40} />
-                      <div>
-                        <p className="text-sm font-bold text-white">{user.name}</p>
-                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest">{user.email}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-white truncate">{user.name}</p>
+                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest truncate">{user.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-8 py-6">
+                  <td className="px-6 sm:px-8 py-6">
                     {activeTab === 'Permissions' && isSuperAdmin ? (
                       <div className="flex items-center gap-2">
                         <select
@@ -135,11 +135,11 @@ export const AdminUsers = () => {
                         {savingId === user._id && <Loader2 size={14} className="text-[#B8FF4D] animate-spin" />}
                       </div>
                     ) : (
-                      <span className="text-xs font-bold text-zinc-400">{roleLabel(user.role)}</span>
+                      <span className="text-xs font-bold text-zinc-400 whitespace-nowrap">{roleLabel(user.role)}</span>
                     )}
                   </td>
-                  <td className="px-8 py-6 text-sm text-zinc-500">{user.joined}</td>
-                  <td className="px-8 py-6">
+                  <td className="px-6 sm:px-8 py-6 text-sm text-zinc-500 whitespace-nowrap">{user.joined}</td>
+                  <td className="px-6 sm:px-8 py-6">
                     <span className={cn(
                       "text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest",
                       user.status === 'active' ? "text-[#B8FF4D]" : "text-red-500"

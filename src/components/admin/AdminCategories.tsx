@@ -26,7 +26,7 @@ export const AdminCategories = () => {
         </div>
         
         <form className="space-y-8" onSubmit={(e) => { e.preventDefault(); setIsCreating(false); }}>
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             <div className="space-y-4">
               <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Category Name</label>
               <input type="text" placeholder="e.g. Mobile Gaming" className="w-full bg-zinc-900 border border-white/5 rounded-xl px-5 py-3 text-white text-sm focus:outline-none focus:border-[#B8FF4D]" />
@@ -42,7 +42,7 @@ export const AdminCategories = () => {
             <textarea rows={3} className="w-full bg-zinc-900 border border-white/5 rounded-xl px-5 py-3 text-white text-sm focus:outline-none focus:border-[#B8FF4D] resize-none" />
           </div>
 
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             <div className="space-y-4">
               <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Icon (Emoji)</label>
               <input type="text" placeholder="📱" className="w-full bg-zinc-900 border border-white/5 rounded-xl px-5 py-3 text-white text-sm focus:outline-none focus:border-[#B8FF4D]" />
@@ -85,42 +85,42 @@ export const AdminCategories = () => {
         </button>
       </div>
 
-      <div className="bg-zinc-950 border border-white/5 rounded-[40px] overflow-hidden">
-        <table className="w-full text-left border-collapse">
+      <div className="bg-zinc-950 border border-white/5 rounded-[40px] overflow-x-auto">
+        <table className="w-full text-left border-collapse min-w-[640px]">
           <thead>
             <tr className="border-b border-white/5 bg-white/[0.02]">
-              <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Icon</th>
-              <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Category</th>
-              <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Slug</th>
-              <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Articles</th>
-              <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</th>
-              <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Actions</th>
+              <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Icon</th>
+              <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Category</th>
+              <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Slug</th>
+              <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Articles</th>
+              <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</th>
+              <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Actions</th>
             </tr>
           </thead>
           <tbody>
             {categories.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-8 py-16 text-center text-zinc-500 text-sm">
+                <td colSpan={6} className="px-6 sm:px-8 py-16 text-center text-zinc-500 text-sm">
                   No categories yet. Create one to get started.
                 </td>
               </tr>
             )}
             {categories.map((cat) => (
               <tr key={cat._id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
-                <td className="px-8 py-6 text-2xl">{cat.icon}</td>
-                <td className="px-8 py-6">
+                <td className="px-6 sm:px-8 py-6 text-2xl">{cat.icon}</td>
+                <td className="px-6 sm:px-8 py-6">
                   <p className="text-sm font-bold text-white">{cat.name}</p>
                 </td>
-                <td className="px-8 py-6">
+                <td className="px-6 sm:px-8 py-6">
                   <p className="text-sm text-zinc-500 font-mono">{cat.slug}</p>
                 </td>
-                <td className="px-8 py-6">
+                <td className="px-6 sm:px-8 py-6">
                   <div className="flex items-center gap-2 text-zinc-400">
                     <FileText size={14} className="text-zinc-700" />
                     <span className="text-sm font-mono">—</span>
                   </div>
                 </td>
-                <td className="px-8 py-6">
+                <td className="px-6 sm:px-8 py-6">
                   <span className={cn(
                     "text-[10px] font-black uppercase tracking-widest",
                     cat.status === 'Active' ? "text-[#B8FF4D]" : "text-zinc-700"
@@ -128,7 +128,7 @@ export const AdminCategories = () => {
                     {cat.status}
                   </span>
                 </td>
-                <td className="px-8 py-6">
+                <td className="px-6 sm:px-8 py-6">
                   <div className="flex items-center gap-2">
                     <button className="p-2 text-zinc-500 hover:text-white transition-colors"><Edit3 size={16} /></button>
                     <button className="p-2 text-zinc-500 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>

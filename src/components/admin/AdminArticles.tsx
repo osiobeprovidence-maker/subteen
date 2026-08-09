@@ -73,23 +73,23 @@ export const AdminArticles = () => {
       </div>
 
       {/* Articles Table */}
-      <div className="bg-zinc-950 border border-white/5 rounded-[40px] overflow-hidden">
-        <table className="w-full text-left border-collapse">
+      <div className="bg-zinc-950 border border-white/5 rounded-[40px] overflow-x-auto">
+        <table className="w-full text-left border-collapse min-w-[760px]">
           <thead>
             <tr className="border-b border-white/5 bg-white/[0.02]">
-              <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Article</th>
-              <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Author</th>
-              <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Views</th>
-              <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</th>
-              <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Actions</th>
+              <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Article</th>
+              <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Author</th>
+              <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Views</th>
+              <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</th>
+              <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Actions</th>
             </tr>
           </thead>
           <tbody>
             {articles.map((article) => (
               <tr key={article._id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
-                <td className="px-8 py-6">
+                <td className="px-6 sm:px-8 py-6">
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-10 rounded-lg bg-zinc-900 border border-white/5 flex items-center justify-center text-zinc-800 overflow-hidden">
+                    <div className="w-16 h-10 rounded-lg bg-zinc-900 border border-white/5 flex items-center justify-center text-zinc-800 overflow-hidden shrink-0">
                       {article.heroImage ? (
                         <img src={article.heroImage} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -102,25 +102,25 @@ export const AdminArticles = () => {
                     </div>
                   </div>
                 </td>
-                <td className="px-8 py-6">
+                <td className="px-6 sm:px-8 py-6">
                   <p className="text-sm text-zinc-400">{article.authorName ?? 'Staff Writer'}</p>
                 </td>
-                <td className="px-8 py-6">
+                <td className="px-6 sm:px-8 py-6">
                    <div className="flex items-center gap-2">
                      <Eye size={12} className="text-zinc-600" />
                      <p className="text-sm text-zinc-400 font-mono">{article.views ?? 0}</p>
                    </div>
                 </td>
-                <td className="px-8 py-6">
+                <td className="px-6 sm:px-8 py-6">
                   <span className={cn(
-                    "text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest",
+                    "text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest whitespace-nowrap",
                     article.status === 'published' ? "bg-[#B8FF4D]/10 text-[#B8FF4D]" : 
                     article.status === 'draft' ? "bg-zinc-800 text-zinc-500" : "bg-blue-500/10 text-blue-400"
                   )}>
                     {STATUS_LABEL[article.status ?? 'draft'] ?? 'Draft'}
                   </span>
                 </td>
-                <td className="px-8 py-6">
+                <td className="px-6 sm:px-8 py-6">
                   <div className="flex items-center gap-2">
                     <Link to={`/editor/edit/${article._id}`} className="p-2 text-zinc-500 hover:text-white transition-colors" title="Edit">
                       <Edit3 size={16} />

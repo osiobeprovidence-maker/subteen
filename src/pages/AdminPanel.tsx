@@ -76,15 +76,15 @@ export const AdminPanel = () => {
   );
 
   const renderReports = () => (
-    <div className="bg-zinc-950 border border-white/5 rounded-[40px] overflow-hidden">
-      <table className="w-full text-left">
+    <div className="bg-zinc-950 border border-white/5 rounded-[40px] overflow-x-auto">
+      <table className="w-full text-left min-w-[680px]">
         <thead className="bg-white/[0.02] border-b border-white/5">
           <tr>
-            <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Reason</th>
-            <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Reported Item</th>
-            <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Reporter</th>
-            <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</th>
-            <th className="px-8 py-6"></th>
+            <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Reason</th>
+            <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Reported Item</th>
+            <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Reporter</th>
+            <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</th>
+            <th className="px-6 sm:px-8 py-6"></th>
           </tr>
         </thead>
         <tbody>
@@ -93,15 +93,15 @@ export const AdminPanel = () => {
             { reason: 'Inappropriate', item: 'User Comment #128', reporter: 'gaming_fan', status: 'Resolved' },
           ].map((report, i) => (
             <tr key={i} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors">
-              <td className="px-8 py-6 text-sm font-bold text-white">{report.reason}</td>
-              <td className="px-8 py-6 text-sm text-zinc-400">{report.item}</td>
-              <td className="px-8 py-6 text-sm text-zinc-500">{report.reporter}</td>
-              <td className="px-8 py-6">
+              <td className="px-6 sm:px-8 py-6 text-sm font-bold text-white">{report.reason}</td>
+              <td className="px-6 sm:px-8 py-6 text-sm text-zinc-400">{report.item}</td>
+              <td className="px-6 sm:px-8 py-6 text-sm text-zinc-500">{report.reporter}</td>
+              <td className="px-6 sm:px-8 py-6">
                 <span className={`text-[10px] font-black uppercase tracking-widest ${report.status === 'Pending' ? 'text-red-500' : 'text-[#B8FF4D]'}`}>
                   {report.status}
                 </span>
               </td>
-              <td className="px-8 py-6 text-right">
+              <td className="px-6 sm:px-8 py-6 text-right">
                 <button className="text-[10px] font-black text-zinc-500 hover:text-white uppercase tracking-widest">Resolve</button>
               </td>
             </tr>
