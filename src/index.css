@@ -9,6 +9,28 @@ body {
   color: #f5f5f5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+
+html {
+  overflow-x: clip;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+/* PWA: respect notches and home indicators when running standalone */
+@media (display-mode: standalone) {
+  .pwa-nav {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pwa-footer {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 2.5rem);
+  }
+  .pwa-floating {
+    bottom: calc(env(safe-area-inset-bottom) + 1rem) !important;
+  }
 }
 
 ::selection {

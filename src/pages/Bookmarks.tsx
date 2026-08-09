@@ -5,6 +5,7 @@ import { api } from '../../convex/_generated/api';
 import { ArticleCard } from '../components/common/ArticleCard';
 import { useAuth } from '../context/AuthContext';
 import type { Article } from '../types';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export const Bookmarks = () => {
   const { dbUser } = useAuth();
@@ -12,6 +13,8 @@ export const Bookmarks = () => {
   const savedQuery = useQuery(api.articles.byIds, { ids });
   const clearBookmarks = useMutation(api.users.clearBookmarks);
   const bookmarkedArticles = (savedQuery ?? []) as unknown as Article[];
+
+  usePageTitle('Bookmarks');
 
   const handleClear = async () => {
     if (!dbUser) return;

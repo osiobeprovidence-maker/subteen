@@ -4,7 +4,10 @@ import {ConvexProvider} from 'convex/react';
 import App from './App.tsx';
 import {convex} from './convex.ts';
 import {ConvexAuthBridge} from './components/auth/ConvexAuthBridge.tsx';
+import {registerServiceWorker} from './lib/pwa.ts';
 import './index.css';
+
+registerServiceWorker();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -1165,3 +1165,52 @@ export const autoApproveDueDrafts = internalMutation({
     return { published, reviewed };
   },
 });
+
+/**
+ * Internal: publish every draft currently in PENDING_REVIEW regardless of
+ * age. Used by admins to bulk-clear the editorial review queue.
+ */
+export const publishAllPendingReview = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const drafts = await ctx.db
+      .query('automatedNewsDrafts')
+      .withIndex('by_status', (q) => q.eq('status', 'PENDING_REVIEW'))
+      .order('asc')
+      .take(1000);
+
+    const results: {
+      title: string;
+      status: 'published' | 'failed';
+      articleId?: Id<'articles'>;
+      error?: string;
+    }[] = [];
+    let published = 0;
+    for (const draft of drafts) {
+      try {
+        const articleId = await publishDraftInternal(ctx, draft._id);
+        published += 1;
+        results.push({ title: draft.title, status: 'published', articleId: articleId ?? undefined });
+      } catch (e) {
+        results.push({
+          title: draft.title,
+          status: 'failed',
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
+    }
+    if (drafts.length > 0) {
+      await log(ctx, {
+        action: 'BULK_PUBLISH',
+        status: published > 0 ? 'success' : 'error',
+        message: `Bulk publish pass: ${published} published, ${results.length - published} failed.`,
+      });
+    }
+    return {
+      total: drafts.length,
+      published,
+      failed: results.filter((r) => r.status === 'failed'),
+      results,
+    };
+  },
+});

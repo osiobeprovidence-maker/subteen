@@ -1,0 +1,80 @@
+{
+  "name": "Subteen",
+  "short_name": "Subteen",
+  "description": "Subteen — the home of gaming news, reviews, guides and communities. Latest esports, hardware, patch notes, trailers and deals for local gamers.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#0A0A0A",
+  "theme_color": "#0A0A0A",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["news", "entertainment", "games"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "News",
+      "short_name": "News",
+      "description": "Latest gaming news",
+      "url": "/category/news",
+      "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "short_name": "Reviews",
+      "description": "Latest game reviews",
+      "url": "/category/reviews",
+      "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "Guides",
+      "short_name": "Guides",
+      "description": "Guides and tips",
+      "url": "/category/guides",
+      "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "Communities",
+      "short_name": "Communities",
+      "description": "Browse communities",
+      "url": "/communities",
+      "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    }
+  ]
+}

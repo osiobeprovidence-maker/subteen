@@ -20,6 +20,7 @@ import { api } from '../../convex/_generated/api';
 import { AdminCommunities } from '../components/admin/AdminCommunities';
 import { cn } from '../lib/utils';
 import { relativeTime } from '../lib/articleHelpers';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 const STATUS_LABEL: Record<string, string> = {
   published: 'Published',
@@ -33,6 +34,8 @@ export const EditorStudio = () => {
   const articles = useQuery(api.articles.listAll, {});
   const counts = useQuery(api.articles.counts);
   const removeArticle = useMutation(api.articles.remove);
+
+  usePageTitle('Editor Studio');
 
   const handleDelete = async (id: any) => {
     await removeArticle({ id });

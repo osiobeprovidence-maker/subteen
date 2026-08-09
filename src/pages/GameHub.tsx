@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export const GameHub = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +38,8 @@ export const GameHub = () => {
   // Match by ID or Slug
   const game = games?.find(g => g._id === id || g.slug === id);
   const [activeTab, setActiveTab] = React.useState('Overview');
+  
+  usePageTitle(game?.title ?? 'Games');
   
   if (!game) {
     return (

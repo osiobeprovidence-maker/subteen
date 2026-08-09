@@ -3,12 +3,15 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Mail, Chrome, ArrowRight, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export const Auth = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { signIn, signUp, signInWithGoogle } = useAuth();
   const isSignUp = location.pathname === '/signup';
+
+  usePageTitle(isSignUp ? 'Sign Up' : 'Sign In');
   const [method, setMethod] = useState<'selection' | 'email'>('selection');
   
   const [email, setEmail] = useState('');

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Check, ArrowRight, Gamepad2, Sword, Trophy, Zap, Ghost, Music } from 'lucide-react';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 const CATEGORIES = [
   { id: 'action', name: 'Action', icon: Zap, color: 'bg-orange-500' },
@@ -15,6 +16,8 @@ const CATEGORIES = [
 export const Onboarding = () => {
   const [selected, setSelected] = useState<string[]>([]);
   const navigate = useNavigate();
+
+  usePageTitle('Welcome');
 
   const toggleCategory = (id: string) => {
     setSelected(prev => 

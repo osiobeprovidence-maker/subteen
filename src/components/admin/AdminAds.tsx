@@ -19,8 +19,8 @@ import { cn } from '../../lib/utils';
 import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 
-export const AdminAds = () => {
-  const [activeView, setActiveView] = React.useState<'Campaigns' | 'Placements'>('Campaigns');
+export const AdminAds = ({ initialView = 'Campaigns' }: { initialView?: 'Campaigns' | 'Placements' }) => {
+  const [activeView, setActiveView] = React.useState<'Campaigns' | 'Placements'>(initialView);
   const campaigns = useQuery(api.ads.listCampaigns) ?? [];
   const placements = useQuery(api.ads.listPlacements) ?? [];
   const stats = useQuery(api.ads.stats);

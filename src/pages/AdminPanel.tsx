@@ -9,6 +9,7 @@ import { AdminAds } from '../components/admin/AdminAds';
 import { AdminCommunities } from '../components/admin/AdminCommunities';
 import { AdminSettings } from '../components/admin/AdminSettings';
 import { useLocation } from 'react-router-dom';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { 
   TrendingUp, 
   Image as ImageIcon, 
@@ -41,10 +42,28 @@ export const AdminPanel = () => {
     if (path.startsWith('/admin/media')) return 'media';
     if (path.startsWith('/admin/reports')) return 'reports';
     if (path.startsWith('/admin/settings')) return 'settings';
+    if (path.startsWith('/admin/placements')) return 'placements';
     return 'dashboard';
   };
 
   const section = getSection();
+
+  const SECTION_TITLES: Record<string, string> = {
+    dashboard: 'Dashboard',
+    articles: 'Articles',
+    communities: 'Communities',
+    categories: 'Categories',
+    tags: 'Tags',
+    games: 'Games',
+    users: 'Users',
+    ads: 'Ads',
+    placements: 'Placements',
+    media: 'Media Library',
+    reports: 'Reports',
+    settings: 'Settings',
+  };
+
+  usePageTitle(SECTION_TITLES[section] ?? 'Dashboard');
 
   const renderMedia = () => (
     <div className="space-y-8">
@@ -122,6 +141,7 @@ export const AdminPanel = () => {
       case 'games': return <AdminGames />;
       case 'users': return <AdminUsers />;
       case 'ads': return <AdminAds />;
+      case 'placements': return <AdminAds initialView="Placements" />;
       case 'media': return renderMedia();
       case 'reports': return renderReports();
       case 'settings': return <AdminSettings />;
@@ -139,6 +159,7 @@ export const AdminPanel = () => {
       case 'games': return <Gamepad2 size={24} />;
       case 'users': return <Users size={24} />;
       case 'ads': return <Megaphone size={24} />;
+      case 'placements': return <Megaphone size={24} />;
       case 'media': return <Library size={24} />;
       case 'reports': return <AlertCircle size={24} />;
       case 'settings': return <Settings size={24} />;
@@ -157,7 +178,7 @@ export const AdminPanel = () => {
              </div>
             <div className="space-y-2">
               <h1 className="text-4xl sm:text-5xl font-black text-white uppercase tracking-tighter">
-                {section === 'dashboard' ? 'Dashboard' : section}
+                {SECTION_TITLES[section] ?? 'Dashboard'}
               </h1>
               <p className="text-zinc-500 font-medium text-lg">Manage your publication and track platform health.</p>
             </div>

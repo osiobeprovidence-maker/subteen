@@ -9,6 +9,7 @@ import { AutomationImported } from '../components/automation/AutomationImported'
 import { AutomationSettings } from '../components/automation/AutomationSettings';
 import { useAuth } from '../context/AuthContext';
 import { cn } from '../lib/utils';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 const TABS = [
   { path: '/admin/automation', label: 'Overview', icon: Zap, end: true },
@@ -23,6 +24,8 @@ export const NewsAutomation = () => {
   const navigate = useNavigate();
   const { role } = useAuth();
   const isAdmin = role === 'admin' || role === 'super_admin';
+
+  usePageTitle('News Automation');
 
   const isReviewDetail = location.pathname.includes('/admin/automation/review/');
 

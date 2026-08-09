@@ -13,17 +13,18 @@ export const Home = () => {
   usePageTitle();
   const publishedQuery = useQuery(api.articles.listPublished, { take: 12 });
   const featuredQuery = useQuery(api.articles.featured, { take: 1 });
+  const latestReviewsQuery = useQuery(api.articles.listPublishedByCategory, { category: 'Reviews', take: 3 });
   const communitiesQuery = useQuery(api.communities.listForPublic);
   const featuredCommunityQuery = useQuery(api.communities.featured);
   const articles = (publishedQuery ?? []) as unknown as Article[];
   const featuredArticles = (featuredQuery ?? []) as unknown as Article[];
+  const latestReviews = (latestReviewsQuery ?? []) as unknown as Article[];
   const communities = (communitiesQuery ?? []) as unknown as Community[];
   const featuredCommunity = featuredCommunityQuery as Community | undefined | null;
 
   const featuredArticle = featuredArticles[0] ?? articles[0];
   const latestNews = articles.filter(a => a.category !== 'Reviews' && a.language !== 'pidgin').slice(0, 4);
   const trendingStories = articles.filter(a => a.isTrending).slice(0, 4);
-  const latestReviews = articles.filter(a => a.category === 'Reviews' && a.language !== 'pidgin').slice(0, 3);
   const pidginArticles = articles.filter(a => a.language === 'pidgin').slice(0, 4);
 
   return (
@@ -122,7 +123,9 @@ export const Home = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
-            {latestReviews.length > 0 ? latestReviews.map(article => (
+            {latestReviewsQuery === undefined ? (
+              <p className="text-zinc-600 text-sm">Loading...</p>
+            ) : latestReviews.length > 0 ? latestReviews.map(article => (
               <ArticleCard key={article.id} article={article} variant="compact" />
             )) : (
               <p className="text-zinc-600 text-sm">No reviews published yet.</p>

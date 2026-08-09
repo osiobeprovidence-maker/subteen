@@ -1,9 +1,12 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShieldAlert, Home, ArrowLeft } from 'lucide-react';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export const Forbidden = () => {
   const location = useLocation();
+
+  usePageTitle('Access Denied');
 
   return (
     <div className="min-h-screen pt-40 pb-32 px-4 sm:px-6 flex items-start justify-center">

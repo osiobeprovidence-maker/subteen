@@ -30,6 +30,7 @@ import { useUploadImage, useRemoveImage, useResolvedMedia, MediaField } from '..
 import { useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { canAccessAdmin, canAccessEditor, roleLabel } from '../lib/roles';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 const COVER_DEFAULT = 'bg-gradient-to-br from-[#1a1a1a] via-[#0d0d0d] to-black';
 
@@ -38,6 +39,8 @@ export const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [displayName, setDisplayName] = useState(dbUser?.name ?? user?.name ?? '');
+
+  usePageTitle('Profile');
   const [cropState, setCropState] = useState<{ field: MediaField; src: string } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);

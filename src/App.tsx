@@ -2,6 +2,9 @@ import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
+import { InstallPrompt } from './components/pwa/InstallPrompt';
+import { OfflineIndicator } from './components/pwa/OfflineIndicator';
+import { UpdatePrompt } from './components/pwa/UpdatePrompt';
 import { Home } from './pages/Home';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -73,6 +76,9 @@ export default function App() {
           </Suspense>
         </main>
         <Footer />
+        <OfflineIndicator />
+        <UpdatePrompt />
+        <InstallPrompt />
       </div>
       </BrowserRouter>
     </AuthProvider>

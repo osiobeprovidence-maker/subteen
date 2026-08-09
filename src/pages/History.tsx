@@ -5,6 +5,7 @@ import { api } from '../../convex/_generated/api';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import type { Article } from '../types';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export const ReadingHistory = () => {
   const { dbUser } = useAuth();
@@ -12,6 +13,8 @@ export const ReadingHistory = () => {
   const savedQuery = useQuery(api.articles.byIds, { ids });
   const clearHistory = useMutation(api.users.clearHistory);
   const historyArticles = (savedQuery ?? []) as unknown as Article[];
+
+  usePageTitle('Reading History');
 
   const handleClear = async () => {
     if (!dbUser) return;

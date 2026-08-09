@@ -6,6 +6,7 @@ import { api } from '../../convex/_generated/api';
 import { ArticleCard } from '../components/common/ArticleCard';
 import { Avatar } from '../components/common/Avatar';
 import type { Article } from '../types';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export const AuthorProfile = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +16,8 @@ export const AuthorProfile = () => {
     author ? { authorId: author._id } : 'skip',
   );
   const authorArticles = (authorArticlesQuery ?? []) as unknown as Article[];
+
+  usePageTitle(author?.name);
   
   if (!author) {
     return (

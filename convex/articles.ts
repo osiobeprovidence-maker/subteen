@@ -120,6 +120,20 @@ export const featured = query({
   },
 });
 
+/** Latest published articles in a given category (e.g. "Reviews"), newest first. */
+export const listPublishedByCategory = query({
+  args: { category: v.string(), take: v.optional(v.number()) },
+  handler: async (ctx, { category, take }) => {
+    const articles = await ctx.db
+      .query('articles')
+      .withIndex('by_category', (q) => q.eq('category', category))
+      .filter((q) => q.eq(q.field('status'), 'published'))
+      .order('desc')
+      .take(take ?? 9);
+    return Promise.all(articles.map((a) => attachAuthor(ctx, a).then((a) => attachCommunity(ctx, a)).then(toCard)));
+  },
+});
+
 export const getBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, { slug }) => {
