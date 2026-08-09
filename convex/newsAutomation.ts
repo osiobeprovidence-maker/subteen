@@ -208,6 +208,7 @@ export const syncSource = internalAction({
     return ctx.runMutation(internal.newsAutomation.applySyncResult, {
       sourceId,
       sourceName: meta.name,
+      pidgin: meta.pidgin ?? false,
       feedText,
       fetchError,
     });
@@ -219,7 +220,9 @@ export const getSourceMeta = internalMutation({
   args: { sourceId: v.id('rssSources') },
   handler: async (ctx, { sourceId }) => {
     const source = await ctx.db.get(sourceId);
-    return source ? { name: source.name, feedUrl: source.feedUrl } : null;
+    return source
+      ? { name: source.name, feedUrl: source.feedUrl, pidgin: source.pidgin ?? false }
+      : null;
   },
 });
 
@@ -228,10 +231,11 @@ export const applySyncResult = internalMutation({
   args: {
     sourceId: v.id('rssSources'),
     sourceName: v.string(),
+    pidgin: v.optional(v.boolean()),
     feedText: v.string(),
     fetchError: v.optional(v.string()),
   },
-  handler: async (ctx, { sourceId, sourceName, feedText, fetchError }) => {
+  handler: async (ctx, { sourceId, sourceName, pidgin, feedText, fetchError }) => {
     const startedAt = now();
     let newStories = 0;
     let duplicates = 0;
@@ -288,6 +292,8 @@ export const applySyncResult = internalMutation({
           originalAuthor: item.author,
           originalPublishedAt: item.publishedAt,
           originalImageUrl: item.imageUrl,
+          videoUrl: item.videoUrl,
+          language: pidgin ? 'pidgin' : 'en',
           status: 'REJECTED',
           duplicateOf: duplicate.id ?? undefined,
           duplicateReason: duplicate.reason,
@@ -314,6 +320,8 @@ export const applySyncResult = internalMutation({
           originalAuthor: item.author,
           originalPublishedAt: item.publishedAt,
           originalImageUrl: item.imageUrl,
+          videoUrl: item.videoUrl,
+          language: pidgin ? 'pidgin' : 'en',
           status: 'IMPORTED',
           createdAt: now(),
           updatedAt: now(),
@@ -411,6 +419,8 @@ export const processQueue = internalMutation({
             publishedAt: imported.originalPublishedAt,
             sourceName: source.name,
             categories: [],
+            videoUrl: imported.videoUrl,
+            language: imported.language ?? 'en',
           },
         });
       } else {
@@ -429,6 +439,8 @@ export const processQueue = internalMutation({
           slug: slugify(imported.originalTitle),
           featuredImage: imported.originalImageUrl,
           sourceImageUrl: imported.originalImageUrl,
+          videoUrl: imported.videoUrl,
+          language: imported.language ?? 'en',
           aiModel: undefined,
           status: (settings.defaultStatus as Doc<'automatedNewsDrafts'>['status']) ?? 'PENDING_REVIEW',
           createdAt: now(),
@@ -468,13 +480,15 @@ export const processItemAction = internalAction({
       publishedAt: v.optional(v.number()),
       sourceName: v.string(),
       categories: v.array(v.string()),
+      videoUrl: v.optional(v.string()),
+      language: v.optional(v.string()),
     }),
   },
   handler: async (ctx, args) => {
     let result: DraftGenerationResult | null = null;
     let error: string | null = null;
     try {
-      result = await generateNewsDraft(args.material);
+      result = await generateNewsDraft(args.material, { language: args.material.language });
     } catch (err) {
       error = err instanceof Error ? err.message : 'AI processing failed';
     }
@@ -483,6 +497,8 @@ export const processItemAction = internalAction({
       sourceId: args.sourceId,
       sourceName: args.sourceName,
       defaultCategory: args.defaultCategory,
+      videoUrl: args.material.videoUrl,
+      language: args.material.language,
       ...(result ? { result } : { error: error ?? 'AI processing failed' }),
     });
   },
@@ -495,6 +511,8 @@ export const finishProcessing = internalMutation({
     sourceId: v.id('rssSources'),
     sourceName: v.string(),
     defaultCategory: v.string(),
+    videoUrl: v.optional(v.string()),
+    language: v.optional(v.string()),
     result: v.optional(
       v.object({
         headline: v.string(),
@@ -544,6 +562,8 @@ export const finishProcessing = internalMutation({
       slug: slugify(result.slug || result.headline),
       featuredImage: imported.originalImageUrl,
       sourceImageUrl: imported.originalImageUrl,
+      videoUrl: args.videoUrl,
+      language: args.language ?? 'en',
       aiModel: DEFAULT_MODEL,
       status: 'AI_DRAFT',
       createdAt: now(),
@@ -609,6 +629,8 @@ async function publishDraftInternal(
     tags: draft.tags ?? [],
     status: 'published',
     views: 0,
+    videoUrl: draft.videoUrl,
+    language: draft.language ?? 'en',
     sourceName: source.name,
     sourceUrl: source.websiteUrl,
     originalUrl: imported.originalUrl,
@@ -904,6 +926,8 @@ export const retryDraft = mutation({
         publishedAt: imported.originalPublishedAt,
         sourceName: source.name,
         categories: [],
+        videoUrl: imported.videoUrl,
+        language: imported.language ?? 'en',
       },
     });
     await log(ctx, {

@@ -23,6 +23,7 @@ interface FormState {
   logoUrl: string;
   description: string;
   defaultCategory: string;
+  pidgin: boolean;
 }
 
 const EMPTY_FORM: FormState = {
@@ -32,6 +33,7 @@ const EMPTY_FORM: FormState = {
   logoUrl: '',
   description: '',
   defaultCategory: 'Gaming News',
+  pidgin: false,
 };
 
 export const RssSources = () => {
@@ -64,6 +66,7 @@ export const RssSources = () => {
       logoUrl: source.logoUrl ?? '',
       description: source.description ?? '',
       defaultCategory: source.defaultCategory ?? 'Gaming News',
+      pidgin: source.pidgin ?? false,
     });
     setFormOpen(true);
   };
@@ -190,9 +193,16 @@ export const RssSources = () => {
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-bold text-white truncate">{source.name}</p>
-                      <p className="text-[10px] text-zinc-600 uppercase tracking-widest truncate">
-                        {source.defaultCategory ?? 'Gaming News'}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[10px] text-zinc-600 uppercase tracking-widest truncate">
+                          {source.defaultCategory ?? 'Gaming News'}
+                        </p>
+                        {source.pidgin && (
+                          <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 bg-[#B8FF4D] text-black rounded">
+                            Pidgin
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </td>
@@ -307,6 +317,25 @@ export const RssSources = () => {
                 <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Description (optional)</label>
                 <textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className={cn(inputClass, 'resize-none')} />
               </div>
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, pidgin: !form.pidgin })}
+                className="w-full flex items-center justify-between p-4 bg-zinc-900 border border-white/10 rounded-2xl hover:border-[#B8FF4D]/30 transition-colors"
+              >
+                <div className="text-left">
+                  <p className="text-xs font-black text-white uppercase tracking-widest">Subteen Pidgin</p>
+                  <p className="text-[11px] text-zinc-500 mt-1">Translate stories from dis source to Nigerian Pidgin for local readers.</p>
+                </div>
+                <span className={cn(
+                  "relative w-12 h-7 rounded-full transition-colors shrink-0",
+                  form.pidgin ? "bg-[#B8FF4D]" : "bg-zinc-700",
+                )}>
+                  <span className={cn(
+                    "absolute top-1 w-5 h-5 rounded-full bg-white transition-all",
+                    form.pidgin ? "left-6" : "left-1",
+                  )} />
+                </span>
+              </button>
               <div className="flex items-center gap-3 pt-4">
                 <button type="submit" className="flex-1 py-4 bg-[#B8FF4D] text-black rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white transition-all">
                   {editing ? 'Save Changes' : 'Add Source'}

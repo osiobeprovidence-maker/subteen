@@ -64,6 +64,7 @@ export const create = mutation({
     description: v.optional(v.string()),
     defaultCategory: v.optional(v.string()),
     active: v.optional(v.boolean()),
+    pidgin: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
@@ -82,6 +83,7 @@ export const create = mutation({
       description: args.description?.trim() || undefined,
       defaultCategory: args.defaultCategory?.trim() || undefined,
       active: args.active ?? true,
+      pidgin: args.pidgin ?? false,
       createdAt: now(),
       updatedAt: now(),
     });
@@ -99,6 +101,7 @@ export const update = mutation({
     description: v.optional(v.string()),
     defaultCategory: v.optional(v.string()),
     active: v.optional(v.boolean()),
+    pidgin: v.optional(v.boolean()),
   },
   handler: async (ctx, { id, ...patch }) => {
     await requireAdmin(ctx);

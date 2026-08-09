@@ -9,6 +9,7 @@ export interface NormalizedFeedItem {
   author?: string;
   description?: string;
   imageUrl?: string;
+  videoUrl?: string;
   categories: string[];
 }
 
@@ -91,6 +92,76 @@ function extractImage(item: RawItem): string | undefined {
   return undefined;
 }
 
+/** Normalize a YouTube watch/shorts/embed URL to an embeddable player URL. */
+function normalizeVideoUrl(raw: string): string | undefined {
+  const trimmed = raw.trim();
+  const m =
+    trimmed.match(
+      /^https?:\/\/(?:www\.)?youtube\.com\/watch\?[^#]*v=([A-Za-z0-9_-]{6,})/,
+    ) ||
+    trimmed.match(/^https?:\/\/youtu\.be\/([A-Za-z0-9_-]{6,})/) ||
+    trimmed.match(/^https?:\/\/(?:www\.)?youtube\.com\/(?:embed|shorts|live)\/([A-Za-z0-9_-]{6,})/);
+  if (m) {
+    return `https://www.youtube.com/embed/${m[1]}`;
+  }
+  const vimeo = trimmed.match(/^https?:\/\/(?:www\.)?vimeo\.com\/(\d{6,})/);
+  if (vimeo) {
+    return `https://player.vimeo.com/video/${vimeo[1]}`;
+  }
+  const dm = trimmed.match(/^https?:\/\/(?:www\.)?dailymotion\.com\/video\/([a-zA-Z0-9]+)/);
+  if (dm) {
+    return `https://www.dailymotion.com/embed/video/${dm[1]}`;
+  }
+  return undefined;
+}
+
+function videoUrlFromMedia(value: unknown): string | undefined {
+  const obj = value as Record<string, unknown> | undefined;
+  if (!obj || typeof obj !== 'object') return undefined;
+  const type = asText(obj['@_type']) || asText(obj['@_medium']);
+  const url = asUrl(obj['@_url']);
+  if (/^video/i.test(type) && url) {
+    return normalizeVideoUrl(url) ?? url;
+  }
+  return undefined;
+}
+
+function extractVideo(item: RawItem): string | undefined {
+  const candidates: unknown[] = [];
+  if (item.enclosure) candidates.push(item.enclosure);
+  if (item['media:content']) candidates.push(item['media:content']);
+  if (item['media:group']) candidates.push(item['media:group']);
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) {
+      for (const c of candidate) {
+        const url = videoUrlFromMedia(c);
+        if (url) return url;
+      }
+    } else {
+      const url = videoUrlFromMedia(candidate);
+      if (url) return url;
+    }
+  }
+  const content = asText(item['content:encoded']) || asText(item.content) || asText(item.description);
+  if (!content) return undefined;
+  const iframe = content.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+  if (iframe) {
+    const url = normalizeVideoUrl(iframe[1]);
+    if (url) return url;
+  }
+  const linkMatch = content.match(/href=["']([^"']*youtube\.com\/watch\?v=[^"']+)["']/i);
+  if (linkMatch) {
+    const url = normalizeVideoUrl(linkMatch[1]);
+    if (url) return url;
+  }
+  const bare = content.match(/(https?:\/\/[^\s"'<>]+(?:youtube\.com|youtu\.be|vimeo\.com|dailymotion\.com)[^\s"'<>]*)/i);
+  if (bare) {
+    const url = normalizeVideoUrl(bare[1].replace(/[),.;]+$/, ''));
+    if (url) return url;
+  }
+  return undefined;
+}
+
 function normalizeItem(item: RawItem): NormalizedFeedItem | null {
   const title = asText(item.title);
   const link = asUrl(item.link);
@@ -129,6 +200,7 @@ function normalizeItem(item: RawItem): NormalizedFeedItem | null {
     author,
     description,
     imageUrl: extractImage(item),
+    videoUrl: extractVideo(item),
     categories: categories.slice(0, 10),
   };
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, ChevronRight, Play, Trophy, Cpu, Gamepad2, Layers } from 'lucide-react';
+import { ArrowRight, ChevronRight, Play, Trophy, Cpu, Gamepad2, Layers, MessagesSquare } from 'lucide-react';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { ArticleCard } from '../components/common/ArticleCard';
@@ -14,9 +14,10 @@ export const Home = () => {
   const featuredArticles = (featuredQuery ?? []) as unknown as Article[];
 
   const featuredArticle = featuredArticles[0] ?? articles[0];
-  const latestNews = articles.filter(a => a.category === 'News').slice(0, 4);
+  const latestNews = articles.filter(a => a.category !== 'Reviews' && a.language !== 'pidgin').slice(0, 4);
   const trendingStories = articles.filter(a => a.isTrending).slice(0, 4);
-  const latestReviews = articles.filter(a => a.category === 'Reviews').slice(0, 3);
+  const latestReviews = articles.filter(a => a.category === 'Reviews' && a.language !== 'pidgin').slice(0, 3);
+  const pidginArticles = articles.filter(a => a.language === 'pidgin').slice(0, 4);
 
   return (
     <div className="space-y-16 sm:space-y-24 lg:space-y-32 pb-20 sm:pb-32">
@@ -118,6 +119,34 @@ export const Home = () => {
               <ArticleCard key={article.id} article={article} variant="compact" />
             )) : (
               <p className="text-zinc-600 text-sm">No reviews published yet.</p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Subteen Pidgin */}
+      <section className="px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto bg-zinc-950 border border-white/5 rounded-[32px] sm:rounded-[40px] p-6 sm:p-10 space-y-8 sm:space-y-10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#B8FF4D] rounded-2xl flex items-center justify-center text-black shrink-0">
+                <MessagesSquare size={20} className="sm:w-6 sm:h-6" />
+              </div>
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tighter">SUBTEEEN PIDGIN</h2>
+                <p className="text-[11px] sm:text-xs text-zinc-400 mt-0.5 sm:mt-1">Di latest gaming gist for local Nigerians</p>
+              </div>
+            </div>
+            <Link to="/pidgin" className="w-fit px-5 py-2.5 sm:px-6 sm:py-3 border border-white/10 rounded-full text-xs sm:text-sm font-bold text-white hover:bg-[#B8FF4D] hover:text-black transition-all">
+              SEE ALL PIDGIN STORIES
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            {pidginArticles.length > 0 ? pidginArticles.map(article => (
+              <ArticleCard key={article.id} article={article} variant="compact" />
+            )) : (
+              <p className="text-zinc-600 text-sm col-span-full">No pidgin stories yet — dem dey come soon.</p>
             )}
           </div>
         </div>

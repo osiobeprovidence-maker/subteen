@@ -123,6 +123,8 @@ export interface DraftSourceMaterial {
   publishedAt?: number;
   sourceName: string;
   categories: string[];
+  videoUrl?: string;
+  language?: string;
 }
 
 const SYSTEM_PROMPT = `You are the newsroom AI for Subteen, a gaming news and media publication.
@@ -136,7 +138,7 @@ STRICT RULES:
 - Never include HTML, markdown link syntax to external articles, or scripts in the body. Plain markdown headings, lists, and emphasis are fine.
 - Keep the body concise (150 to 320 words) with a clear intro, 2-3 short sections, and a short closing.
 - Do not use clickbait. Headlines must be clear and accurate.
-- Classify into one of these categories only: Gaming News, PlayStation, Xbox, Nintendo, PC Gaming, Mobile Gaming, Esports, Game Releases, Updates, Industry, Business, Reviews, Hardware. Choose the best single match.
+- Classify into one of these categories only: Gaming News, PlayStation, Xbox, Nintendo, PC Gaming, Mobile Gaming, Esports, Game Releases, Updates, Industry, Business, Reviews, Hardware. Choose the best single match. If the story is a game/product review (has a score, rating or verdict), you MUST choose Reviews.
 - Return ONLY valid JSON with exactly these keys: headline, subheadline, summary, body, category, tags, seoTitle, seoDescription, slug, keywords.
   - headline: string
   - subheadline: one sentence explaining the significance
@@ -149,7 +151,51 @@ STRICT RULES:
   - slug: url-friendly version of the headline
   - keywords: array of 3-5 search keywords`;
 
-export async function generateNewsDraft(material: DraftSourceMaterial): Promise<DraftGenerationResult> {
+const PIDGIN_SYSTEM_PROMPT = `You are the newsroom AI for Subteen Pidgin, the Nigerian Pidgin edition of Subteen, a gaming news and media publication for local Nigerian gamers.
+
+Your job is to create an ORIGINAL Subteen editorial news draft in Nigerian Pidgin English (Naija Pidgin) from factual information provided about a story discovered via an RSS feed.
+
+STRICT RULES:
+- Write the WHOLE draft in Nigerian Pidgin English. Use natural Naija Pidgin words naturally, e.g. "e dey", "dem", "dey", "na", "no be", "fit", "so", "wetin", "una", "make we", "don". Keep it friendly, clear and readable for local Nigerian gamers.
+- Write an original, professional report in Subteen Pidgin's voice. Do NOT copy, paraphrase closely, or reproduce paragraphs from the original publication.
+- Only use facts that are explicitly present in the provided source material.
+- Do NOT invent quotes, statistics, dates, people, events, product details, claims, or anything not present in the source material. If a detail is missing, leave it out.
+- Never include HTML, markdown link syntax to external articles, or scripts in the body. Plain markdown headings, lists, and emphasis are fine.
+- Keep the body concise (150 to 320 words) with a clear intro, 2-3 short sections, and a short closing.
+- Do not use clickbait. Headlines must be clear and accurate (headline can be in Pidgin).
+- Classify into one of these categories only: Gaming News, PlayStation, Xbox, Nintendo, PC Gaming, Mobile Gaming, Esports, Game Releases, Updates, Industry, Business, Reviews, Hardware. Choose the best single match. If the story is a game/product review (has a score, rating or verdict), you MUST choose Reviews.
+- Return ONLY valid JSON with exactly these keys: headline, subheadline, summary, body, category, tags, seoTitle, seoDescription, slug, keywords.
+  - headline: string
+  - subheadline: one sentence explaining the significance
+  - summary: short original summary (max 2 sentences)
+  - body: markdown string
+  - category: one of the categories above
+  - tags: array of 3-6 short relevant tags (no commas inside tags)
+  - seoTitle: under 60 chars
+  - seoDescription: under 160 chars
+  - slug: url-friendly version of the headline
+  - keywords: array of 3-5 search keywords`;
+
+/** Keywords that strongly suggest a story is a game/product review. */
+const REVIEW_HINTS =
+  /\b(review|reviewed|verdict|hands-on|hands on|review roundup|we gave it)\b|\b(score|rating|rated)\b|\/\s*10\b|out of 10|out of 100/i;
+
+export function isLikelyReview(material: Pick<DraftSourceMaterial, 'title' | 'description' | 'categories'>): boolean {
+  const haystack = [
+    material.title,
+    material.description ?? '',
+    ...(material.categories ?? []),
+  ].join(' \n ');
+  return REVIEW_HINTS.test(haystack);
+}
+
+export async function generateNewsDraft(
+  material: DraftSourceMaterial,
+  options: { language?: string } = {},
+): Promise<DraftGenerationResult> {
+  const language = options.language ?? material.language ?? 'en';
+  const isPidgin = language === 'pidgin';
+
   const source = JSON.stringify(
     {
       original_title: material.title,
@@ -164,7 +210,7 @@ export async function generateNewsDraft(material: DraftSourceMaterial): Promise<
   );
 
   const text = await generateText(
-    SYSTEM_PROMPT,
+    isPidgin ? PIDGIN_SYSTEM_PROMPT : SYSTEM_PROMPT,
     `Source material:\n${source}\n\nGenerate the Subteen draft JSON now.`,
     { jsonMode: true, maxOutputTokens: 4096, temperature: 0.6 },
   );
@@ -195,7 +241,10 @@ export async function generateNewsDraft(material: DraftSourceMaterial): Promise<
 
   const headline = clean(parsed?.headline) || material.title;
   const body = clean(parsed?.body) || `# ${headline}\n\nA report based on recent coverage from ${material.sourceName}.`;
-  const category = clean(parsed?.category) || 'Gaming News';
+  let category = clean(parsed?.category) || 'Gaming News';
+  if (isLikelyReview(material)) {
+    category = 'Reviews';
+  }
 
   return {
     headline,

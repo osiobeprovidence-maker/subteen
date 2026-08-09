@@ -115,10 +115,18 @@ export const ArticlePage = () => {
         </div>
       </header>
 
-      {/* Hero Image */}
+      {/* Hero Image / Video */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-12 sm:mb-20">
         <div className="aspect-[16/10] sm:aspect-[21/9] rounded-[24px] sm:rounded-[40px] overflow-hidden bg-zinc-900 shadow-2xl">
-          {article.heroImage ? (
+          {article.videoUrl ? (
+            <iframe
+              src={article.videoUrl}
+              title={article.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="w-full h-full border-0"
+            />
+          ) : article.heroImage ? (
             <img src={article.heroImage} alt={article.title} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">

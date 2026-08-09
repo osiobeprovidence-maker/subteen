@@ -13,10 +13,14 @@ export const CategoryPage = () => {
   
   // Normalize category string for filtering
   const displayCategory = category?.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  const filteredArticles = articles.filter(a => 
-    a.category.toLowerCase() === category?.toLowerCase() || 
-    a.tags.some(t => t.toLowerCase() === category?.toLowerCase())
-  );
+  const normalizedCategory = category?.toLowerCase() ?? '';
+  const filteredArticles = articles.filter(a => {
+    if (normalizedCategory === 'news') return a.language !== 'pidgin' && a.category !== 'Reviews';
+    if (normalizedCategory === 'reviews') return a.category === 'Reviews' && a.language !== 'pidgin';
+    if (normalizedCategory === 'pidgin') return a.language === 'pidgin';
+    return a.category.toLowerCase() === normalizedCategory ||
+      a.tags.some(t => t.toLowerCase() === normalizedCategory);
+  });
 
   return (
     <div className="pb-32">

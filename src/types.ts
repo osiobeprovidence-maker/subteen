@@ -69,6 +69,7 @@ export interface Article {
   isTrending?: boolean;
   reviewScore?: number;
   videoUrl?: string;
+  language?: 'en' | 'pidgin';
   status?: 'draft' | 'published' | 'scheduled';
   views?: number;
   sourceName?: string;
