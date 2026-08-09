@@ -6,60 +6,11 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = join(ROOT, 'public', 'icons');
 
-const BG = [10, 10, 10];
+// Original Subteen favicon/logo: neon lime (#B8FF4D) tile with a black "S".
 const LIME = [184, 255, 77];
-const WHITE = [245, 245, 245];
+const BLACK = [0, 0, 0];
 
 const S_GLYPH = ['11111', '10000', '10000', '11111', '00001', '00001', '11111'];
-
-const FONT = {
-  A: ['01110', '10001', '10001', '11111', '10001', '10001', '10001'],
-  B: ['11110', '10001', '10001', '11110', '10001', '10001', '11110'],
-  C: ['01111', '10000', '10000', '10000', '10000', '10000', '01111'],
-  D: ['11110', '10001', '10001', '10001', '10001', '10001', '11110'],
-  E: ['11111', '10000', '10000', '11110', '10000', '10000', '11111'],
-  F: ['11111', '10000', '10000', '11110', '10000', '10000', '10000'],
-  G: ['01111', '10000', '10000', '10111', '10001', '10001', '01111'],
-  H: ['10001', '10001', '10001', '11111', '10001', '10001', '10001'],
-  I: ['11111', '00100', '00100', '00100', '00100', '00100', '11111'],
-  J: ['00111', '00010', '00010', '00010', '00010', '10010', '01100'],
-  K: ['10001', '10010', '10100', '11000', '10100', '10010', '10001'],
-  L: ['10000', '10000', '10000', '10000', '10000', '10000', '11111'],
-  M: ['10001', '11011', '10101', '10101', '10001', '10001', '10001'],
-  N: ['10001', '11001', '10101', '10011', '10001', '10001', '10001'],
-  O: ['01110', '10001', '10001', '10001', '10001', '10001', '01110'],
-  P: ['11110', '10001', '10001', '11110', '10000', '10000', '10000'],
-  Q: ['01110', '10001', '10001', '10001', '10101', '10010', '01101'],
-  R: ['11110', '10001', '10001', '11110', '10100', '10010', '10001'],
-  S: ['01111', '10000', '10000', '01110', '00001', '00001', '11110'],
-  T: ['11111', '00100', '00100', '00100', '00100', '00100', '00100'],
-  U: ['10001', '10001', '10001', '10001', '10001', '10001', '01110'],
-  V: ['10001', '10001', '10001', '10001', '10001', '01010', '00100'],
-  W: ['10001', '10001', '10001', '10101', '10101', '11011', '10001'],
-  X: ['10001', '10001', '01010', '00100', '01010', '10001', '10001'],
-  Y: ['10001', '10001', '01010', '00100', '00100', '00100', '00100'],
-  Z: ['11111', '00001', '00010', '00100', '01000', '10000', '11111'],
-  0: ['01110', '10001', '10011', '10101', '11001', '10001', '01110'],
-  1: ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
-  2: ['01110', '10001', '00001', '00010', '00100', '01000', '11111'],
-  3: ['11110', '00001', '00001', '01110', '00001', '00001', '11110'],
-  4: ['00010', '00110', '01010', '10010', '11111', '00010', '00010'],
-  5: ['11111', '10000', '10000', '11110', '00001', '00001', '11110'],
-  6: ['00110', '01000', '10000', '11110', '10001', '10001', '01110'],
-  7: ['11111', '00001', '00010', '00100', '01000', '01000', '01000'],
-  8: ['01110', '10001', '10001', '01110', '10001', '10001', '01110'],
-  9: ['01110', '10001', '10001', '01111', '00001', '00010', '01100'],
-};
-
-const WORDMARK = [
-  { ch: 'S', color: WHITE },
-  { ch: 'U', color: WHITE },
-  { ch: 'B', color: WHITE },
-  { ch: 'T', color: LIME },
-  { ch: 'E', color: LIME },
-  { ch: 'E', color: LIME },
-  { ch: 'N', color: LIME },
-];
 
 function fillPixel(buf, size, x, y, [r, g, b]) {
   if (x < 0 || y < 0 || x >= size || y >= size) return;
@@ -99,36 +50,20 @@ function drawGlyph(buf, size, glyph, x, y, cell, color) {
   }
 }
 
-function drawWordmark(buf, size, cell, topY) {
-  const perLetter = 5 * cell;
-  const totalW = WORDMARK.length * perLetter + (WORDMARK.length - 1) * cell;
-  let x = Math.round((size - totalW) / 2);
-  for (const { ch, color } of WORDMARK) {
-    drawGlyph(buf, size, FONT[ch], x, Math.round(topY), cell, color);
-    x += perLetter + cell;
-  }
-}
-
 function renderIcon(size, { fullBleed = false, contentScale = 1 } = {}) {
   const buf = Buffer.alloc(size * size * 4, 0);
   if (fullBleed) {
-    fillRect(buf, size, 0, 0, size, size, BG);
+    fillRect(buf, size, 0, 0, size, size, LIME);
   } else {
-    const m = Math.round(size * 0.03);
-    fillRoundedRect(buf, size, m, m, size - m, size - m, Math.round(size * 0.22), BG);
+    const m = Math.round(size * 0.02);
+    fillRoundedRect(buf, size, m, m, size - m, size - m, Math.round(size * 0.22), LIME);
   }
 
   const k = (size / 512) * contentScale;
-  const sS = Math.max(3, Math.round(38 * k));
-  const sT = Math.max(2, Math.round(7 * k));
-  const gap = Math.max(3, Math.round(22 * k));
-  const heroH = 7 * sS;
-  const wordH = 7 * sT;
-  const total = heroH + gap + wordH;
-  const top = Math.round((size - total) / 2);
-
-  drawGlyph(buf, size, S_GLYPH, Math.round((size - 5 * sS) / 2), top, sS, LIME);
-  drawWordmark(buf, size, sT, top + heroH + gap);
+  const cell = Math.max(3, Math.round(50 * k));
+  const left = Math.round((size - 5 * cell) / 2);
+  const top = Math.round((size - 7 * cell) / 2);
+  drawGlyph(buf, size, S_GLYPH, left, top, cell, BLACK);
   return buf;
 }
 
