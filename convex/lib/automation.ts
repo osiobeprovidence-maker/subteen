@@ -30,6 +30,7 @@ export type AutomationStatus =
 export const DEFAULT_SYNC_FREQUENCY_MINUTES = 15;
 export const DEFAULT_MAX_STORIES_PER_SYNC = 15;
 export const DEFAULT_DRAFT_STATUS = 'PENDING_REVIEW';
+export const DEFAULT_AUTO_APPROVE_DELAY_MINUTES = 30;
 
 export const SYNC_FREQUENCY_OPTIONS = [
   { label: '5 minutes', value: 5 },

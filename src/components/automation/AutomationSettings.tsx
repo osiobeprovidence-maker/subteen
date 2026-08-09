@@ -14,6 +14,17 @@ const FREQUENCY_OPTIONS = [
   { value: 1440, label: 'Daily' },
 ];
 
+const AUTO_APPROVE_DELAY_OPTIONS = [
+  { value: 5, label: '5 minutes' },
+  { value: 10, label: '10 minutes' },
+  { value: 15, label: '15 minutes' },
+  { value: 30, label: '30 minutes' },
+  { value: 60, label: '1 hour' },
+  { value: 120, label: '2 hours' },
+  { value: 360, label: '6 hours' },
+  { value: 1440, label: '24 hours' },
+];
+
 export const AutomationSettings = () => {
   const settings = useQuery(api.newsAutomation.settings);
   const updateSettings = useMutation(api.newsAutomation.updateSettings);
@@ -22,6 +33,8 @@ export const AutomationSettings = () => {
   const [autoPublish, setAutoPublish] = useState(false);
   const [trustedSources, setTrustedSources] = useState<string[]>([]);
   const [trustedCategories, setTrustedCategories] = useState<string[]>([]);
+  const [autoApprove, setAutoApprove] = useState(false);
+  const [autoApproveDelayMinutes, setAutoApproveDelayMinutes] = useState(30);
   const [maxStoriesPerSync, setMaxStoriesPerSync] = useState(20);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -32,6 +45,8 @@ export const AutomationSettings = () => {
     setAutoPublish(settings.autoPublish ?? false);
     setTrustedSources(settings.trustedSources ?? []);
     setTrustedCategories(settings.trustedCategories ?? []);
+    setAutoApprove(settings.autoApprove ?? false);
+    setAutoApproveDelayMinutes(settings.autoApproveDelayMinutes ?? 30);
     setMaxStoriesPerSync(settings.maxStoriesPerSync ?? 20);
   }, [settings]);
 
@@ -46,6 +61,8 @@ export const AutomationSettings = () => {
         autoPublish,
         trustedSources,
         trustedCategories,
+        autoApprove,
+        autoApproveDelayMinutes,
         maxStoriesPerSync,
       });
       setSaved(true);
@@ -177,6 +194,52 @@ export const AutomationSettings = () => {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+      </div>
+
+      <div className={cardClass}>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-black text-white uppercase tracking-tight">Time-Based Auto-Approval</h3>
+              <p className="text-[10px] text-zinc-600 uppercase tracking-widest mt-1">Publish every AI draft automatically after a delay.</p>
+            </div>
+            <button
+              onClick={() => setAutoApprove(!autoApprove)}
+              className={cn(
+                'relative w-14 h-8 rounded-full transition-all',
+                autoApprove ? 'bg-[#B8FF4D]' : 'bg-zinc-800',
+              )}
+            >
+              <span
+                className={cn(
+                  'absolute top-1 w-6 h-6 rounded-full transition-all',
+                  autoApprove ? 'left-7 bg-black' : 'left-1 bg-zinc-500',
+                )}
+              />
+            </button>
+          </div>
+          <p className="text-xs text-zinc-500">
+            When enabled, every AI-generated draft is published automatically after the configured delay, giving you a window to intervene. A check runs every minute.
+          </p>
+        </div>
+
+        {autoApprove && (
+          <div className="space-y-3 pt-2">
+            <label className={labelClass}>Auto-Publish Delay</label>
+            <select
+              value={autoApproveDelayMinutes}
+              onChange={(e) => setAutoApproveDelayMinutes(Number(e.target.value))}
+              className={cn(inputClass, 'appearance-none cursor-pointer')}
+            >
+              {AUTO_APPROVE_DELAY_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            <p className="text-[10px] text-zinc-600 uppercase tracking-widest pt-1">
+              Drafts are published this long after they were created. Reject or edit them before the window closes.
+            </p>
           </div>
         )}
       </div>

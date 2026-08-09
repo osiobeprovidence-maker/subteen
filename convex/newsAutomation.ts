@@ -15,6 +15,7 @@ import {
   DEFAULT_SYNC_FREQUENCY_MINUTES,
   DEFAULT_MAX_STORIES_PER_SYNC,
   DEFAULT_DRAFT_STATUS,
+  DEFAULT_AUTO_APPROVE_DELAY_MINUTES,
   sanitizeHtml,
   sanitizeContent,
   slugify,
@@ -87,6 +88,8 @@ export async function getSettingsDoc(ctx: QueryCtx | MutationCtx) {
     autoPublish: false,
     trustedSources: [],
     trustedCategories: [],
+    autoApprove: false,
+    autoApproveDelayMinutes: DEFAULT_AUTO_APPROVE_DELAY_MINUTES,
     defaultStatus: DEFAULT_DRAFT_STATUS,
     maxStoriesPerSync: DEFAULT_MAX_STORIES_PER_SYNC,
     updatedAt: now(),
@@ -106,6 +109,8 @@ export async function ensureSettingsDoc(ctx: MutationCtx) {
     autoPublish: false,
     trustedSources: [],
     trustedCategories: [],
+    autoApprove: false,
+    autoApproveDelayMinutes: DEFAULT_AUTO_APPROVE_DELAY_MINUTES,
     defaultStatus: DEFAULT_DRAFT_STATUS,
     maxStoriesPerSync: DEFAULT_MAX_STORIES_PER_SYNC,
     updatedAt: now(),
@@ -1013,6 +1018,8 @@ export const updateSettings = mutation({
     autoPublish: v.optional(v.boolean()),
     trustedSources: v.optional(v.array(v.string())),
     trustedCategories: v.optional(v.array(v.string())),
+    autoApprove: v.optional(v.boolean()),
+    autoApproveDelayMinutes: v.optional(v.number()),
     defaultStatus: v.optional(v.string()),
     maxStoriesPerSync: v.optional(v.number()),
   },
@@ -1024,7 +1031,11 @@ export const updateSettings = mutation({
       .withIndex('by_key', (q) => q.eq('key', AUTOMATION_SETTINGS_KEY))
       .unique();
     if (!existing) throw new Error('Settings not found.');
-    await ctx.db.patch(existing._id, { ...patch, updatedAt: now() });
+    const updates: Record<string, unknown> = { ...patch };
+    if (patch.autoApprove === true && !existing.autoApprove) {
+      updates.autoApproveEnabledAt = now();
+    }
+    await ctx.db.patch(existing._id, { ...updates, updatedAt: now() });
     await log(ctx, {
       action: 'SETTINGS_CHANGED',
       status: 'info',
@@ -1081,5 +1092,52 @@ export const retryFailedImports = internalMutation({
       await ctx.scheduler.runAfter(0, internal.newsAutomation.processQueue, { batchSize: 2 });
     }
     return { requeued };
+  },
+});
+
+/**
+ * Internal: auto-approve & publish drafts that have been sitting in
+ * PENDING_REVIEW for >= autoApproveDelayMinutes. Runs on a short cron.
+ */
+export const autoApproveDueDrafts = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const settings = await getSettingsDoc(ctx);
+    if (!settings.autoApprove) return { published: 0, reviewed: 0 };
+
+    const delayMs = Math.max(1, settings.autoApproveDelayMinutes ?? DEFAULT_AUTO_APPROVE_DELAY_MINUTES) * 60 * 1000;
+    const enabledAt = settings.autoApproveEnabledAt ?? 0;
+    const cutoff = now() - delayMs;
+
+    const drafts = await ctx.db
+      .query('automatedNewsDrafts')
+      .withIndex('by_status', (q) => q.eq('status', 'PENDING_REVIEW'))
+      .order('asc')
+      .take(25);
+
+    let published = 0;
+    let reviewed = 0;
+    for (const draft of drafts) {
+      if (draft.createdAt > cutoff) continue;
+      if (draft.createdAt < enabledAt) continue;
+      try {
+        await publishDraftInternal(ctx, draft._id, undefined, true);
+        published += 1;
+      } catch {
+        await ctx.db.patch(draft._id, {
+          status: 'APPROVED',
+          updatedAt: now(),
+        });
+        reviewed += 1;
+      }
+    }
+    if (published > 0 || reviewed > 0) {
+      await log(ctx, {
+        action: 'AUTO_APPROVAL',
+        status: 'info',
+        message: `Auto-approval pass: ${published} published, ${reviewed} approved/reviewed.`,
+      });
+    }
+    return { published, reviewed };
   },
 });

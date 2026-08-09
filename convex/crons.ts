@@ -15,4 +15,10 @@ crons.interval(
   internal.newsAutomation.scheduledSync,
 );
 
+crons.interval(
+  'news-automation-auto-approve',
+  { minutes: 1 },
+  internal.newsAutomation.autoApproveDueDrafts,
+);
+
 export default crons;
