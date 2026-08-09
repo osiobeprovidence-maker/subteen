@@ -59,9 +59,14 @@ export const AutomationImported = () => {
           <div className="divide-y divide-white/5">
             {items.map((item: any) => (
               <div key={item._id} className="flex items-center gap-5 px-7 py-5 hover:bg-white/[0.02] transition-colors">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center overflow-hidden shrink-0">
-                  {item.sourceLogoUrl ? (
-                    <img src={item.sourceLogoUrl} alt="" className="w-full h-full object-cover" />
+                <div className="w-24 h-14 rounded-xl bg-zinc-900 flex items-center justify-center overflow-hidden shrink-0">
+                  {item.originalImageUrl ? (
+                    <img
+                      src={item.originalImageUrl}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
                   ) : (
                     <Radio size={16} className="text-zinc-600" />
                   )}

@@ -35,7 +35,7 @@ export const NewsAutomation = () => {
       )?.path ?? '/admin/automation';
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-12 space-y-10">
       <div className="space-y-2">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-[#B8FF4D] flex items-center justify-center">

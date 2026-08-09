@@ -67,9 +67,14 @@ export const AutomationReviews = () => {
                 onClick={() => navigate(`/admin/automation/review/${draft._id}`)}
                 className="w-full flex items-center gap-5 px-7 py-5 text-left hover:bg-white/[0.02] transition-colors group"
               >
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center overflow-hidden shrink-0">
-                  {draft.sourceLogoUrl ? (
-                    <img src={draft.sourceLogoUrl} alt="" className="w-full h-full object-cover" />
+                <div className="w-24 h-14 rounded-xl bg-zinc-900 flex items-center justify-center overflow-hidden shrink-0">
+                  {draft.featuredImage || draft.sourceImageUrl ? (
+                    <img
+                      src={draft.featuredImage ?? draft.sourceImageUrl}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
                   ) : (
                     <FileText size={16} className="text-zinc-600" />
                   )}
