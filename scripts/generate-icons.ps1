@@ -31,21 +31,32 @@ function New-Icon([string]$fileName, [int]$size, [bool]$rounded) {
     $g.FillRectangle($limeBrush, 0, 0, $size, $size)
   }
 
-  $fontSize = [single]($size * 0.5625)
-  $font = $null
-  try {
-    $font = New-Object System.Drawing.Font('Arial Black', $fontSize, [System.Drawing.FontStyle]::Bold, [System.Drawing.GraphicsUnit]::Pixel)
-  } catch {
-    $font = New-Object System.Drawing.Font('Arial', $fontSize, [System.Drawing.FontStyle]::Bold, [System.Drawing.GraphicsUnit]::Pixel)
+  $newFont = {
+    param([single]$px)
+    try {
+      New-Object System.Drawing.Font('Arial Black', $px, [System.Drawing.FontStyle]::Bold, [System.Drawing.GraphicsUnit]::Pixel)
+    } catch {
+      New-Object System.Drawing.Font('Arial', $px, [System.Drawing.FontStyle]::Bold, [System.Drawing.GraphicsUnit]::Pixel)
+    }
   }
 
-  $fmt = New-Object System.Drawing.StringFormat
-  $fmt.Alignment = [System.Drawing.StringAlignment]::Center
-  $fmt.LineAlignment = [System.Drawing.StringAlignment]::Center
-  $rect = New-Object System.Drawing.RectangleF(0, 0, $size, $size)
-  $g.DrawString('S', $font, $blackBrush, $rect, $fmt)
+  $centerFmt = New-Object System.Drawing.StringFormat
+  $centerFmt.Alignment = [System.Drawing.StringAlignment]::Center
+  $centerFmt.LineAlignment = [System.Drawing.StringAlignment]::Center
 
-  $font.Dispose()
+  # Big modern "S" (matches favicon) in the upper portion.
+  $sFont = & $newFont ([single]($size * 0.40))
+  $sRect = New-Object System.Drawing.RectangleF([single]0, [single](0.04 * $size), [single]$size, [single](0.58 * $size))
+  $g.DrawString('S', $sFont, $blackBrush, $sRect, $centerFmt)
+  $sFont.Dispose()
+
+  # "SUBTEEN" wordmark below it.
+  $wordFont = & $newFont ([single]($size * 0.10))
+  $wordRect = New-Object System.Drawing.RectangleF([single]0, [single](0.62 * $size), [single]$size, [single](0.34 * $size))
+  $g.DrawString('SUBTEEN', $wordFont, $blackBrush, $wordRect, $centerFmt)
+  $wordFont.Dispose()
+
+  $centerFmt.Dispose()
   $blackBrush.Dispose()
   $limeBrush.Dispose()
   $g.Dispose()
