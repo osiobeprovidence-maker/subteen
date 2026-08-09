@@ -173,6 +173,12 @@ export default defineSchema({
     featuredLayout: v.string(),
     trendingLimit: v.number(),
     latestLimit: v.number(),
+    logoUrl: v.optional(v.string()),
+    iconLogo: v.optional(v.string()),
+    darkLogo: v.optional(v.string()),
+    lightLogo: v.optional(v.string()),
+    brandUpdatedAt: v.optional(v.number()),
+    brandUpdatedBy: v.optional(v.string()),
   }),
 
   rssSources: defineTable({

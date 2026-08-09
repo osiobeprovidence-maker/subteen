@@ -8,6 +8,8 @@ import { UpdatePrompt } from './components/pwa/UpdatePrompt';
 import { Home } from './pages/Home';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { BrandLogo } from './components/common/BrandLogo';
+import { useDynamicFavicon } from './hooks/useDynamicFavicon';
 
 const ArticlePage = lazy(() => import('./pages/ArticlePage').then((m) => ({ default: m.ArticlePage })));
 const GameHub = lazy(() => import('./pages/GameHub').then((m) => ({ default: m.GameHub })));
@@ -37,12 +39,14 @@ const ScrollToTop = () => {
 };
 
 const Fallback = () => (
-  <div className="min-h-[60vh] flex items-center justify-center">
+  <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6">
+    <BrandLogo variant="icon" className="h-10" />
     <div className="w-8 h-8 border-2 border-[#B8FF4D] border-t-transparent rounded-full animate-spin" />
   </div>
 );
 
 export default function App() {
+  useDynamicFavicon();
   return (
     <AuthProvider>
       <BrowserRouter>

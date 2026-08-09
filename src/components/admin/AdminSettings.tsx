@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Settings as SettingsIcon, 
-  Palette, 
+  Image as ImageIcon,
   Layout, 
   Navigation, 
   Lock, 
@@ -12,17 +12,16 @@ import {
   Database, 
   Key, 
   ShieldCheck,
-  ChevronRight,
-  Monitor
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { BrandAssetsPanel } from './BrandAssetsPanel';
 
 export const AdminSettings = () => {
   const [activeTab, setActiveTab] = React.useState('General');
 
   const settingsTabs = [
     { name: 'General', icon: SettingsIcon },
-    { name: 'Branding', icon: Palette },
+    { name: 'Brand Assets', icon: ImageIcon },
     { name: 'Homepage', icon: Layout },
     { name: 'Navigation', icon: Navigation },
     { name: 'Authentication', icon: Lock },
@@ -96,36 +95,8 @@ export const AdminSettings = () => {
           </div>
         )}
 
-        {activeTab === 'Branding' && (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div className="space-y-4">
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Site Logo</label>
-                <div className="aspect-video bg-zinc-900 rounded-[32px] border border-white/5 flex items-center justify-center relative group overflow-hidden">
-                   <span className="text-4xl font-black italic tracking-tighter">SUBTEEN</span>
-                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                     <button className="px-4 py-2 bg-white text-black rounded-full font-black text-[10px] uppercase tracking-widest">Replace Logo</button>
-                   </div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Accent Color</label>
-                <div className="flex flex-wrap gap-4">
-                  {['#B8FF4D', '#FF4D4D', '#4D9FFF', '#FF4DEB', '#FFFFFF'].map(color => (
-                    <button 
-                      key={color} 
-                      className={cn(
-                        "w-12 h-12 rounded-2xl border-4 transition-all",
-                        color === '#B8FF4D' ? "border-white/20" : "border-transparent"
-                      )}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                  <button className="w-12 h-12 rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center text-zinc-500">+</button>
-                </div>
-              </div>
-            </div>
-          </div>
+        {activeTab === 'Brand Assets' && (
+          <BrandAssetsPanel />
         )}
 
         {activeTab === 'Homepage' && (

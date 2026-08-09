@@ -36,6 +36,19 @@ export const getUrl = query({
   },
 });
 
+/** Resolve several storageIds to URLs in a single round trip. */
+export const getUrls = query({
+  args: { ids: v.array(v.string()) },
+  handler: async (ctx, { ids }) => {
+    const unique = [...new Set(ids)];
+    const out: Record<string, string | null> = {};
+    for (const id of unique) {
+      out[id] = await ctx.storage.getUrl(id as never);
+    }
+    return out;
+  },
+});
+
 export const saveImage = mutation({
   args: {
     userId: v.id('users'),

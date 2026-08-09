@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Twitter, Instagram, Youtube, Facebook, Mail } from 'lucide-react';
+import { BrandLogo } from '../common/BrandLogo';
 
 export const Footer = () => {
   return (
@@ -8,8 +9,8 @@ export const Footer = () => {
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
           <div className="space-y-6">
-            <Link to="/" className="text-3xl font-black tracking-tighter text-white">
-              SUB<span className="text-[#B8FF4D]">TEEN</span>
+            <Link to="/" className="block">
+              <BrandLogo variant="dark" className="text-3xl h-10" />
             </Link>
             <p className="text-zinc-400 leading-relaxed max-w-xs">
               The premium destination for gaming news, expert reviews, and in-depth culture. No fluff, just gaming.

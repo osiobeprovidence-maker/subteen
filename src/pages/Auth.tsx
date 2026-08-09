@@ -4,6 +4,7 @@ import { Mail, Chrome, ArrowRight, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { BrandLogo } from '../components/common/BrandLogo';
 
 export const Auth = () => {
   const location = useLocation();
@@ -67,8 +68,8 @@ export const Auth = () => {
         >
           {/* Brand & Heading Group */}
           <div className="text-center w-full max-w-2xl px-4">
-            <Link to="/" className="text-xl sm:text-3xl font-black tracking-tighter text-white inline-block mb-5 sm:mb-6">
-              SUB<span className="text-[#B8FF4D]">TEEN</span>
+            <Link to="/" className="inline-block mb-5 sm:mb-6">
+              <BrandLogo variant="auto" background="dark" className="text-xl sm:text-3xl h-8 sm:h-10" />
             </Link>
             
             <h1 className="text-[28px] sm:text-[42px] lg:text-[52px] font-black text-white tracking-tight leading-tight mb-3 sm:mb-4">

@@ -4,6 +4,7 @@ import { Menu, X, Search, Bookmark, History, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
 import { Avatar } from '../common/Avatar';
+import { BrandLogo } from '../common/BrandLogo';
 import { useAuth } from '../../context/AuthContext';
 import { canAccessEditor, Role } from '../../lib/roles';
 import {
@@ -139,8 +140,9 @@ export const Navbar = () => {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
           <div className="flex items-center gap-12 min-w-0">
-            <Link to="/" className="text-xl sm:text-2xl font-black tracking-tighter text-white shrink-0">
-              SUB<span className="text-[#B8FF4D]">TEEN</span>
+            <Link to="/" className="shrink-0">
+              <BrandLogo variant="dark" className="hidden md:inline-block text-xl sm:text-2xl h-7 sm:h-8" />
+              <BrandLogo variant="icon" className="md:hidden h-7 sm:h-8" />
             </Link>
 
             {isAdminPath ? (
@@ -380,8 +382,8 @@ export const Navbar = () => {
                 className="absolute top-0 right-0 h-full w-[320px] max-w-[85vw] bg-zinc-950 border-l border-white/10 flex flex-col overflow-hidden"
               >
                 <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
-                  <Link to="/" onClick={() => setIsOpen(false)} className="text-lg font-black tracking-tighter text-white">
-                    SUB<span className="text-[#B8FF4D]">TEEN</span>
+                  <Link to="/" onClick={() => setIsOpen(false)} className="block">
+                    <BrandLogo variant="icon" className="h-7" />
                   </Link>
                   <button onClick={() => setIsOpen(false)} className="text-zinc-400 hover:text-white transition-colors" aria-label="Close menu">
                     <X size={24} />
