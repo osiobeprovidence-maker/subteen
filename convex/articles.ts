@@ -53,6 +53,9 @@ async function ensureUniqueSlug(
 }
 
 async function attachAuthor(ctx: QueryCtx, article: Doc<'articles'>) {
+  if (article.authorName && !article.authorId) {
+    return article;
+  }
   let authorName: string | undefined = article.authorName;
   let authorAvatar: string | undefined = article.authorAvatar;
   if (article.authorId) {
@@ -65,6 +68,12 @@ async function attachAuthor(ctx: QueryCtx, article: Doc<'articles'>) {
   return { ...article, authorName, authorAvatar };
 }
 
+/** Card projection: drops the heavy `content` body used only by the article page. */
+function toCard(article: Doc<'articles'>) {
+  const { content: _content, ...card } = article;
+  return { ...card, content: undefined };
+}
+
 export const listPublished = query({
   args: { take: v.optional(v.number()) },
   handler: async (ctx, { take }) => {
@@ -73,7 +82,7 @@ export const listPublished = query({
       .withIndex('by_status', (q) => q.eq('status', 'published'))
       .order('desc')
       .take(take ?? 50);
-    return Promise.all(articles.map((a) => attachAuthor(ctx, a)));
+    return Promise.all(articles.map((a) => attachAuthor(ctx, a).then(toCard)));
   },
 });
 
@@ -87,7 +96,7 @@ export const featured = query({
       .take(50);
     const featuredOnes = all.filter((a) => a.isFeatured);
     const base = featuredOnes.length > 0 ? featuredOnes : all;
-    return Promise.all(base.slice(0, take ?? 5).map((a) => attachAuthor(ctx, a)));
+    return Promise.all(base.slice(0, take ?? 5).map((a) => attachAuthor(ctx, a).then(toCard)));
   },
 });
 
@@ -160,7 +169,7 @@ export const byIds = query({
     const sorted = ids
       .map((id) => published.find((a) => a._id === id))
       .filter((a): a is Doc<'articles'> => !!a);
-    return Promise.all(sorted.map((a) => attachAuthor(ctx, a)));
+    return Promise.all(sorted.map((a) => attachAuthor(ctx, a).then(toCard)));
   },
 });
 
@@ -173,7 +182,7 @@ export const byAuthor = query({
       .order('desc')
       .take(100);
     const published = articles.filter((a) => a.status === 'published');
-    return Promise.all(published.map((a) => attachAuthor(ctx, a)));
+    return Promise.all(published.map((a) => attachAuthor(ctx, a).then(toCard)));
   },
 });
 
@@ -191,7 +200,7 @@ export const related = query({
     const rel = all
       .filter((a) => a.category === category && a._id !== excludeId)
       .slice(0, 3);
-    return Promise.all(rel.map((a) => attachAuthor(ctx, a)));
+    return Promise.all(rel.map((a) => attachAuthor(ctx, a).then(toCard)));
   },
 });
 
@@ -199,6 +208,24 @@ export const listGames = query({
   args: {},
   handler: async (ctx) => {
     return ctx.db.query('games').order('desc').take(50);
+  },
+});
+
+export const getGame = query({
+  args: { id: v.union(v.id('games'), v.string()) },
+  handler: async (ctx, { id }) => {
+    if (id.startsWith('game_') || id.startsWith('g_')) {
+      return ctx.db
+        .query('games')
+        .withIndex('by_slug', (q) => q.eq('slug', id))
+        .first();
+    }
+    const byId = await ctx.db.get(id as Id<'games'>);
+    if (byId) return byId;
+    return ctx.db
+      .query('games')
+      .withIndex('by_slug', (q) => q.eq('slug', id))
+      .first();
   },
 });
 

@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'motion/react';
 import { ArrowRight, ChevronRight, Play, Trophy, Cpu, Gamepad2, Layers } from 'lucide-react';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
@@ -8,8 +7,8 @@ import { Link } from 'react-router-dom';
 import type { Article } from '../types';
 
 export const Home = () => {
-  const publishedQuery = useQuery(api.articles.listPublished, {});
-  const featuredQuery = useQuery(api.articles.featured, {});
+  const publishedQuery = useQuery(api.articles.listPublished, { take: 12 });
+  const featuredQuery = useQuery(api.articles.featured, { take: 1 });
   const games = useQuery(api.articles.listGames);
   const articles = (publishedQuery ?? []) as unknown as Article[];
   const featuredArticles = (featuredQuery ?? []) as unknown as Article[];

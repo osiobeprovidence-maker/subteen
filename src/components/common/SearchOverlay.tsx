@@ -13,8 +13,8 @@ interface SearchOverlayProps {
 
 export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
-  const publishedQuery = useQuery(api.articles.listPublished, { take: 100 });
-  const games = useQuery(api.articles.listGames);
+  const publishedQuery = useQuery(api.articles.listPublished, isOpen ? { take: 100 } : 'skip');
+  const games = useQuery(api.articles.listGames, isOpen ? {} : 'skip');
   const articles = (publishedQuery ?? []) as unknown as Article[];
   
   useEffect(() => {

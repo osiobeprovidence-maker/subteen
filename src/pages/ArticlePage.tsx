@@ -21,7 +21,10 @@ export const ArticlePage = () => {
   const article = articleDoc as unknown as Article | null | undefined;
   const articleId = articleDoc?._id as any;
 
-  const games = useQuery(api.articles.listGames);
+  const gameQuery = useQuery(
+    api.articles.getGame,
+    articleDoc && articleDoc.gameId ? { id: articleDoc.gameId } : 'skip',
+  );
   const relatedQuery = useQuery(
     api.articles.related,
     articleDoc && articleDoc.status === 'published' ? { category: articleDoc.category, excludeId: articleDoc._id } : 'skip',
@@ -62,7 +65,7 @@ export const ArticlePage = () => {
 
   const authorName = article.authorName ?? 'Staff Writer';
   const authorAvatar = article.authorAvatar;
-  const game = article.gameId ? (games ?? []).find((g) => g._id === article.gameId || g.slug === article.gameId) : null;
+  const game = gameQuery ?? null;
 
   return (
     <div className="pb-20 sm:pb-32">

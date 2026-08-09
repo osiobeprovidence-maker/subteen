@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Search, Bookmark, History, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
-import { SearchOverlay } from '../common/SearchOverlay';
 import { Avatar } from '../common/Avatar';
 import { useAuth } from '../../context/AuthContext';
 import { canAccessAdmin, canAccessEditor, Role } from '../../lib/roles';
+
+const SearchOverlay = lazy(() => import('../common/SearchOverlay').then((m) => ({ default: m.SearchOverlay })));
 
 const NAV_LINKS = [
   { name: 'News', path: '/category/news' },
