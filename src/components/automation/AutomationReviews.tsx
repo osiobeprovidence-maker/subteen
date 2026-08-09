@@ -19,7 +19,7 @@ const FILTERS = [
 export const AutomationReviews = () => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState('PENDING_REVIEW');
-  const drafts = useQuery(api.newsAutomation.listDrafts, { draftStatus: filter as any }) ?? [];
+  const drafts = useQuery(api.newsAutomation.listDrafts, filter ? { status: filter as any } : undefined) ?? [];
 
   return (
     <div className="space-y-8">
