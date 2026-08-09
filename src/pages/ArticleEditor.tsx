@@ -43,10 +43,12 @@ import { cn } from '../lib/utils';
 import { ImageCropModal } from '../components/profile/ImageCropModal';
 import { useAuth } from '../context/AuthContext';
 import { slugify, objectUrlToDataUrl, readingTimeFor } from '../lib/articleHelpers';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export const ArticleEditor = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  usePageTitle(id ? 'Edit Article' : 'New Article');
   const { user } = useAuth();
   const communities = useQuery(api.communities.listAll);
   const editable = useQuery(api.articles.getEditable, id ? { id: id as any } : 'skip');
