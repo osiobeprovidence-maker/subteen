@@ -9,4 +9,10 @@ crons.interval(
   internal.articles.publishScheduled,
 );
 
+crons.interval(
+  'news-automation-sync',
+  { minutes: 5 },
+  internal.newsAutomation.scheduledSync,
+);
+
 export default crons;

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { Clock, Share2, Bookmark, ChevronRight } from 'lucide-react';
+import { Clock, Share2, Bookmark, ChevronRight, ExternalLink } from 'lucide-react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Avatar } from '../components/common/Avatar';
@@ -140,6 +140,42 @@ export const ArticlePage = () => {
                   #{tag}
                 </span>
               ))}
+            </div>
+          )}
+
+          {/* Source attribution */}
+          {(article.sourceName || article.originalUrl) && (
+            <div className="mt-10 sm:mt-16 bg-zinc-950 border border-white/5 rounded-2xl sm:rounded-3xl p-6 sm:p-8">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center overflow-hidden shrink-0">
+                  {article.sourceLogoUrl ? (
+                    <img src={article.sourceLogoUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <ExternalLink size={16} className="text-[#B8FF4D]" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">
+                    Source
+                  </p>
+                  {article.sourceName && (
+                    <p className="text-sm font-black text-white uppercase tracking-tight">
+                      {article.sourceName}
+                    </p>
+                  )}
+                  {article.originalUrl && (
+                    <a
+                      href={article.originalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 mt-2 text-xs sm:text-sm font-bold text-[#B8FF4D] hover:text-white transition-colors"
+                    >
+                      <ExternalLink size={13} />
+                      Read the original story
+                    </a>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </article>

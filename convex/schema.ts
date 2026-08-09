@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
+import { automationStatusSchema } from './lib/automation';
 
 export default defineSchema({
   authors: defineTable({
@@ -64,11 +65,16 @@ export default defineSchema({
     status: v.optional(v.union(v.literal('published'), v.literal('draft'), v.literal('scheduled'))),
     scheduledFor: v.optional(v.number()),
     views: v.optional(v.number()),
+    sourceName: v.optional(v.string()),
+    sourceUrl: v.optional(v.string()),
+    originalUrl: v.optional(v.string()),
+    originalTitle: v.optional(v.string()),
   })
     .index('by_slug', ['slug'])
     .index('by_category', ['category'])
     .index('by_author', ['authorId'])
     .index('by_status', ['status'])
+    .index('by_originalUrl', ['originalUrl'])
     .searchIndex('search_content', { searchField: 'title' }),
 
   users: defineTable({
@@ -144,4 +150,100 @@ export default defineSchema({
     trendingLimit: v.number(),
     latestLimit: v.number(),
   }),
+
+  rssSources: defineTable({
+    name: v.string(),
+    feedUrl: v.string(),
+    websiteUrl: v.string(),
+    logoUrl: v.optional(v.string()),
+    description: v.optional(v.string()),
+    defaultCategory: v.optional(v.string()),
+    active: v.boolean(),
+    lastSyncedAt: v.optional(v.number()),
+    lastSyncStatus: v.optional(v.string()),
+    lastSyncError: v.optional(v.string()),
+    lastSyncStats: v.optional(
+      v.object({
+        newStories: v.number(),
+        duplicates: v.number(),
+        failed: v.number(),
+        processingTimeMs: v.number(),
+      }),
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_active', ['active'])
+    .index('by_name', ['name']),
+
+  importedNews: defineTable({
+    sourceId: v.id('rssSources'),
+    guid: v.optional(v.string()),
+    originalUrl: v.string(),
+    originalTitle: v.string(),
+    originalDescription: v.optional(v.string()),
+    originalAuthor: v.optional(v.string()),
+    originalPublishedAt: v.optional(v.number()),
+    originalImageUrl: v.optional(v.string()),
+    status: automationStatusSchema,
+    duplicateOf: v.optional(v.id('importedNews')),
+    duplicateReason: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_source', ['sourceId'])
+    .index('by_status', ['status'])
+    .index('by_originalUrl', ['originalUrl'])
+    .index('by_guid', ['guid']),
+
+  automatedNewsDrafts: defineTable({
+    importedNewsId: v.id('importedNews'),
+    sourceId: v.id('rssSources'),
+    title: v.string(),
+    subtitle: v.optional(v.string()),
+    summary: v.optional(v.string()),
+    body: v.string(),
+    category: v.string(),
+    tags: v.array(v.string()),
+    seoTitle: v.optional(v.string()),
+    seoDescription: v.optional(v.string()),
+    slug: v.optional(v.string()),
+    featuredImage: v.optional(v.string()),
+    sourceImageUrl: v.optional(v.string()),
+    aiModel: v.optional(v.string()),
+    status: automationStatusSchema,
+    reviewedBy: v.optional(v.id('users')),
+    reviewedAt: v.optional(v.number()),
+    publishedAt: v.optional(v.number()),
+    articleId: v.optional(v.id('articles')),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_imported', ['importedNewsId'])
+    .index('by_status', ['status'])
+    .index('by_source', ['sourceId']),
+
+  automationLogs: defineTable({
+    sourceId: v.optional(v.id('rssSources')),
+    action: v.string(),
+    status: v.union(v.literal('success'), v.literal('error'), v.literal('info'), v.literal('warning')),
+    message: v.string(),
+    metadata: v.optional(v.any()),
+    createdAt: v.number(),
+  })
+    .index('by_created', ['createdAt'])
+    .index('by_source', ['sourceId']),
+
+  automationSettings: defineTable({
+    key: v.string(),
+    syncFrequencyMinutes: v.number(),
+    aiProcessing: v.boolean(),
+    autoPublish: v.boolean(),
+    trustedSources: v.array(v.string()),
+    trustedCategories: v.array(v.string()),
+    defaultStatus: v.string(),
+    maxStoriesPerSync: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_key', ['key']),
 });

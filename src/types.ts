@@ -71,6 +71,11 @@ export interface Article {
   videoUrl?: string;
   status?: 'draft' | 'published' | 'scheduled';
   views?: number;
+  sourceName?: string;
+  sourceUrl?: string;
+  sourceLogoUrl?: string;
+  originalUrl?: string;
+  originalTitle?: string;
 }
 
 export interface User {

@@ -14,6 +14,7 @@ import { ReadingHistory } from './pages/History';
 import { EditorStudio } from './pages/EditorStudio';
 import { AdminPanel } from './pages/AdminPanel';
 import { ArticleEditor } from './pages/ArticleEditor';
+import { NewsAutomation } from './pages/NewsAutomation';
 import { Auth } from './pages/Auth';
 import { Onboarding } from './pages/Onboarding';
 import { Forbidden } from './pages/Forbidden';
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="/editor/new" element={<ProtectedRoute roles={['editor', 'admin', 'super_admin']}><ArticleEditor /></ProtectedRoute>} />
             <Route path="/editor/edit/:id" element={<ProtectedRoute roles={['editor', 'admin', 'super_admin']}><ArticleEditor /></ProtectedRoute>} />
             <Route path="/editor/*" element={<ProtectedRoute roles={['editor', 'admin', 'super_admin']}><EditorStudio /></ProtectedRoute>} />
+            <Route path="/admin/automation/*" element={<ProtectedRoute roles={['editor', 'admin', 'super_admin']}><NewsAutomation /></ProtectedRoute>} />
             <Route path="/admin/*" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminPanel /></ProtectedRoute>} />
             <Route path="/signin" element={<Auth />} />
             <Route path="/signup" element={<Auth />} />

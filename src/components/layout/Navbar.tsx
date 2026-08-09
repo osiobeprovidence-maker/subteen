@@ -17,6 +17,7 @@ const NAV_LINKS = [
 const ROLE_LINKS: { roles: (Role | undefined)[]; name: string; path: string }[] = [
   { roles: ['editor', 'admin', 'super_admin'], name: 'Editor Studio', path: '/editor' },
   { roles: ['admin', 'super_admin'], name: 'Admin Panel', path: '/admin' },
+  { roles: ['editor', 'admin', 'super_admin'], name: 'News Automation', path: '/admin/automation' },
 ];
 
 const navLinksFor = (role: Role | undefined) => {
@@ -40,6 +41,7 @@ const ADMIN_LINKS = [
   { name: 'Media', path: '/admin/media' },
   { name: 'Reports', path: '/admin/reports' },
   { name: 'Settings', path: '/admin/settings' },
+  { name: 'Automation', path: '/admin/automation' },
 ];
 
 const EDITOR_LINKS = [
