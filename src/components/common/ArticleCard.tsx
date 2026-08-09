@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Clock, User as UserIcon } from 'lucide-react';
 import { Article } from '../../types';
 import { cn } from '../../lib/utils';
@@ -11,8 +11,51 @@ interface ArticleCardProps {
 }
 
 export const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'large' }) => {
+  const navigate = useNavigate();
   const authorName = article.authorName ?? 'Staff Writer';
   const authorAvatar = article.authorAvatar;
+
+  const categorySlug = (article.category ?? '').toLowerCase();
+
+  const goCategory = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (categorySlug) navigate(`/category/${categorySlug}`);
+  };
+
+  const goCommunity = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (article.communitySlug) navigate(`/communities/${article.communitySlug}`);
+  };
+
+  const CategoryLabel = ({ className }: { className?: string }) =>
+    categorySlug ? (
+      <span
+        role="link"
+        tabIndex={0}
+        onClick={goCategory}
+        onKeyDown={(e) => e.key === 'Enter' && goCategory(e as unknown as React.MouseEvent)}
+        className={cn('cursor-pointer hover:underline underline-offset-4 decoration-[#B8FF4D]/50', className)}
+      >
+        {article.category}
+      </span>
+    ) : (
+      <span className={className}>{article.category}</span>
+    );
+
+  const CommunityLabel = ({ className }: { className?: string }) =>
+    article.communityName && article.communitySlug ? (
+      <span
+        role="link"
+        tabIndex={0}
+        onClick={goCommunity}
+        onKeyDown={(e) => e.key === 'Enter' && goCommunity(e as unknown as React.MouseEvent)}
+        className={cn('cursor-pointer hover:text-white transition-colors', className)}
+      >
+        {article.communityName}
+      </span>
+    ) : null;
 
   if (variant === 'minimal') {
     return (
@@ -25,9 +68,7 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'la
           />
         </div>
         <div className="space-y-1">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-[#B8FF4D]">
-            {article.category}
-          </span>
+          <CategoryLabel className="text-[10px] font-bold uppercase tracking-widest text-[#B8FF4D]" />
           <h3 className="text-sm font-bold text-white group-hover:text-[#B8FF4D] transition-colors line-clamp-2 leading-tight">
             {article.title}
           </h3>
@@ -52,9 +93,15 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'la
           )}
         </div>
         <div className="space-y-2">
-          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#B8FF4D]">
-            {article.category}
-          </span>
+          <div className="flex items-center gap-2">
+            <CategoryLabel className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#B8FF4D]" />
+            {article.communityName && (
+              <>
+                <span className="w-0.5 h-0.5 rounded-full bg-zinc-700" />
+                <CommunityLabel className="text-[10px] sm:text-xs font-bold text-zinc-500" />
+              </>
+            )}
+          </div>
           <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-[#B8FF4D] transition-colors leading-tight line-clamp-2">
             {article.title}
           </h3>
@@ -80,10 +127,11 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'la
       </div>
       
       <div className="space-y-3 sm:space-y-4">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <span className="px-2 py-0.5 sm:px-3 sm:py-1 bg-zinc-900 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#B8FF4D] border border-white/5">
-            {article.category}
-          </span>
+        <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+          <CategoryLabel className="px-2 py-0.5 sm:px-3 sm:py-1 bg-zinc-900 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#B8FF4D] border border-white/5" />
+          {article.communityName && (
+            <CommunityLabel className="px-2 py-0.5 sm:px-3 sm:py-1 bg-[#B8FF4D]/10 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#B8FF4D] border border-[#B8FF4D]/20" />
+          )}
           <span className="text-[11px] sm:text-xs text-zinc-500">
             {new Date(article.publishDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </span>

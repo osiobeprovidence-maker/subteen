@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { name: 'News', path: '/category/news' },
   { name: 'Reviews', path: '/category/reviews' },
   { name: 'Guides', path: '/category/guides' },
+  { name: 'Communities', path: '/communities' },
 ];
 
 const ROLE_LINKS: { roles: (Role | undefined)[]; name: string; path: string }[] = [
@@ -34,6 +35,7 @@ const navLinksFor = (role: Role | undefined) => {
 const ADMIN_LINKS = [
   { name: 'Dashboard', path: '/admin' },
   { name: 'Articles', path: '/admin/articles' },
+  { name: 'Communities', path: '/admin/communities' },
   { name: 'Games', path: '/admin/games' },
   { name: 'Categories', path: '/admin/categories' },
   { name: 'Tags', path: '/admin/tags' },
@@ -48,6 +50,7 @@ const ADMIN_LINKS = [
 const EDITOR_LINKS = [
   { name: 'Dashboard', path: '/editor' },
   { name: 'Articles', path: '/editor/articles' },
+  { name: 'Communities', path: '/editor/communities' },
   { name: 'Drafts', path: '/editor/drafts' },
   { name: 'Published', path: '/editor/published' },
   { name: 'Scheduled', path: '/editor/scheduled' },

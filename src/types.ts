@@ -18,10 +18,33 @@ export type Category =
   | 'Esports' 
   | 'Deals' 
   | 'Trailers' 
+  | 'Patch Notes'
   | 'Opinion' 
   | 'Features' 
   | 'Industry' 
   | 'Hardware';
+
+export type CommunityStatus = 'published' | 'draft';
+
+export interface Community {
+  _id: string;
+  name: string;
+  slug: string;
+  description: string;
+  coverImage?: string;
+  icon?: string;
+  platform?: string;
+  category?: string;
+  gameTitle?: string;
+  releaseYear?: string;
+  setting?: string;
+  protagonist?: string;
+  featured?: boolean;
+  status: CommunityStatus;
+  postCount?: number;
+  createdAt: number;
+  updatedAt: number;
+}
 
 export type Platform = 'PC' | 'PlayStation' | 'Xbox' | 'Nintendo' | 'Mobile' | 'VR';
 
@@ -65,6 +88,10 @@ export interface Article {
   readingTime: number;
   tags: string[];
   gameId?: string;
+  communityId?: string;
+  communityName?: string;
+  communitySlug?: string;
+  communityIcon?: string;
   isFeatured?: boolean;
   isTrending?: boolean;
   reviewScore?: number;

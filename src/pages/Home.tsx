@@ -3,15 +3,22 @@ import { ArrowRight, ChevronRight, Play, Trophy, Cpu, Gamepad2, Layers, Messages
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { ArticleCard } from '../components/common/ArticleCard';
+import { CommunityCard } from '../components/common/CommunityCard';
+import { CommunityImage } from '../components/common/CommunityImage';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { Link } from 'react-router-dom';
-import type { Article } from '../types';
+import type { Article, Community } from '../types';
 
 export const Home = () => {
+  usePageTitle();
   const publishedQuery = useQuery(api.articles.listPublished, { take: 12 });
   const featuredQuery = useQuery(api.articles.featured, { take: 1 });
-  const games = useQuery(api.articles.listGames);
+  const communitiesQuery = useQuery(api.communities.listForPublic);
+  const featuredCommunityQuery = useQuery(api.communities.featured);
   const articles = (publishedQuery ?? []) as unknown as Article[];
   const featuredArticles = (featuredQuery ?? []) as unknown as Article[];
+  const communities = (communitiesQuery ?? []) as unknown as Community[];
+  const featuredCommunity = featuredCommunityQuery as Community | undefined | null;
 
   const featuredArticle = featuredArticles[0] ?? articles[0];
   const latestNews = articles.filter(a => a.category !== 'Reviews' && a.language !== 'pidgin').slice(0, 4);
@@ -155,7 +162,7 @@ export const Home = () => {
       {/* Categories Grid (Bento) */}
       <section className="px-4 sm:px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-          <div className="col-span-2 row-span-1 md:row-span-2 bg-zinc-900 rounded-3xl p-6 sm:p-8 flex flex-col justify-between group cursor-pointer border border-white/5 hover:border-[#B8FF4D]/50 transition-colors">
+          <Link to="/category/esports" className="col-span-2 row-span-1 md:row-span-2 bg-zinc-900 rounded-3xl p-6 sm:p-8 flex flex-col justify-between group cursor-pointer border border-white/5 hover:border-[#B8FF4D]/50 transition-colors">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-zinc-800 rounded-xl sm:rounded-2xl flex items-center justify-center text-[#B8FF4D] mb-4 sm:mb-0">
               <Trophy size={20} className="sm:w-6 sm:h-6" />
             </div>
@@ -166,95 +173,101 @@ export const Home = () => {
                 <ChevronRight size={18} className="sm:w-5 sm:h-5" />
               </div>
             </div>
-          </div>
+          </Link>
           
-          <div className="bg-zinc-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between group cursor-pointer border border-white/5 hover:border-[#B8FF4D]/50 transition-colors">
+          <Link to="/category/hardware" className="bg-zinc-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between group cursor-pointer border border-white/5 hover:border-[#B8FF4D]/50 transition-colors">
             <Cpu size={20} className="text-[#B8FF4D] sm:w-6 sm:h-6" />
             <h3 className="text-sm sm:text-xl font-bold text-white">HARDWARE</h3>
-          </div>
+          </Link>
           
-          <div className="bg-zinc-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between group cursor-pointer border border-white/5 hover:border-[#B8FF4D]/50 transition-colors">
+          <Link to="/category/patch-notes" className="bg-zinc-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between group cursor-pointer border border-white/5 hover:border-[#B8FF4D]/50 transition-colors">
             <Layers size={20} className="text-[#B8FF4D] sm:w-6 sm:h-6" />
             <h3 className="text-sm sm:text-xl font-bold text-white">PATCH NOTES</h3>
-          </div>
+          </Link>
           
-          <div className="bg-zinc-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between group cursor-pointer border border-white/5 hover:border-[#B8FF4D]/50 transition-colors">
+          <Link to="/category/trailers" className="bg-zinc-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between group cursor-pointer border border-white/5 hover:border-[#B8FF4D]/50 transition-colors">
             <Play size={20} className="text-[#B8FF4D] sm:w-6 sm:h-6" />
             <h3 className="text-sm sm:text-xl font-bold text-white">TRAILERS</h3>
-          </div>
+          </Link>
           
-          <div className="bg-zinc-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between group cursor-pointer border border-white/5 hover:border-[#B8FF4D]/50 transition-colors">
+          <Link to="/category/deals" className="bg-zinc-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between group cursor-pointer border border-white/5 hover:border-[#B8FF4D]/50 transition-colors">
             <Gamepad2 size={20} className="text-[#B8FF4D] sm:w-6 sm:h-6" />
             <h3 className="text-sm sm:text-xl font-bold text-white">DEALS</h3>
-          </div>
+          </Link>
         </div>
       </section>
 
-      {/* Popular Game Hubs */}
+      {/* Popular Communities */}
       <section className="px-4 sm:px-6">
         <div className="max-w-7xl mx-auto space-y-12">
           <div className="flex items-center justify-between">
-            <h2 className="text-3xl font-black text-white uppercase tracking-tighter">POPULAR GAME HUBS</h2>
-            <Link to="/games" className="text-sm font-bold text-zinc-500 hover:text-white transition-colors">EXPLORE ALL</Link>
+            <h2 className="text-3xl font-black text-white uppercase tracking-tighter">POPULAR COMMUNITIES</h2>
+            <Link to="/communities" className="text-sm font-bold text-zinc-500 hover:text-white transition-colors">EXPLORE ALL</Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            {(games ?? []).map(game => (
-              <Link key={game._id} to={`/game/${game.slug}`} className="group space-y-4">
-                <div className="aspect-[2/3] rounded-2xl overflow-hidden border border-white/5 relative">
-                  <img src={game.coverImage} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={game.title} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
-                  <div className="absolute bottom-3 left-3 right-3">
-                    <span className="text-[8px] font-black px-1.5 py-0.5 bg-[#B8FF4D] text-black rounded uppercase tracking-widest">
-                      {game.platforms[0]}
-                    </span>
-                  </div>
-                </div>
-                <h3 className="text-sm font-bold text-white group-hover:text-[#B8FF4D] transition-colors leading-tight">{game.title}</h3>
-              </Link>
+            {communities.slice(0, 6).map(community => (
+              <CommunityCard key={community._id} community={community} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Coming Soon */}
-      <section className="px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto bg-white rounded-[32px] sm:rounded-[40px] p-8 sm:p-12 lg:p-20 overflow-hidden relative">
-          <div className="relative z-10 space-y-8 sm:space-y-12">
-            <div className="space-y-3 sm:space-y-4">
-              <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-black/50">COMING SOON</span>
-              <h2 className="text-4xl sm:text-5xl lg:text-7xl font-black text-black leading-[1.1] tracking-tighter">GRAND THEFT AUTO VI</h2>
+      {/* Featured Community */}
+      {featuredCommunity && (
+        <section className="px-4 sm:px-6">
+          <div className="max-w-7xl mx-auto bg-white rounded-[32px] sm:rounded-[40px] p-8 sm:p-12 lg:p-20 overflow-hidden relative">
+            <div className="relative z-10 space-y-8 sm:space-y-12">
+              <div className="space-y-3 sm:space-y-4">
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-black/50">
+                  {featuredCommunity.platform ?? 'FEATURED COMMUNITY'}
+                </span>
+                <h2 className="text-4xl sm:text-5xl lg:text-7xl font-black text-black leading-[1.1] tracking-tighter">
+                  {featuredCommunity.name}
+                </h2>
+                {featuredCommunity.gameTitle && (
+                  <p className="text-black/50 font-bold uppercase tracking-widest text-sm sm:text-base">
+                    {featuredCommunity.gameTitle}
+                  </p>
+                )}
+              </div>
+              
+              <div className="flex flex-wrap gap-8 sm:gap-12">
+                {featuredCommunity.releaseYear && (
+                  <div className="space-y-0.5 sm:space-y-1">
+                    <span className="text-3xl sm:text-5xl font-black text-black">{featuredCommunity.releaseYear}</span>
+                    <p className="text-[10px] sm:text-sm font-bold text-black/40 uppercase tracking-widest">RELEASE YEAR</p>
+                  </div>
+                )}
+                {featuredCommunity.setting && (
+                  <div className="space-y-0.5 sm:space-y-1">
+                    <span className="text-3xl sm:text-5xl font-black text-black">{featuredCommunity.setting}</span>
+                    <p className="text-[10px] sm:text-sm font-bold text-black/40 uppercase tracking-widest">SETTING</p>
+                  </div>
+                )}
+                {featuredCommunity.protagonist && (
+                  <div className="space-y-0.5 sm:space-y-1">
+                    <span className="text-3xl sm:text-5xl font-black text-black">{featuredCommunity.protagonist}</span>
+                    <p className="text-[10px] sm:text-sm font-bold text-black/40 uppercase tracking-widest">PROTAGONIST</p>
+                  </div>
+                )}
+              </div>
+
+              <Link to={`/communities/${featuredCommunity.slug}`} className="inline-flex items-center gap-2 sm:gap-3 bg-black text-white px-8 py-4 sm:px-10 sm:py-5 rounded-full font-black text-base sm:text-lg hover:bg-[#B8FF4D] hover:text-black transition-all">
+                GO TO COMMUNITY <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
+              </Link>
             </div>
             
-            <div className="flex flex-wrap gap-8 sm:gap-12">
-              <div className="space-y-0.5 sm:space-y-1">
-                <span className="text-3xl sm:text-5xl font-black text-black">2025</span>
-                <p className="text-[10px] sm:text-sm font-bold text-black/40 uppercase tracking-widest">RELEASE YEAR</p>
-              </div>
-              <div className="space-y-0.5 sm:space-y-1">
-                <span className="text-3xl sm:text-5xl font-black text-black">LEONIDA</span>
-                <p className="text-[10px] sm:text-sm font-bold text-black/40 uppercase tracking-widest">SETTING</p>
-              </div>
-              <div className="space-y-0.5 sm:space-y-1">
-                <span className="text-3xl sm:text-5xl font-black text-black">LUCIA</span>
-                <p className="text-[10px] sm:text-sm font-bold text-black/40 uppercase tracking-widest">PROTAGONIST</p>
-              </div>
+            <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-30 md:opacity-100">
+               <CommunityImage 
+                 src={featuredCommunity.coverImage}
+                 className="w-full h-full object-cover"
+                 alt={featuredCommunity.name}
+               />
+               <div className="absolute inset-0 bg-gradient-to-r from-white via-white/50 to-transparent" />
             </div>
-
-            <Link to="/game/gta-vi" className="inline-flex items-center gap-2 sm:gap-3 bg-black text-white px-8 py-4 sm:px-10 sm:py-5 rounded-full font-black text-base sm:text-lg hover:bg-[#B8FF4D] hover:text-black transition-all">
-              GO TO HUB <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
-            </Link>
           </div>
-          
-          <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-30 md:opacity-100">
-             <img 
-               src="https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=1000&auto=format&fit=crop" 
-               className="w-full h-full object-cover"
-               alt="GTA VI"
-             />
-             <div className="absolute inset-0 bg-gradient-to-r from-white via-white/50 to-transparent" />
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 };

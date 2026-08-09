@@ -6,6 +6,7 @@ import { AdminTags } from '../components/admin/AdminTags';
 import { AdminGames } from '../components/admin/AdminGames';
 import { AdminUsers } from '../components/admin/AdminUsers';
 import { AdminAds } from '../components/admin/AdminAds';
+import { AdminCommunities } from '../components/admin/AdminCommunities';
 import { AdminSettings } from '../components/admin/AdminSettings';
 import { useLocation } from 'react-router-dom';
 import { 
@@ -33,6 +34,7 @@ export const AdminPanel = () => {
     if (path.startsWith('/admin/articles')) return 'articles';
     if (path.startsWith('/admin/categories')) return 'categories';
     if (path.startsWith('/admin/tags')) return 'tags';
+    if (path.startsWith('/admin/communities')) return 'communities';
     if (path.startsWith('/admin/games')) return 'games';
     if (path.startsWith('/admin/users')) return 'users';
     if (path.startsWith('/admin/ads')) return 'ads';
@@ -116,6 +118,7 @@ export const AdminPanel = () => {
       case 'articles': return <AdminArticles />;
       case 'categories': return <AdminCategories />;
       case 'tags': return <AdminTags />;
+      case 'communities': return <AdminCommunities />;
       case 'games': return <AdminGames />;
       case 'users': return <AdminUsers />;
       case 'ads': return <AdminAds />;
@@ -132,6 +135,7 @@ export const AdminPanel = () => {
       case 'articles': return <FileText size={24} />;
       case 'categories': return <Grid size={24} />;
       case 'tags': return <TagIcon size={24} />;
+      case 'communities': return <Gamepad2 size={24} />;
       case 'games': return <Gamepad2 size={24} />;
       case 'users': return <Users size={24} />;
       case 'ads': return <Megaphone size={24} />;

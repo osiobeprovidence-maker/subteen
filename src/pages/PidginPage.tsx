@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { ArticleCard } from '../components/common/ArticleCard';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { MessagesSquare } from 'lucide-react';
 import type { Article } from '../types';
 
 export const PidginPage = () => {
+  usePageTitle('Subteen Pidgin');
   const publishedQuery = useQuery(api.articles.listPublished, { take: 100 });
   const articles = (publishedQuery ?? []) as unknown as Article[];
   const pidginArticles = articles.filter(a => a.language === 'pidgin');

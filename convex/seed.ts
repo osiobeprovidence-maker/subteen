@@ -480,3 +480,144 @@ export const seedExtras = mutation({
     return { seeded: true, categories: 10, tags: 12, adCampaigns: 3, adPlacements: 5, settings: 1, users: 5 };
   },
 });
+
+const SEED_COMMUNITIES = [
+  {
+    name: 'Grand Theft Auto VI',
+    slug: 'grand-theft-auto-vi',
+    description:
+      'The home of every story, trailer and rumour about Rockstar’s return to Leonida. Lucia, Jason and the biggest open world ever built — discussed here daily.',
+    coverImage: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=1000&auto=format&fit=crop',
+    icon: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=200&auto=format&fit=crop',
+    platform: 'PlayStation',
+    category: 'Action / Open World',
+    gameTitle: 'Grand Theft Auto VI',
+    releaseYear: '2025',
+    setting: 'Leonida',
+    protagonist: 'Lucia & Jason',
+    featured: true,
+    status: 'published' as const,
+  },
+  {
+    name: 'Elden Ring',
+    slug: 'elden-ring',
+    description:
+      'The Lands Between and beyond. Builds, bosses, lore theories and every Shadow of the Erdtree secret the community can unearth.',
+    coverImage: 'https://images.unsplash.com/photo-1612285335132-13674681329c?q=80&w=1000&auto=format&fit=crop',
+    icon: 'https://images.unsplash.com/photo-1612285335132-13674681329c?q=80&w=200&auto=format&fit=crop',
+    platform: 'PC',
+    category: 'Action RPG / Souls-like',
+    gameTitle: 'Elden Ring',
+    releaseYear: '2022',
+    setting: 'The Lands Between',
+    protagonist: 'The Tarnished',
+    status: 'published' as const,
+  },
+  {
+    name: 'Valorant',
+    slug: 'valorant',
+    description:
+      'Tactical shooter tactics, agent picks, VCT coverage and climbing guides from the Subteen Valorant community.',
+    coverImage: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1000&auto=format&fit=crop',
+    icon: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=200&auto=format&fit=crop',
+    platform: 'PC',
+    category: 'Tactical Shooter / Esports',
+    gameTitle: 'Valorant',
+    releaseYear: '2020',
+    setting: 'Near-future Earth',
+    status: 'published' as const,
+  },
+  {
+    name: "Baldur's Gate 3",
+    slug: 'baldurs-gate-3',
+    description:
+      'Builds, honour mode runs, romances gone wrong and the endless choices of Larian’s masterpiece.',
+    coverImage: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=1000&auto=format&fit=crop',
+    icon: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=200&auto=format&fit=crop',
+    platform: 'PC',
+    category: 'CRPG / Turn-based',
+    gameTitle: "Baldur's Gate 3",
+    releaseYear: '2023',
+    setting: 'Faerûn',
+    protagonist: 'The Dark Urge',
+    status: 'published' as const,
+  },
+  {
+    name: 'Helldivers 2',
+    slug: 'helldivers-2',
+    description:
+      'For Democracy. War strategies, loadout builds and the latest from the galactic front lines.',
+    coverImage: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=1000&auto=format&fit=crop',
+    icon: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=200&auto=format&fit=crop',
+    platform: 'PlayStation',
+    category: 'Co-op Shooter',
+    gameTitle: 'Helldivers 2',
+    releaseYear: '2024',
+    setting: 'Super Earth & the Galaxy',
+    status: 'published' as const,
+  },
+  {
+    name: 'Minecraft',
+    slug: 'minecraft',
+    description:
+      'Builds, survival tips, redstone contraptions and every update worth digging into.',
+    coverImage: 'https://images.unsplash.com/photo-1547394765-185e1e68f34e?q=80&w=1000&auto=format&fit=crop',
+    icon: 'https://images.unsplash.com/photo-1547394765-185e1e68f34e?q=80&w=200&auto=format&fit=crop',
+    platform: 'Xbox',
+    category: 'Sandbox / Survival',
+    gameTitle: 'Minecraft',
+    releaseYear: '2011',
+    setting: 'The Overworld',
+    status: 'published' as const,
+  },
+];
+
+/** Seeds demo communities and links seeded articles to them. Idempotent by slug. */
+export const seedCommunities = mutation({
+  args: {},
+  handler: async (ctx) => {
+    let created = 0;
+    for (const c of SEED_COMMUNITIES) {
+      const existing = await ctx.db
+        .query('communities')
+        .withIndex('by_slug', (q) => q.eq('slug', c.slug))
+        .unique();
+      if (existing) continue;
+      const now = Date.now();
+      await ctx.db.insert('communities', {
+        ...c,
+        coverImage: c.coverImage,
+        icon: c.icon,
+        createdAt: now,
+        updatedAt: now,
+      });
+      created += 1;
+    }
+
+    const links = [
+      { articleSlug: 'gta-vi-everything-we-know', communitySlug: 'grand-theft-auto-vi' },
+      { articleSlug: 'elden-ring-shadow-erdtree-review', communitySlug: 'elden-ring' },
+      { articleSlug: 'valorant-meta-guide', communitySlug: 'valorant' },
+      { articleSlug: 'baldurs-gate-3-retrospective', communitySlug: 'baldurs-gate-3' },
+      { articleSlug: 'helldivers-2-live-service-revolution', communitySlug: 'helldivers-2' },
+      { articleSlug: 'valorant-champions-final-recap', communitySlug: 'valorant' },
+    ];
+    let linked = 0;
+    for (const link of links) {
+      const article = await ctx.db
+        .query('articles')
+        .withIndex('by_slug', (q) => q.eq('slug', link.articleSlug))
+        .unique();
+      const community = await ctx.db
+        .query('communities')
+        .withIndex('by_slug', (q) => q.eq('slug', link.communitySlug))
+        .unique();
+      if (article && community && !article.communityId) {
+        await ctx.db.patch(article._id, { communityId: community._id });
+        linked += 1;
+      }
+    }
+
+    return { seeded: true, created, linked };
+  },
+});

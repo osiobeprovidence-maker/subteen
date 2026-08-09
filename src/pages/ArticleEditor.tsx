@@ -48,7 +48,7 @@ export const ArticleEditor = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const games = useQuery(api.articles.listGames);
+  const communities = useQuery(api.communities.listAll);
   const editable = useQuery(api.articles.getEditable, id ? { id: id as any } : 'skip');
   const createArticle = useMutation(api.articles.create);
   const updateArticle = useMutation(api.articles.update);
@@ -63,6 +63,7 @@ export const ArticleEditor = () => {
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('News');
   const [selectedGame, setSelectedGame] = useState('');
+  const [selectedCommunity, setSelectedCommunity] = useState('');
   const [status, setStatus] = useState<'Draft' | 'Published' | 'Scheduled'>('Draft');
   const [scheduledFor, setScheduledFor] = useState('');
   const [isFeatured, setIsFeatured] = useState(false);
@@ -105,6 +106,7 @@ export const ArticleEditor = () => {
     setContent(editable.content);
     setCategory(editable.category);
     setSelectedGame(editable.gameId ?? '');
+    setSelectedCommunity(editable.communityId ?? '');
     setStatus(editable.status === 'scheduled' ? 'Scheduled' : editable.status === 'published' ? 'Published' : 'Draft');
     setScheduledFor(editable.scheduledFor ? new Date(editable.scheduledFor).toISOString().slice(0, 16) : '');
     setIsFeatured(!!editable.isFeatured);
@@ -131,6 +133,7 @@ export const ArticleEditor = () => {
       heroImage: heroImage || undefined,
       category,
       gameId: selectedGame || undefined,
+      communityId: selectedCommunity || undefined,
       isFeatured,
       readingTime,
       status: dbStatus,
@@ -600,7 +603,7 @@ export const ArticleEditor = () => {
                             onChange={(e) => setCategory(e.target.value)}
                             className="w-full appearance-none bg-zinc-900 border border-white/5 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#B8FF4D] transition-all cursor-pointer"
                           >
-                            {['News', 'Reviews', 'Guides', 'Esports', 'Deals', 'Trailers'].map(cat => (
+                            {['News', 'Reviews', 'Guides', 'Esports', 'Deals', 'Trailers', 'Patch Notes', 'Hardware', 'Opinion', 'Features', 'Industry'].map(cat => (
                               <option key={cat}>{cat}</option>
                             ))}
                           </select>
@@ -608,18 +611,18 @@ export const ArticleEditor = () => {
                         </div>
                       </div>
 
-                      {/* Linked Game */}
+                      {/* Linked Community */}
                       <div className="space-y-4">
-                        <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Linked Game Hub</label>
+                        <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Linked Community</label>
                         <div className="relative group">
                           <select 
-                            value={selectedGame}
-                            onChange={(e) => setSelectedGame(e.target.value)}
+                            value={selectedCommunity}
+                            onChange={(e) => handleChange(setSelectedCommunity, e.target.value)}
                             className="w-full appearance-none bg-zinc-900 border border-white/5 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#B8FF4D] transition-all cursor-pointer"
                           >
                             <option value="">None</option>
-                            {(games ?? []).map(game => (
-                              <option key={game._id} value={game._id}>{game.title}</option>
+                            {(communities ?? []).map(community => (
+                              <option key={community._id as any} value={community._id as any}>{community.name}</option>
                             ))}
                           </select>
                           <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none group-hover:text-white transition-colors" />

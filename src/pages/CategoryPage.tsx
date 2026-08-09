@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { ArticleCard } from '../components/common/ArticleCard';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { Filter, SlidersHorizontal } from 'lucide-react';
 import type { Article } from '../types';
 
@@ -14,6 +15,7 @@ export const CategoryPage = () => {
   // Normalize category string for filtering
   const displayCategory = category?.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   const normalizedCategory = category?.toLowerCase() ?? '';
+  usePageTitle(displayCategory);
   const filteredArticles = articles.filter(a => {
     if (normalizedCategory === 'news') return a.language !== 'pidgin' && a.category !== 'Reviews';
     if (normalizedCategory === 'reviews') return a.category === 'Reviews' && a.language !== 'pidgin';

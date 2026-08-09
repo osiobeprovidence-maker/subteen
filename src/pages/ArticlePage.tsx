@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { Clock, Share2, Bookmark, ChevronRight, ExternalLink } from 'lucide-react';
+import { Clock, Share2, Bookmark, ChevronRight, ExternalLink, Gamepad2 } from 'lucide-react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Avatar } from '../components/common/Avatar';
+import { CommunityImage } from '../components/common/CommunityImage';
 import { useAuth } from '../context/AuthContext';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { cn } from '../lib/utils';
 import type { Article } from '../types';
 
@@ -20,6 +22,8 @@ export const ArticlePage = () => {
   const articleDoc = useQuery(articleQuery, slug ? { slug } : 'skip');
   const article = articleDoc as unknown as Article | null | undefined;
   const articleId = articleDoc?._id as any;
+
+  usePageTitle(article?.title);
 
   const gameQuery = useQuery(
     api.articles.getGame,
@@ -76,6 +80,14 @@ export const ArticlePage = () => {
             <Link to={`/category/${article.category.toLowerCase()}`} className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#B8FF4D]">
               {article.category}
             </Link>
+            {article.communityName && article.communitySlug && (
+              <>
+                <span className="w-1 h-1 rounded-full bg-zinc-700" />
+                <Link to={`/communities/${article.communitySlug}`} className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-[#B8FF4D] transition-colors">
+                  {article.communityName}
+                </Link>
+              </>
+            )}
             <span className="w-1 h-1 rounded-full bg-zinc-700" />
             <span className="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-widest">
               {new Date(article.publishDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
@@ -192,6 +204,26 @@ export const ArticlePage = () => {
         </article>
 
         <aside className="lg:col-span-4 space-y-10 sm:space-y-12">
+          {article.communityName && article.communitySlug && (
+            <div className="bg-zinc-950 border border-white/5 rounded-3xl p-8 space-y-6">
+              <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Part of the Community</p>
+              <div className="flex gap-4 items-start">
+                <div className="w-20 h-20 shrink-0 rounded-xl overflow-hidden bg-zinc-900">
+                  <CommunityImage src={article.communityIcon} alt={article.communityName} className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-xl font-black text-white leading-tight">{article.communityName}</h3>
+                  <Link 
+                    to={`/communities/${article.communitySlug}`}
+                    className="inline-block mt-6 text-sm font-bold text-[#B8FF4D] hover:underline"
+                  >
+                    View Community →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
           {game && (
             <div className="bg-zinc-950 border border-white/5 rounded-3xl p-8 space-y-6">
               <div className="flex gap-4 items-start">
@@ -205,7 +237,7 @@ export const ArticlePage = () => {
                     to={`/game/${game.slug}`}
                     className="inline-block mt-6 text-sm font-bold text-[#B8FF4D] hover:underline"
                   >
-                    View Game Hub →
+                    View Hub →
                   </Link>
                 </div>
               </div>

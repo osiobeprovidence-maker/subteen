@@ -17,6 +17,7 @@ import {
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+import { AdminCommunities } from '../components/admin/AdminCommunities';
 import { cn } from '../lib/utils';
 import { relativeTime } from '../lib/articleHelpers';
 
@@ -50,6 +51,7 @@ export const EditorStudio = () => {
     if (path.startsWith('/editor/drafts')) return 'drafts';
     if (path.startsWith('/editor/published')) return 'published';
     if (path.startsWith('/editor/scheduled')) return 'scheduled';
+    if (path.startsWith('/editor/communities')) return 'communities';
     if (path.startsWith('/editor/analytics')) return 'analytics';
     if (path.startsWith('/editor/ads')) return 'ads';
     return 'dashboard';
@@ -220,6 +222,7 @@ export const EditorStudio = () => {
       case 'scheduled': return renderArticles('scheduled');
       case 'analytics': return renderPerformance();
       case 'ads': return renderAds();
+      case 'communities': return <AdminCommunities />;
       default: return renderDashboard();
     }
   };

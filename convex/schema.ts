@@ -44,6 +44,27 @@ export default defineSchema({
     .index('by_slug', ['slug'])
     .searchIndex('search_title', { searchField: 'title' }),
 
+  communities: defineTable({
+    name: v.string(),
+    slug: v.string(),
+    description: v.string(),
+    coverImage: v.optional(v.string()),
+    icon: v.optional(v.string()),
+    platform: v.optional(v.string()),
+    category: v.optional(v.string()),
+    gameTitle: v.optional(v.string()),
+    releaseYear: v.optional(v.string()),
+    setting: v.optional(v.string()),
+    protagonist: v.optional(v.string()),
+    featured: v.optional(v.boolean()),
+    status: v.union(v.literal('published'), v.literal('draft')),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_slug', ['slug'])
+    .index('by_status', ['status'])
+    .index('by_featured', ['featured']),
+
   articles: defineTable({
     title: v.string(),
     subtitle: v.optional(v.string()),
@@ -58,6 +79,7 @@ export default defineSchema({
     readingTime: v.number(),
     tags: v.array(v.string()),
     gameId: v.optional(v.string()),
+    communityId: v.optional(v.string()),
     isFeatured: v.optional(v.boolean()),
     isTrending: v.optional(v.boolean()),
     reviewScore: v.optional(v.number()),
@@ -75,6 +97,7 @@ export default defineSchema({
     .index('by_category', ['category'])
     .index('by_author', ['authorId'])
     .index('by_status', ['status'])
+    .index('by_community', ['communityId'])
     .index('by_originalUrl', ['originalUrl'])
     .searchIndex('search_content', { searchField: 'title' }),
 

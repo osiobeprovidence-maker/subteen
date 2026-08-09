@@ -12,6 +12,8 @@ const AdminCMS = lazy(() => import('./pages/AdminCMS').then((m) => ({ default: m
 const AuthorProfile = lazy(() => import('./pages/AuthorProfile').then((m) => ({ default: m.AuthorProfile })));
 const CategoryPage = lazy(() => import('./pages/CategoryPage').then((m) => ({ default: m.CategoryPage })));
 const PidginPage = lazy(() => import('./pages/PidginPage').then((m) => ({ default: m.PidginPage })));
+const CommunitiesPage = lazy(() => import('./pages/CommunitiesPage').then((m) => ({ default: m.CommunitiesPage })));
+const CommunityPage = lazy(() => import('./pages/CommunityPage').then((m) => ({ default: m.CommunityPage })));
 const UserProfile = lazy(() => import('./pages/UserProfile').then((m) => ({ default: m.UserProfile })));
 const Bookmarks = lazy(() => import('./pages/Bookmarks').then((m) => ({ default: m.Bookmarks })));
 const ReadingHistory = lazy(() => import('./pages/History').then((m) => ({ default: m.ReadingHistory })));
@@ -53,6 +55,8 @@ export default function App() {
               <Route path="/author/:id" element={<AuthorProfile />} />
               <Route path="/category/:category" element={<CategoryPage />} />
               <Route path="/pidgin" element={<PidginPage />} />
+              <Route path="/communities" element={<CommunitiesPage />} />
+              <Route path="/communities/:slug" element={<CommunityPage />} />
               <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
               <Route path="/bookmarks" element={<ProtectedRoute><Bookmarks /></ProtectedRoute>} />
               <Route path="/history" element={<ProtectedRoute><ReadingHistory /></ProtectedRoute>} />

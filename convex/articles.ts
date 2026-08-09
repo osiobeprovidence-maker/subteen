@@ -68,6 +68,26 @@ async function attachAuthor(ctx: QueryCtx, article: Doc<'articles'>) {
   return { ...article, authorName, authorAvatar };
 }
 
+/** Attaches the linked community's public name/slug/icon so cards can link to it. */
+async function attachCommunity(ctx: QueryCtx, article: Doc<'articles'>) {
+  let communityName: string | undefined;
+  let communitySlug: string | undefined;
+  let communityIcon: string | undefined;
+  if (article.communityId) {
+    try {
+      const community = await ctx.db.get(article.communityId as Id<'communities'>);
+      if (community && community.status === 'published') {
+        communityName = community.name;
+        communitySlug = community.slug;
+        communityIcon = community.icon;
+      }
+    } catch {
+      // communityId may reference a removed or legacy entry
+    }
+  }
+  return { ...article, communityName, communitySlug, communityIcon };
+}
+
 /** Card projection: drops the heavy `content` body used only by the article page. */
 function toCard(article: Doc<'articles'>) {
   const { content: _content, ...card } = article;
@@ -82,7 +102,7 @@ export const listPublished = query({
       .withIndex('by_status', (q) => q.eq('status', 'published'))
       .order('desc')
       .take(take ?? 50);
-    return Promise.all(articles.map((a) => attachAuthor(ctx, a).then(toCard)));
+    return Promise.all(articles.map((a) => attachAuthor(ctx, a).then((a) => attachCommunity(ctx, a)).then(toCard)));
   },
 });
 
@@ -96,7 +116,7 @@ export const featured = query({
       .take(50);
     const featuredOnes = all.filter((a) => a.isFeatured);
     const base = featuredOnes.length > 0 ? featuredOnes : all;
-    return Promise.all(base.slice(0, take ?? 5).map((a) => attachAuthor(ctx, a).then(toCard)));
+    return Promise.all(base.slice(0, take ?? 5).map((a) => attachAuthor(ctx, a).then((a) => attachCommunity(ctx, a)).then(toCard)));
   },
 });
 
@@ -108,7 +128,7 @@ export const getBySlug = query({
       .withIndex('by_slug', (q) => q.eq('slug', slug))
       .unique();
     if (!article || article.status !== 'published') return null;
-    return attachAuthor(ctx, article);
+    return attachAuthor(ctx, article).then((a) => attachCommunity(ctx, a));
   },
 });
 
@@ -169,7 +189,7 @@ export const byIds = query({
     const sorted = ids
       .map((id) => published.find((a) => a._id === id))
       .filter((a): a is Doc<'articles'> => !!a);
-    return Promise.all(sorted.map((a) => attachAuthor(ctx, a).then(toCard)));
+    return Promise.all(sorted.map((a) => attachAuthor(ctx, a).then((a) => attachCommunity(ctx, a)).then(toCard)));
   },
 });
 
@@ -182,7 +202,7 @@ export const byAuthor = query({
       .order('desc')
       .take(100);
     const published = articles.filter((a) => a.status === 'published');
-    return Promise.all(published.map((a) => attachAuthor(ctx, a).then(toCard)));
+    return Promise.all(published.map((a) => attachAuthor(ctx, a).then((a) => attachCommunity(ctx, a)).then(toCard)));
   },
 });
 
@@ -200,7 +220,7 @@ export const related = query({
     const rel = all
       .filter((a) => a.category === category && a._id !== excludeId)
       .slice(0, 3);
-    return Promise.all(rel.map((a) => attachAuthor(ctx, a).then(toCard)));
+    return Promise.all(rel.map((a) => attachAuthor(ctx, a).then((a) => attachCommunity(ctx, a)).then(toCard)));
   },
 });
 
@@ -238,6 +258,7 @@ export const create = mutation({
     heroImage: v.optional(v.string()),
     category: v.string(),
     gameId: v.optional(v.string()),
+    communityId: v.optional(v.string()),
     isFeatured: v.optional(v.boolean()),
     isTrending: v.optional(v.boolean()),
     reviewScore: v.optional(v.number()),
@@ -278,6 +299,7 @@ export const create = mutation({
       readingTime: args.readingTime ?? 1,
       tags: args.tags ?? [],
       gameId: args.gameId,
+      communityId: args.communityId,
       isFeatured: args.isFeatured,
       isTrending: args.isTrending,
       reviewScore: args.reviewScore,
@@ -300,6 +322,7 @@ export const update = mutation({
     heroImage: v.optional(v.string()),
     category: v.optional(v.string()),
     gameId: v.optional(v.string()),
+    communityId: v.optional(v.string()),
     isFeatured: v.optional(v.boolean()),
     isTrending: v.optional(v.boolean()),
     reviewScore: v.optional(v.number()),
