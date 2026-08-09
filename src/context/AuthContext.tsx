@@ -5,6 +5,10 @@ import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  EmailAuthProvider,
+  linkWithCredential,
+  reauthenticateWithCredential,
+  updatePassword,
   updateProfile,
   signOut,
   User,
@@ -28,9 +32,12 @@ interface AuthContextType {
   user: AuthUser | null;
   dbUser: Doc<'users'> | null;
   role: Role;
+  hasPassword: boolean;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  addPassword: (password: string) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -48,7 +55,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [dbUser, setDbUser] = useState<Doc<'users'> | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const syncUser = useMutation(api.users.upsertFromFirebase);
+
+  const hasPassword = !!firebaseUser?.providerData?.some((p) => p.providerId === 'password');
 
   const convexUser = useQuery(
     api.users.getByFirebaseUid,
@@ -66,6 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (firebaseUser) {
         const u = toAuthUser(firebaseUser);
         setUser(u);
+        setFirebaseUser(firebaseUser);
         setIsLoggedIn(true);
         syncUser({
           firebaseUid: u.uid,
@@ -77,6 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .catch(() => {});
       } else {
         setUser(null);
+        setFirebaseUser(null);
         setIsLoggedIn(false);
         setDbUser(null);
       }
@@ -101,6 +113,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await signInWithPopup(auth, provider);
   }, []);
 
+  const addPassword = useCallback(async (password: string) => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error('You must be signed in to add a password.');
+    if (!currentUser.email) throw new Error('Your account has no email to attach a password to.');
+    await linkWithCredential(currentUser, EmailAuthProvider.credential(currentUser.email, password));
+  }, []);
+
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error('You must be signed in to change your password.');
+    if (currentUser.email) {
+      await reauthenticateWithCredential(
+        currentUser,
+        EmailAuthProvider.credential(currentUser.email, currentPassword),
+      );
+    }
+    await updatePassword(currentUser, newPassword);
+  }, []);
+
   const logout = useCallback(async () => {
     await signOut(auth);
   }, []);
@@ -113,9 +144,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         dbUser,
         role: (dbUser?.role as Role | undefined) ?? 'member',
+        hasPassword,
         signUp,
         signIn,
         signInWithGoogle,
+        addPassword,
+        changePassword,
         logout,
       }}
     >

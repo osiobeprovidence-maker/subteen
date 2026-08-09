@@ -24,6 +24,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { ImageCropModal } from '../components/profile/ImageCropModal';
+import { PasswordModal } from '../components/profile/PasswordModal';
 import { Avatar } from '../components/common/Avatar';
 import { useUploadImage, useRemoveImage, useResolvedMedia, MediaField } from '../hooks/useImageUpload';
 import { useMutation } from 'convex/react';
@@ -33,8 +34,9 @@ import { canAccessAdmin, canAccessEditor, roleLabel } from '../lib/roles';
 const COVER_DEFAULT = 'bg-gradient-to-br from-[#1a1a1a] via-[#0d0d0d] to-black';
 
 export const UserProfile = () => {
-  const { user, dbUser, logout, role } = useAuth();
+  const { user, dbUser, logout, role, hasPassword } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [displayName, setDisplayName] = useState(dbUser?.name ?? user?.name ?? '');
   const [cropState, setCropState] = useState<{ field: MediaField; src: string } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -105,16 +107,16 @@ export const UserProfile = () => {
     {
       title: 'Account Settings',
       items: [
-        { name: 'Email Address', value: email || '—', icon: Mail },
-        { name: 'Password', value: 'Managed by Google', icon: Key },
-        { name: 'Security', value: 'Two-factor enabled', icon: Shield },
+        { name: 'Email Address', value: email || '—', icon: Mail, onClick: undefined },
+        { name: 'Password', value: hasPassword ? 'Set — tap to change' : 'Google sign-in — tap to add', icon: Key, onClick: () => setShowPasswordModal(true) },
+        { name: 'Security', value: 'Two-factor enabled', icon: Shield, onClick: undefined },
       ]
     },
     {
       title: 'Preferences',
       items: [
-        { name: 'Notifications', value: dbUser?.preferences?.newsletter ? 'Newsletter On' : 'Newsletter Off', icon: Bell },
-        { name: 'Appearance', value: dbUser?.preferences?.darkMode ? 'Dark Mode' : 'Light Mode', icon: Palette },
+        { name: 'Notifications', value: dbUser?.preferences?.newsletter ? 'Newsletter On' : 'Newsletter Off', icon: Bell, onClick: undefined },
+        { name: 'Appearance', value: dbUser?.preferences?.darkMode ? 'Dark Mode' : 'Light Mode', icon: Palette, onClick: undefined },
       ]
     }
   ];
@@ -304,6 +306,7 @@ export const UserProfile = () => {
           onCancel={() => setCropState(null)}
           onConfirm={handleCropConfirm}
         />
+        <PasswordModal open={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
       </div>
     );
   }
@@ -381,6 +384,7 @@ export const UserProfile = () => {
                 {section.items.map((item, idx) => (
                   <button 
                     key={item.name}
+                    onClick={item.onClick}
                     className={`w-full flex items-center justify-between p-6 hover:bg-white/[0.02] transition-colors ${idx !== section.items.length - 1 ? 'border-b border-white/5' : ''}`}
                   >
                     <div className="flex items-center gap-4">
@@ -413,6 +417,8 @@ export const UserProfile = () => {
           </div>
         </div>
       </div>
+
+      <PasswordModal open={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
     </div>
   );
 };
