@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { Clock, Share2, Bookmark, ChevronRight, ExternalLink, Gamepad2 } from 'lucide-react';
+import { Clock, Share2, Bookmark, ChevronRight, ExternalLink, Gamepad2, Calendar, MapPin, Ticket, User as UserIcon } from 'lucide-react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Avatar } from '../components/common/Avatar';
@@ -148,6 +148,103 @@ export const ArticlePage = () => {
           )}
         </div>
       </div>
+
+      {/* Event Details */}
+      {(article.contentType === 'event' || article.category === 'Events') && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-12 sm:mb-20">
+          <div className="rounded-[24px] sm:rounded-[40px] border border-white/5 bg-zinc-950 p-8 sm:p-10">
+            <div className="flex items-center justify-between gap-4 mb-8">
+              <h2 className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Event Details</h2>
+              <span
+                className={cn(
+                  'px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest',
+                  article.eventStatus === 'live'
+                    ? 'bg-red-500/15 text-red-400'
+                    : article.eventStatus === 'ended'
+                      ? 'bg-zinc-800 text-zinc-500'
+                      : 'bg-[#B8FF4D]/10 text-[#B8FF4D]',
+                )}
+              >
+                {article.eventStatus === 'live' ? 'Live Now' : article.eventStatus === 'ended' ? 'Ended' : 'Upcoming'}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {article.eventDate && (
+                <div className="flex items-start gap-3">
+                  <Calendar size={18} className="text-[#B8FF4D] mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Date</p>
+                    <p className="text-sm font-bold text-white mt-1">
+                      {new Date(`${article.eventDate}T00:00:00`).toLocaleDateString('en-GB', {
+                        weekday: 'long',
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {(article.eventStartTime || article.eventEndTime) && (
+                <div className="flex items-start gap-3">
+                  <Clock size={18} className="text-[#B8FF4D] mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Time</p>
+                    <p className="text-sm font-bold text-white mt-1">
+                      {article.eventStartTime}
+                      {article.eventStartTime && article.eventEndTime ? ' – ' : ''}
+                      {article.eventEndTime}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {article.venue && (
+                <div className="flex items-start gap-3">
+                  <MapPin size={18} className="text-[#B8FF4D] mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Venue</p>
+                    <p className="text-sm font-bold text-white mt-1">{article.venue}</p>
+                  </div>
+                </div>
+              )}
+              {article.organizer && (
+                <div className="flex items-start gap-3">
+                  <UserIcon size={18} className="text-[#B8FF4D] mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Organizer</p>
+                    <p className="text-sm font-bold text-white mt-1">{article.organizer}</p>
+                  </div>
+                </div>
+              )}
+              {article.ticketInfo && (
+                <div className="flex items-start gap-3">
+                  <Ticket size={18} className="text-[#B8FF4D] mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Tickets</p>
+                    <p className="text-sm font-bold text-white mt-1">{article.ticketInfo}</p>
+                  </div>
+                </div>
+              )}
+              {article.ticketUrl && (
+                <div className="flex items-start gap-3">
+                  <ExternalLink size={18} className="text-[#B8FF4D] mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Get Tickets</p>
+                    <a
+                      href={article.ticketUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-bold text-[#B8FF4D] hover:text-white mt-1 inline-block transition-colors"
+                    >
+                      Buy tickets →
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">

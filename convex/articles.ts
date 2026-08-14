@@ -207,6 +207,26 @@ export const search = query({
   },
 });
 
+/** Published events (contentType 'event' or Events pillar), sorted by event date. */
+export const listEvents = query({
+  args: { take: v.optional(v.number()) },
+  handler: async (ctx, { take }) => {
+    const all = await ctx.db
+      .query('articles')
+      .withIndex('by_status', (q) => q.eq('status', 'published'))
+      .order('desc')
+      .take(take ?? 100);
+    const events = all
+      .filter((a) => a.contentType === 'event' || a.category === 'Events')
+      .sort((a, b) => {
+        const da = a.eventDate ?? a.publishDate ?? '';
+        const db = b.eventDate ?? b.publishDate ?? '';
+        return da.localeCompare(db);
+      });
+    return Promise.all(events.map((a) => attachAuthor(ctx, a).then((a) => attachCommunity(ctx, a)).then(toCard)));
+  },
+});
+
 export const getBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, { slug }) => {

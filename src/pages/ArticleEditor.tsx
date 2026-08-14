@@ -75,6 +75,14 @@ export const ArticleEditor = () => {
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('Gaming');
   const [subcategory, setSubcategory] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [eventStartTime, setEventStartTime] = useState('');
+  const [eventEndTime, setEventEndTime] = useState('');
+  const [venue, setVenue] = useState('');
+  const [organizer, setOrganizer] = useState('');
+  const [ticketUrl, setTicketUrl] = useState('');
+  const [ticketInfo, setTicketInfo] = useState('');
+  const [eventStatus, setEventStatus] = useState('upcoming');
   const [selectedGame, setSelectedGame] = useState('');
   const [selectedCommunity, setSelectedCommunity] = useState('');
   const [status, setStatus] = useState<'Draft' | 'Published' | 'Scheduled'>('Draft');
@@ -122,6 +130,14 @@ export const ArticleEditor = () => {
     setContent(editable.content);
     setCategory(pillarOf(editable.category));
     setSubcategory(editable.subcategory ?? '');
+    setEventDate(editable.eventDate ?? '');
+    setEventStartTime(editable.eventStartTime ?? '');
+    setEventEndTime(editable.eventEndTime ?? '');
+    setVenue(editable.venue ?? '');
+    setOrganizer(editable.organizer ?? '');
+    setTicketUrl(editable.ticketUrl ?? '');
+    setTicketInfo(editable.ticketInfo ?? '');
+    setEventStatus(editable.eventStatus ?? 'upcoming');
     setSelectedGame(editable.gameId ?? '');
     setSelectedCommunity(editable.communityId ?? '');
     setStatus(editable.status === 'scheduled' ? 'Scheduled' : editable.status === 'published' ? 'Published' : 'Draft');
@@ -169,6 +185,14 @@ export const ArticleEditor = () => {
       category,
       subcategory: subcategory || undefined,
       excerpt: excerpt || undefined,
+      eventDate: category === 'Events' && eventDate ? eventDate : undefined,
+      eventStartTime: category === 'Events' && eventStartTime ? eventStartTime : undefined,
+      eventEndTime: category === 'Events' && eventEndTime ? eventEndTime : undefined,
+      venue: category === 'Events' && venue ? venue : undefined,
+      organizer: category === 'Events' && organizer ? organizer : undefined,
+      ticketUrl: category === 'Events' && ticketUrl ? ticketUrl : undefined,
+      ticketInfo: category === 'Events' && ticketInfo ? ticketInfo : undefined,
+      eventStatus: category === 'Events' ? eventStatus : undefined,
       gameId: selectedGame || undefined,
       communityId: selectedCommunity || undefined,
       videoUrl: videoUrl || undefined,
@@ -716,6 +740,101 @@ export const ArticleEditor = () => {
                           <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none group-hover:text-white transition-colors" />
                         </div>
                       </div>
+
+                      {/* Event Details */}
+                      {category === 'Events' && (
+                        <div className="space-y-4 pt-6 border-t border-white/5">
+                          <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Event Details</h3>
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Date</label>
+                                <input
+                                  type="date"
+                                  value={eventDate}
+                                  onChange={(e) => handleChange(setEventDate, e.target.value)}
+                                  className="w-full bg-zinc-900 border border-white/5 rounded-2xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-[#B8FF4D] transition-all [color-scheme:dark]"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Status</label>
+                                <div className="relative group">
+                                  <select
+                                    value={eventStatus}
+                                    onChange={(e) => handleChange(setEventStatus, e.target.value)}
+                                    className="w-full appearance-none bg-zinc-900 border border-white/5 rounded-2xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-[#B8FF4D] transition-all cursor-pointer"
+                                  >
+                                    <option value="upcoming">Upcoming</option>
+                                    <option value="live">Live</option>
+                                    <option value="ended">Ended</option>
+                                  </select>
+                                  <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Start Time</label>
+                                <input
+                                  type="time"
+                                  value={eventStartTime}
+                                  onChange={(e) => handleChange(setEventStartTime, e.target.value)}
+                                  className="w-full bg-zinc-900 border border-white/5 rounded-2xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-[#B8FF4D] transition-all [color-scheme:dark]"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">End Time</label>
+                                <input
+                                  type="time"
+                                  value={eventEndTime}
+                                  onChange={(e) => handleChange(setEventEndTime, e.target.value)}
+                                  className="w-full bg-zinc-900 border border-white/5 rounded-2xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-[#B8FF4D] transition-all [color-scheme:dark]"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Venue</label>
+                              <input
+                                type="text"
+                                value={venue}
+                                onChange={(e) => handleChange(setVenue, e.target.value)}
+                                placeholder="Venue or platform"
+                                className="w-full bg-zinc-900 border border-white/5 rounded-2xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-[#B8FF4D] transition-all placeholder:text-zinc-700"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Organizer</label>
+                              <input
+                                type="text"
+                                value={organizer}
+                                onChange={(e) => handleChange(setOrganizer, e.target.value)}
+                                placeholder="Organizer name"
+                                className="w-full bg-zinc-900 border border-white/5 rounded-2xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-[#B8FF4D] transition-all placeholder:text-zinc-700"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Ticket URL</label>
+                              <input
+                                type="url"
+                                value={ticketUrl}
+                                onChange={(e) => handleChange(setTicketUrl, e.target.value)}
+                                placeholder="https://..."
+                                className="w-full bg-zinc-900 border border-white/5 rounded-2xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-[#B8FF4D] transition-all placeholder:text-zinc-700"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Ticket Info</label>
+                              <textarea
+                                value={ticketInfo}
+                                onChange={(e) => handleChange(setTicketInfo, e.target.value)}
+                                placeholder="Price, booking details..."
+                                rows={2}
+                                className="w-full bg-zinc-900 border border-white/5 rounded-2xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-[#B8FF4D] transition-all placeholder:text-zinc-700 resize-none"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Linked Community */}
                       <div className="space-y-4">

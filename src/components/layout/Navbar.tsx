@@ -18,7 +18,7 @@ const SearchOverlay = lazy(() => import('../common/SearchOverlay').then((m) => (
 
 const PILLAR_NAV = PILLARS.map((pillar) => ({
   name: pillar,
-  path: `/category/${pillar.toLowerCase()}`,
+  path: pillar === 'Events' ? '/events' : `/category/${pillar.toLowerCase()}`,
   subcategories: CATEGORY_SUBCATEGORIES[pillar] ?? [],
 }));
 

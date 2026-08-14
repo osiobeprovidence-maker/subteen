@@ -16,6 +16,7 @@ const GameHub = lazy(() => import('./pages/GameHub').then((m) => ({ default: m.G
 const AdminCMS = lazy(() => import('./pages/AdminCMS').then((m) => ({ default: m.AdminCMS })));
 const AuthorProfile = lazy(() => import('./pages/AuthorProfile').then((m) => ({ default: m.AuthorProfile })));
 const CategoryPage = lazy(() => import('./pages/CategoryPage').then((m) => ({ default: m.CategoryPage })));
+const EventsPage = lazy(() => import('./pages/EventsPage').then((m) => ({ default: m.EventsPage })));
 const PidginPage = lazy(() => import('./pages/PidginPage').then((m) => ({ default: m.PidginPage })));
 const CommunitiesPage = lazy(() => import('./pages/CommunitiesPage').then((m) => ({ default: m.CommunitiesPage })));
 const CommunityPage = lazy(() => import('./pages/CommunityPage').then((m) => ({ default: m.CommunityPage })));
@@ -61,6 +62,7 @@ export default function App() {
               <Route path="/game/:id" element={<GameHub />} />
               <Route path="/author/:id" element={<AuthorProfile />} />
               <Route path="/category/:category" element={<CategoryPage />} />
+              <Route path="/events" element={<EventsPage />} />
               <Route path="/pidgin" element={<PidginPage />} />
               <Route path="/communities" element={<CommunitiesPage />} />
               <Route path="/communities/:slug" element={<CommunityPage />} />

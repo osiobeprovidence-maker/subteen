@@ -1238,19 +1238,29 @@ type PendingDuplicate = {
 async function analyzePendingDrafts(
   ctx: QueryCtx | MutationCtx,
 ): Promise<{ eligible: Doc<'automatedNewsDrafts'>[]; skipped: PendingDuplicate[] }> {
-  const drafts = await ctx.db
-    .query('automatedNewsDrafts')
-    .withIndex('by_status', (q) => q.eq('status', 'PENDING_REVIEW'))
-    .order('asc')
-    .take(1000);
+  const [drafts, publishedArticles, importedRows] = await Promise.all([
+    ctx.db
+      .query('automatedNewsDrafts')
+      .withIndex('by_status', (q) => q.eq('status', 'PENDING_REVIEW'))
+      .order('asc')
+      .take(1000),
+    ctx.db
+      .query('articles')
+      .withIndex('by_status', (q) => q.eq('status', 'published'))
+      .order('desc')
+      .take(500),
+    ctx.db.query('importedNews').take(2000),
+  ]);
 
-  const publishedArticles = await ctx.db
-    .query('articles')
-    .withIndex('by_status', (q) => q.eq('status', 'published'))
-    .order('desc')
-    .take(500);
+  const importedById = new Map<string, Doc<'importedNews'>>();
+  for (const imported of importedRows) {
+    importedById.set(imported._id as string, imported);
+  }
+
+  const publishedUrlKeys = new Set<string>();
   const publishedTokenSets: Set<string>[] = [];
   for (const a of publishedArticles) {
+    if (a.originalUrl) publishedUrlKeys.add(normalizeUrlKey(a.originalUrl));
     if (a.title) publishedTokenSets.push(titleTokenSet(a.title));
     if (a.originalTitle) publishedTokenSets.push(titleTokenSet(a.originalTitle));
   }
@@ -1261,20 +1271,13 @@ async function analyzePendingDrafts(
   const keptTokenSets: Set<string>[] = [];
 
   for (const draft of drafts) {
-    const imported = draft.importedNewsId ? await ctx.db.get(draft.importedNewsId) : null;
-    const originalUrl = imported?.originalUrl;
-    const urlKey = normalizeUrlKey(originalUrl);
+    const imported = draft.importedNewsId ? importedById.get(draft.importedNewsId as string) : undefined;
+    const urlKey = normalizeUrlKey(imported?.originalUrl);
 
     // 1. exact originalUrl already published
-    if (urlKey) {
-      const existing = await ctx.db
-        .query('articles')
-        .withIndex('by_originalUrl', (q) => q.eq('originalUrl', originalUrl))
-        .first();
-      if (existing) {
-        skipped.push({ draftId: draft._id, title: draft.title, reason: 'originalUrl already published', kind: 'published' });
-        continue;
-      }
+    if (urlKey && publishedUrlKeys.has(urlKey)) {
+      skipped.push({ draftId: draft._id, title: draft.title, reason: 'originalUrl already published', kind: 'published' });
+      continue;
     }
 
     if (draft.title) {

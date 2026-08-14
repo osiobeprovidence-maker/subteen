@@ -80,7 +80,7 @@ export interface Article {
   slug: string;
   content: string;
   heroImage: string;
-  category: Category;
+  category: string;
   subcategory?: string;
   excerpt?: string;
   country?: string;
