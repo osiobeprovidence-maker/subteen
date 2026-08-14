@@ -128,7 +128,7 @@ async function ensureUniqueSlug(
     const existing = await ctx.db
       .query('articles')
       .withIndex('by_slug', (q) => q.eq('slug', candidate))
-      .unique();
+      .first();
     if (!existing || existing._id === excludeId) return candidate;
     candidate = `${slugify(base)}-${i}`;
     i += 1;
@@ -145,20 +145,20 @@ async function findDuplicate(
     const byGuid = await ctx.db
       .query('importedNews')
       .withIndex('by_guid', (q) => q.eq('guid', item.guid))
-      .unique();
+      .first();
     if (byGuid) return { id: byGuid._id, reason: 'Same RSS GUID already imported' };
   }
 
   const byUrl = await ctx.db
     .query('importedNews')
     .withIndex('by_originalUrl', (q) => q.eq('originalUrl', item.link))
-    .unique();
+    .first();
   if (byUrl) return { id: byUrl._id, reason: 'Same original URL already imported' };
 
   const existingArticle = await ctx.db
     .query('articles')
     .withIndex('by_originalUrl', (q) => q.eq('originalUrl', item.link))
-    .unique();
+    .first();
   if (existingArticle) {
     return { id: null as never, reason: 'Story already published on Subteen' };
   }
