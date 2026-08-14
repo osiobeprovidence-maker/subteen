@@ -168,6 +168,16 @@ export default defineSchema({
   })
     .index('by_slug', ['slug']),
 
+  editorialSections: defineTable({
+    slug: v.string(),
+    name: v.string(),
+    active: v.boolean(),
+    isDefault: v.boolean(),
+    order: v.number(),
+  })
+    .index('by_slug', ['slug'])
+    .index('by_active', ['active']),
+
   tags: defineTable({
     name: v.string(),
     slug: v.string(),

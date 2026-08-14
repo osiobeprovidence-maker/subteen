@@ -7,6 +7,7 @@ import { AdminGames } from '../components/admin/AdminGames';
 import { AdminUsers } from '../components/admin/AdminUsers';
 import { AdminAds } from '../components/admin/AdminAds';
 import { AdminCommunities } from '../components/admin/AdminCommunities';
+import { AdminSections } from '../components/admin/AdminSections';
 import { AdminSettings } from '../components/admin/AdminSettings';
 import { AdminReviewQueue } from '../components/admin/AdminReviewQueue';
 import { useLocation } from 'react-router-dom';
@@ -21,6 +22,7 @@ import {
   LayoutDashboard,
   FileText,
   Grid,
+  Layers,
   Users,
   Megaphone,
   Library,
@@ -36,6 +38,7 @@ export const AdminPanel = () => {
   const getSection = () => {
     if (path.startsWith('/admin/articles')) return 'articles';
     if (path.startsWith('/admin/categories')) return 'categories';
+    if (path.startsWith('/admin/sections')) return 'sections';
     if (path.startsWith('/admin/tags')) return 'tags';
     if (path.startsWith('/admin/communities')) return 'communities';
     if (path.startsWith('/admin/games')) return 'games';
@@ -56,6 +59,7 @@ export const AdminPanel = () => {
     articles: 'Articles',
     communities: 'Communities',
     categories: 'Categories',
+    sections: 'Sections',
     tags: 'Tags',
     games: 'Games',
     users: 'Users',
@@ -140,6 +144,7 @@ export const AdminPanel = () => {
     switch (section) {
       case 'articles': return <AdminArticles />;
       case 'categories': return <AdminCategories />;
+      case 'sections': return <AdminSections />;
       case 'tags': return <AdminTags />;
       case 'communities': return <AdminCommunities />;
       case 'games': return <AdminGames />;
@@ -159,6 +164,7 @@ export const AdminPanel = () => {
       case 'dashboard': return <LayoutDashboard size={24} />;
       case 'articles': return <FileText size={24} />;
       case 'categories': return <Grid size={24} />;
+      case 'sections': return <Layers size={24} />;
       case 'tags': return <TagIcon size={24} />;
       case 'communities': return <Gamepad2 size={24} />;
       case 'games': return <Gamepad2 size={24} />;

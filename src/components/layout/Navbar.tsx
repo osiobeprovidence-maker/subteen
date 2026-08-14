@@ -12,20 +12,11 @@ import {
   isAdminItemActive,
   isAdminGroupActive,
 } from '../../lib/adminNavigation';
-import { PILLARS, CATEGORY_SUBCATEGORIES } from '../../../convex/lib/taxonomy';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import { toSectionNav, type EditorialSectionNav } from '../../lib/sections';
 
 const SearchOverlay = lazy(() => import('../common/SearchOverlay').then((m) => ({ default: m.SearchOverlay })));
-
-const PILLAR_NAV = PILLARS.map((pillar) => ({
-  name: pillar,
-  path: pillar === 'Events' ? '/events' : `/category/${pillar.toLowerCase()}`,
-  subcategories: CATEGORY_SUBCATEGORIES[pillar] ?? [],
-}));
-
-const NAV_LINKS: { name: string; path: string; subcategories?: string[] }[] = [
-  ...PILLAR_NAV,
-  { name: 'Communities', path: '/communities' },
-];
 
 const ROLE_LINKS: { roles: (Role | undefined)[]; name: string; path: string }[] = [
   { roles: ['editor', 'admin', 'super_admin'], name: 'Editor Studio', path: '/editor' },
@@ -33,11 +24,11 @@ const ROLE_LINKS: { roles: (Role | undefined)[]; name: string; path: string }[] 
   { roles: ['editor', 'admin', 'super_admin'], name: 'News Automation', path: '/admin/automation' },
 ];
 
-const navLinksFor = (role: Role | undefined) => {
-  const links = [...NAV_LINKS];
+const roleLinksFor = (role: Role | undefined): EditorialSectionNav[] => {
+  const links: EditorialSectionNav[] = [];
   for (const entry of ROLE_LINKS) {
     if (entry.roles.includes(role)) {
-      links.push({ name: entry.name, path: entry.path });
+      links.push({ slug: '', name: entry.name, active: true, isDefault: false, order: 999, path: entry.path, subcategories: [] });
     }
   }
   return links;
@@ -52,6 +43,7 @@ const ADMIN_LINKS = [
   { name: 'Review Queue', path: '/admin/review-queue' },
   { name: 'Games', path: '/admin/games' },
   { name: 'Categories', path: '/admin/categories' },
+  { name: 'Sections', path: '/admin/sections' },
   { name: 'Tags', path: '/admin/tags' },
   { name: 'Users', path: '/admin/users' },
   { name: 'Ads', path: '/admin/ads' },
@@ -82,10 +74,18 @@ export const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const activeSections = useQuery(api.editorialSections.listActive);
+
   const isAdminPath = location.pathname.startsWith('/admin');
   const isEditorPath = location.pathname.startsWith('/editor');
 
-  const currentLinks: { name: string; path: string; subcategories?: string[] }[] = isAdminPath ? ADMIN_LINKS : isEditorPath ? EDITOR_LINKS : navLinksFor(role);
+  const publicLinks: EditorialSectionNav[] = (activeSections ?? []).map(toSectionNav);
+
+  const currentLinks: { name: string; path: string; subcategories?: string[] }[] = isAdminPath
+    ? ADMIN_LINKS
+    : isEditorPath
+      ? EDITOR_LINKS
+      : [...publicLinks, ...roleLinksFor(role)];
   const adminNav = isAdminPath ? adminNavFor(role) : [];
 
   useEffect(() => {
@@ -433,7 +433,7 @@ export const Navbar = () => {
                   <Link to="/profile" onClick={() => setIsOpen(false)} className="text-sm font-bold uppercase tracking-widest text-zinc-400">Profile</Link>
                   <Link to="/bookmarks" onClick={() => setIsOpen(false)} className="text-sm font-bold uppercase tracking-widest text-zinc-400">Bookmarks</Link>
                   <Link to="/history" onClick={() => setIsOpen(false)} className="text-sm font-bold uppercase tracking-widest text-zinc-400">Reading History</Link>
-                  {navLinksFor(role)
+                  {roleLinksFor(role)
                     .filter((link) => link.path === '/editor' || link.path === '/admin')
                     .map((link) => (
                       <Link key={link.name} to={link.path} onClick={() => setIsOpen(false)} className="text-sm font-bold uppercase tracking-widest text-zinc-400">{link.name}</Link>

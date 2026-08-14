@@ -30,6 +30,7 @@ export const ADMIN_NAVIGATION: AdminNavEntry[] = [
       { name: 'Communities', path: '/admin/communities' },
       { name: 'Games', path: '/admin/games' },
       { name: 'Categories', path: '/admin/categories' },
+      { name: 'Sections', path: '/admin/sections' },
       { name: 'Tags', path: '/admin/tags' },
     ],
   },

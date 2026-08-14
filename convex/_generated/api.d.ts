@@ -15,6 +15,7 @@ import type * as authors from "../authors.js";
 import type * as categories from "../categories.js";
 import type * as communities from "../communities.js";
 import type * as crons from "../crons.js";
+import type * as editorialSections from "../editorialSections.js";
 import type * as lib_ai from "../lib/ai.js";
 import type * as lib_automation from "../lib/automation.js";
 import type * as lib_roles from "../lib/roles.js";
@@ -43,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   categories: typeof categories;
   communities: typeof communities;
   crons: typeof crons;
+  editorialSections: typeof editorialSections;
   "lib/ai": typeof lib_ai;
   "lib/automation": typeof lib_automation;
   "lib/roles": typeof lib_roles;
