@@ -4,6 +4,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { ArticleImage } from '../components/common/ArticleImage';
 import type { Article } from '../types';
 import { usePageTitle } from '../hooks/usePageTitle';
 
@@ -41,7 +42,7 @@ export const ReadingHistory = () => {
             {historyArticles.map(article => (
               <div key={article.id} className="flex flex-col md:flex-row gap-6 p-6 bg-zinc-950 border border-white/5 rounded-[24px] group hover:border-[#B8FF4D]/30 transition-all">
                 <Link to={`/article/${article.slug}`} className="w-full md:w-56 aspect-[16/10] sm:aspect-video rounded-xl overflow-hidden shrink-0 bg-zinc-900">
-                  <img src={article.heroImage} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt={article.title} />
+                  <ArticleImage src={article.heroImage} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt={article.title} />
                 </Link>
                 <div className="flex-1 flex flex-col justify-center gap-2">
                   <div className="flex items-center gap-3">

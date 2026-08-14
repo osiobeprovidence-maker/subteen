@@ -18,6 +18,7 @@ import { Link } from 'react-router-dom';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import type { Id } from '../../../convex/_generated/dataModel';
+import { ArticleImage } from '../common/ArticleImage';
 
 const STATUS_LABEL: Record<string, string> = {
   published: 'Published',
@@ -91,7 +92,7 @@ export const AdminArticles = () => {
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-10 rounded-lg bg-zinc-900 border border-white/5 flex items-center justify-center text-zinc-800 overflow-hidden shrink-0">
                       {article.heroImage ? (
-                        <img src={article.heroImage} alt="" className="w-full h-full object-cover" />
+                        <ArticleImage src={article.heroImage} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <ImageIcon size={20} />
                       )}

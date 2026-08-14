@@ -8,6 +8,7 @@ import { Avatar } from '../components/common/Avatar';
 import { CommunityImage } from '../components/common/CommunityImage';
 import { useAuth } from '../context/AuthContext';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { ArticleImage } from '../components/common/ArticleImage';
 import { cn } from '../lib/utils';
 import type { Article } from '../types';
 
@@ -139,7 +140,7 @@ export const ArticlePage = () => {
               className="w-full h-full border-0"
             />
           ) : article.heroImage ? (
-            <img src={article.heroImage} alt={article.title} className="w-full h-full object-cover" />
+            <ArticleImage src={article.heroImage} alt={article.title} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <ChevronRight size={48} className="text-zinc-800 rotate-180" />
@@ -252,7 +253,7 @@ export const ArticlePage = () => {
                   <Link key={a.id} to={`/article/${a.slug}`} className="group block space-y-3">
                      <div className="aspect-video rounded-xl overflow-hidden bg-zinc-900">
                        {a.heroImage ? (
-                         <img src={a.heroImage} alt={a.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                         <ArticleImage src={a.heroImage} alt={a.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                        ) : (
                          <div className="w-full h-full flex items-center justify-center text-zinc-800"><ChevronRight size={24} /></div>
                        )}

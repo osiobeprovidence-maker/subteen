@@ -4,6 +4,7 @@ import { Clock, User as UserIcon } from 'lucide-react';
 import { Article } from '../../types';
 import { cn } from '../../lib/utils';
 import { Avatar } from './Avatar';
+import { ArticleImage } from './ArticleImage';
 
 interface ArticleCardProps {
   article: Article;
@@ -61,8 +62,8 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'la
     return (
       <Link to={`/article/${article.slug}`} className="group flex gap-4 items-start">
         <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-zinc-900">
-          <img 
-            src={article.heroImage} 
+          <ArticleImage
+            src={article.heroImage}
             alt={article.title}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
@@ -81,8 +82,8 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'la
     return (
       <Link to={`/article/${article.slug}`} className="group space-y-3 sm:space-y-4">
         <div className="aspect-video rounded-xl overflow-hidden bg-zinc-900 relative">
-          <img 
-            src={article.heroImage} 
+          <ArticleImage
+            src={article.heroImage}
             alt={article.title}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
@@ -118,8 +119,8 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'la
   return (
     <Link to={`/article/${article.slug}`} className="group block space-y-4 sm:space-y-6">
       <div className="aspect-[16/10] sm:aspect-[21/9] rounded-2xl overflow-hidden bg-zinc-900 relative">
-        <img 
-          src={article.heroImage} 
+        <ArticleImage
+          src={article.heroImage}
           alt={article.title}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         />

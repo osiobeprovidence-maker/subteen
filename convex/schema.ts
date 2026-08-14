@@ -84,9 +84,21 @@ export default defineSchema({
     isTrending: v.optional(v.boolean()),
     reviewScore: v.optional(v.number()),
     videoUrl: v.optional(v.string()),
+    contentType: v.optional(v.string()),
     language: v.optional(v.string()),
+    publishedAt: v.optional(v.number()),
+    shares: v.optional(v.number()),
+    sourceType: v.optional(v.string()),
     status: v.optional(v.union(v.literal('published'), v.literal('draft'), v.literal('scheduled'))),
     scheduledFor: v.optional(v.number()),
+    reviewStatus: v.optional(
+      v.union(v.literal('pending'), v.literal('approved'), v.literal('rejected')),
+    ),
+    autoApproveAt: v.optional(v.number()),
+    submittedAt: v.optional(v.number()),
+    reviewedAt: v.optional(v.number()),
+    reviewedBy: v.optional(v.string()),
+    rejectReason: v.optional(v.string()),
     views: v.optional(v.number()),
     sourceName: v.optional(v.string()),
     sourceUrl: v.optional(v.string()),
@@ -99,6 +111,7 @@ export default defineSchema({
     .index('by_status', ['status'])
     .index('by_community', ['communityId'])
     .index('by_originalUrl', ['originalUrl'])
+    .index('by_review_status', ['reviewStatus'])
     .searchIndex('search_content', { searchField: 'title' }),
 
   users: defineTable({
@@ -118,6 +131,10 @@ export default defineSchema({
     status: v.optional(v.union(v.literal('active'), v.literal('suspended'))),
     joined: v.optional(v.string()),
     articleCount: v.optional(v.number()),
+    country: v.optional(v.string()),
+    phoneNumber: v.optional(v.string()),
+    state: v.optional(v.string()),
+    city: v.optional(v.string()),
     bookmarks: v.array(v.id('articles')),
     readingHistory: v.array(v.id('articles')),
     preferences: v.object({
@@ -144,6 +161,18 @@ export default defineSchema({
   })
     .index('by_slug', ['slug'])
     .index('by_name', ['name']),
+
+  videos: defineTable({
+    title: v.string(),
+    uploadId: v.string(),
+    assetId: v.optional(v.string()),
+    playbackId: v.string(),
+    status: v.union(v.literal('processing'), v.literal('ready'), v.literal('error')),
+    articleId: v.optional(v.id('articles')),
+    createdAt: v.number(),
+  })
+    .index('by_article', ['articleId'])
+    .index('by_upload', ['uploadId']),
 
   adCampaigns: defineTable({
     advertiser: v.string(),
@@ -179,6 +208,8 @@ export default defineSchema({
     lightLogo: v.optional(v.string()),
     brandUpdatedAt: v.optional(v.number()),
     brandUpdatedBy: v.optional(v.string()),
+    autoApproveEnabled: v.optional(v.boolean()),
+    autoApproveDelayMinutes: v.optional(v.number()),
   }),
 
   rssSources: defineTable({
@@ -284,4 +315,4 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index('by_key', ['key']),
-});
+}, { schemaValidation: false });

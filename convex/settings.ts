@@ -19,6 +19,8 @@ const DEFAULT_SETTINGS = {
   featuredLayout: 'Hero',
   trendingLimit: 5,
   latestLimit: 10,
+  autoApproveEnabled: false,
+  autoApproveDelayMinutes: 5,
 };
 
 async function requireAdmin(ctx: MutationCtx) {
@@ -81,6 +83,8 @@ export const update = mutation({
     featuredLayout: v.optional(v.string()),
     trendingLimit: v.optional(v.number()),
     latestLimit: v.optional(v.number()),
+    autoApproveEnabled: v.optional(v.boolean()),
+    autoApproveDelayMinutes: v.optional(v.number()),
   },
   handler: async (ctx, patch) => {
     const existing = await ctx.db.query('settings').first();

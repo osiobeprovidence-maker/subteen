@@ -9,6 +9,12 @@ const statusSchema = v.union(
   v.literal('scheduled'),
 );
 
+const reviewStatusSchema = v.union(
+  v.literal('pending'),
+  v.literal('approved'),
+  v.literal('rejected'),
+);
+
 async function getRole(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) return null;
@@ -25,6 +31,24 @@ async function requireEditor(ctx: MutationCtx) {
     throw new Error('You need editor access to do that.');
   }
   return role;
+}
+
+async function getAutoApproveSettings(ctx: MutationCtx) {
+  const settings = await ctx.db.query('settings').first();
+  return {
+    enabled: settings?.autoApproveEnabled ?? false,
+    delayMinutes: settings?.autoApproveDelayMinutes ?? 5,
+  };
+}
+
+async function getReviewerName(ctx: MutationCtx): Promise<string | undefined> {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) return undefined;
+  const user = await ctx.db
+    .query('users')
+    .withIndex('by_firebase_uid', (q) => q.eq('firebaseUid', identity.subject))
+    .unique();
+  return user?.name ?? identity.name ?? identity.email ?? undefined;
 }
 
 function slugify(input: string): string {
@@ -191,6 +215,7 @@ export const counts = query({
       published: all.filter((a) => a.status === 'published').length,
       drafts: all.filter((a) => a.status === 'draft').length,
       scheduled: all.filter((a) => a.status === 'scheduled').length,
+      pendingReview: all.filter((a) => a.reviewStatus === 'pending').length,
     };
   },
 });
@@ -357,8 +382,12 @@ export const update = mutation({
       const trimmed = slug.trim();
       if (trimmed) patch.slug = await ensureUniqueSlug(ctx, trimmed, id);
     }
-    if (rest.status === 'published' && !existing.publishDate) {
-      patch.publishDate = existing.publishDate ?? new Date().toISOString().slice(0, 10);
+    if (rest.status === 'published') {
+      patch.reviewStatus = undefined;
+      patch.autoApproveAt = undefined;
+      if (!existing.publishDate) {
+        patch.publishDate = existing.publishDate ?? new Date().toISOString().slice(0, 10);
+      }
     }
     await ctx.db.patch(id, patch as never);
     return ctx.db.get(id);
@@ -373,10 +402,85 @@ export const setStatus = mutation({
     if (!existing) throw new Error('Article not found.');
     await ctx.db.patch(id, {
       status,
-      ...(status === 'published' && !existing.publishDate
-        ? { publishDate: new Date().toISOString().slice(0, 10) }
+      ...(status === 'published'
+        ? {
+            reviewStatus: undefined,
+            autoApproveAt: undefined,
+            publishDate: existing.publishDate ?? new Date().toISOString().slice(0, 10),
+          }
         : {}),
     });
+  },
+});
+
+export const submitForReview = mutation({
+  args: { id: v.id('articles') },
+  handler: async (ctx, { id }) => {
+    await requireEditor(ctx);
+    const existing = await ctx.db.get(id);
+    if (!existing) throw new Error('Article not found.');
+    const { enabled, delayMinutes } = await getAutoApproveSettings(ctx);
+    const now = Date.now();
+    await ctx.db.patch(id, {
+      reviewStatus: 'pending',
+      submittedAt: now,
+      autoApproveAt: enabled ? now + delayMinutes * 60_000 : undefined,
+      rejectReason: undefined,
+      reviewedAt: undefined,
+      reviewedBy: undefined,
+    });
+    return ctx.db.get(id);
+  },
+});
+
+export const reviewArticle = mutation({
+  args: {
+    id: v.id('articles'),
+    action: v.union(v.literal('approve'), v.literal('reject')),
+    reason: v.optional(v.string()),
+  },
+  handler: async (ctx, { id, action, reason }) => {
+    await requireEditor(ctx);
+    const existing = await ctx.db.get(id);
+    if (!existing) throw new Error('Article not found.');
+    const reviewedBy = await getReviewerName(ctx);
+    const now = Date.now();
+    if (action === 'approve') {
+      await ctx.db.patch(id, {
+        status: 'published',
+        reviewStatus: 'approved',
+        publishDate: existing.publishDate || new Date(now).toISOString().slice(0, 10),
+        autoApproveAt: undefined,
+        reviewedAt: now,
+        reviewedBy,
+        rejectReason: undefined,
+      });
+    } else {
+      await ctx.db.patch(id, {
+        reviewStatus: 'rejected',
+        autoApproveAt: undefined,
+        reviewedAt: now,
+        reviewedBy,
+        rejectReason: reason,
+      });
+    }
+    return ctx.db.get(id);
+  },
+});
+
+export const listReviewQueue = query({
+  args: {},
+  handler: async (ctx) => {
+    const role = await getRole(ctx);
+    if (!canAccessEditor(role)) {
+      throw new Error('You need editor access to view the review queue.');
+    }
+    const all = await ctx.db.query('articles').collect();
+    return all
+      .filter((a) => a.reviewStatus === 'pending')
+      .sort(
+        (a, b) => (a.autoApproveAt ?? a.submittedAt ?? 0) - (b.autoApproveAt ?? b.submittedAt ?? 0),
+      );
   },
 });
 
@@ -414,6 +518,29 @@ export const publishScheduled = internalMutation({
       published += 1;
     }
     return { published };
+  },
+});
+
+export const approveOverdue = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const all = await ctx.db.query('articles').collect();
+    let approved = 0;
+    for (const a of all) {
+      if (a.reviewStatus !== 'pending') continue;
+      if (a.autoApproveAt === undefined || a.autoApproveAt > now) continue;
+      await ctx.db.patch(a._id, {
+        status: 'published',
+        reviewStatus: 'approved',
+        publishDate: a.publishDate || new Date(now).toISOString().slice(0, 10),
+        autoApproveAt: undefined,
+        reviewedAt: now,
+        reviewedBy: 'auto-approval',
+      });
+      approved += 1;
+    }
+    return { approved };
   },
 });
 

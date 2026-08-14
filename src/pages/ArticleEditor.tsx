@@ -33,7 +33,10 @@ import {
   RefreshCw,
   Scissors,
   Loader2,
-  X
+  X,
+  ClipboardCheck,
+  Clock3,
+  AlertTriangle,
 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -41,9 +44,12 @@ import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { cn } from '../lib/utils';
 import { ImageCropModal } from '../components/profile/ImageCropModal';
+import { MuxVideo } from '../components/common/MuxVideo';
+import { VideoUploadModal } from '../components/editor/VideoUploadModal';
 import { useAuth } from '../context/AuthContext';
-import { slugify, objectUrlToDataUrl, readingTimeFor } from '../lib/articleHelpers';
+import { slugify, readingTimeFor } from '../lib/articleHelpers';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { useResolvedMedia } from '../hooks/useImageUpload';
 
 export const ArticleEditor = () => {
   const navigate = useNavigate();
@@ -55,9 +61,12 @@ export const ArticleEditor = () => {
   const createArticle = useMutation(api.articles.create);
   const updateArticle = useMutation(api.articles.update);
   const removeArticle = useMutation(api.articles.remove);
+  const submitForReview = useMutation(api.articles.submitForReview);
+  const generateUploadUrl = useMutation(api.media.generateUploadUrl);
   const [draftId, setDraftId] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [createdAt, setCreatedAt] = useState<number>(Date.now());
+  const [reviewInfo, setReviewInfo] = useState<{ reviewStatus?: string; autoApproveAt?: number } | null>(null);
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [excerpt, setExcerpt] = useState('');
@@ -81,6 +90,9 @@ export const ArticleEditor = () => {
   const [isCoverPreviewOpen, setIsCoverPreviewOpen] = useState(false);
   const [isCropOpen, setIsCropOpen] = useState(false);
   const [cropSource, setCropSource] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const resolvedCover = useResolvedMedia(coverUrl ?? undefined);
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -113,6 +125,12 @@ export const ArticleEditor = () => {
     setScheduledFor(editable.scheduledFor ? new Date(editable.scheduledFor).toISOString().slice(0, 16) : '');
     setIsFeatured(!!editable.isFeatured);
     setCoverUrl(editable.heroImage || null);
+    setVideoUrl(editable.videoUrl ?? '');
+    setReviewInfo(
+      editable.reviewStatus
+        ? { reviewStatus: editable.reviewStatus, autoApproveAt: editable.autoApproveAt }
+        : null,
+    );
   }, [editable, hydrated]);
 
   const handleChange = (setter: any, value: any) => {
@@ -122,11 +140,23 @@ export const ArticleEditor = () => {
 
   const readingTime = Math.max(1, readingTimeFor(content));
 
-  const persistArticle = async (nextStatus: 'Draft' | 'Published' | 'Scheduled'): Promise<{ slug: string }> => {
+  const uploadCoverToStorage = async (source: string): Promise<string> => {
+    const isRemote = /^https?:\/\//.test(source);
+    const isStorageId = !isRemote && !source.startsWith('data:') && !source.startsWith('blob:');
+    if (isRemote || isStorageId) return source;
+    const blob = await fetch(source).then((r) => r.blob());
+    const uploadUrl = await generateUploadUrl();
+    const res = await fetch(uploadUrl, { method: 'POST', body: blob });
+    if (!res.ok) throw new Error('Failed to upload cover image.');
+    const { storageId } = (await res.json()) as { storageId: string };
+    return storageId;
+  };
+
+  const persistArticle = async (nextStatus: 'Draft' | 'Published' | 'Scheduled'): Promise<{ slug: string; id: string | null }> => {
     setSaveStatus('Saving');
     const dbStatus = nextStatus.toLowerCase() as 'draft' | 'published' | 'scheduled';
     const finalSlug = slug.trim() || slugify(title) || `article-${Date.now()}`;
-    const heroImage = coverUrl ? await objectUrlToDataUrl(coverUrl) : '';
+    const heroImage = coverUrl ? await uploadCoverToStorage(coverUrl) : '';
     const payload: Record<string, unknown> = {
       title: title.trim() || 'Untitled',
       subtitle: subtitle || undefined,
@@ -136,6 +166,7 @@ export const ArticleEditor = () => {
       category,
       gameId: selectedGame || undefined,
       communityId: selectedCommunity || undefined,
+      videoUrl: videoUrl || undefined,
       isFeatured,
       readingTime,
       status: dbStatus,
@@ -143,15 +174,30 @@ export const ArticleEditor = () => {
       scheduledFor: dbStatus === 'scheduled' && scheduledFor ? new Date(scheduledFor).getTime() : undefined,
     };
 
+    let id: string | null = draftId;
     if (draftId) {
       await updateArticle({ id: draftId as any, ...(payload as any) });
     } else {
       const created = await createArticle(payload as any);
-      if (created) setDraftId(created._id as any);
+      if (created) {
+        setDraftId(created._id as any);
+        id = created._id as any;
+      }
     }
     setStatus(nextStatus);
+    if (nextStatus !== 'Draft') setReviewInfo(null);
     setSaveStatus('Saved');
-    return { slug: finalSlug };
+    return { slug: finalSlug, id };
+  };
+
+  const handleSubmitForReview = async () => {
+    const { id } = await persistArticle('Draft');
+    if (!id) return;
+    const doc = await submitForReview({ id: id as any });
+    if (doc) {
+      setReviewInfo({ reviewStatus: doc.reviewStatus ?? 'pending', autoApproveAt: doc.autoApproveAt });
+      setStatus('Draft');
+    }
   };
 
   const handleSaveDraft = async () => {
@@ -213,8 +259,7 @@ export const ArticleEditor = () => {
 
   const openCrop = () => {
     if (!coverUrl) return;
-    setCropSource(coverUrl);
-    setIsCropOpen(true);
+    setCropSource(resolvedCover ?? coverUrl);
   };
 
   const handleRemoveCover = () => {
@@ -272,6 +317,9 @@ export const ArticleEditor = () => {
             </button>
             <button onClick={handlePreview} disabled={saveStatus === 'Saving'} className="flex items-center gap-2 px-6 py-2 rounded-full text-[10px] font-black text-zinc-400 hover:bg-zinc-900 uppercase tracking-widest transition-all disabled:opacity-50">
               <Eye size={14} /> Preview
+            </button>
+            <button onClick={handleSubmitForReview} disabled={saveStatus === 'Saving'} className="hidden sm:flex items-center gap-2 px-6 py-2 rounded-full border border-[#B8FF4D]/30 text-[#B8FF4D] text-[10px] font-black uppercase tracking-widest hover:bg-[#B8FF4D]/10 transition-all disabled:opacity-50">
+              <ClipboardCheck size={14} /> Submit for Review
             </button>
             <button onClick={handlePublish} disabled={saveStatus === 'Saving'} className="flex items-center gap-2 px-8 py-2 rounded-full bg-[#B8FF4D] text-black text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_20px_rgba(184,255,77,0.2)] disabled:opacity-50">
               <Send size={14} /> Publish
@@ -339,7 +387,7 @@ export const ArticleEditor = () => {
                 <>
                   <div className="group relative h-[360px] rounded-2xl overflow-hidden border border-white/5 bg-zinc-950">
                     <img
-                      src={coverUrl}
+                      src={resolvedCover}
                       alt="Cover"
                       className="w-full h-full object-cover cursor-zoom-in transition-transform duration-500 group-hover:scale-[1.02]"
                       onClick={() => setIsCoverPreviewOpen(true)}
@@ -416,7 +464,7 @@ export const ArticleEditor = () => {
                     <motion.img
                       initial={{ scale: 0.95 }}
                       animate={{ scale: 1 }}
-                      src={coverUrl}
+                      src={resolvedCover}
                       alt="Cover preview"
                       className="max-w-full max-h-[90vh] rounded-lg object-contain"
                       onClick={(e) => e.stopPropagation()}
@@ -441,7 +489,11 @@ export const ArticleEditor = () => {
                 {toolbarTools.map((tool, i) => (
                   <button 
                     key={i} 
-                    className="p-3 text-zinc-500 hover:text-white hover:bg-zinc-900 rounded-2xl transition-all group relative"
+                    onClick={tool.label === 'Video' ? () => setIsVideoModalOpen(true) : undefined}
+                    className={cn(
+                      "p-3 text-zinc-500 hover:text-white hover:bg-zinc-900 rounded-2xl transition-all group relative",
+                      tool.label === 'Video' && "cursor-pointer"
+                    )}
                     title={tool.label}
                   >
                     <tool.icon size={20} />
@@ -582,6 +634,30 @@ export const ArticleEditor = () => {
                         </div>
                       </div>
 
+                      {reviewInfo?.reviewStatus === 'pending' && (
+                        <div className="rounded-2xl border border-[#B8FF4D]/20 bg-[#B8FF4D]/5 p-4 space-y-2">
+                          <div className="flex items-center gap-2 text-[#B8FF4D]">
+                            <Clock3 size={14} />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Pending Review</span>
+                          </div>
+                          {reviewInfo.autoApproveAt && (
+                            <p className="text-[10px] text-zinc-400">
+                              Auto-approves at {new Date(reviewInfo.autoApproveAt).toLocaleTimeString()} unless an editor approves first.
+                            </p>
+                          )}
+                          <p className="text-[10px] text-zinc-600">This draft is in the review queue and not yet public.</p>
+                        </div>
+                      )}
+                      {reviewInfo?.reviewStatus === 'rejected' && (
+                        <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4 space-y-2">
+                          <div className="flex items-center gap-2 text-red-500">
+                            <AlertTriangle size={14} />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Rejected</span>
+                          </div>
+                          <p className="text-[10px] text-zinc-400">Fix the issues, then submit for review again.</p>
+                        </div>
+                      )}
+
                       {/* Schedule Date */}
                       {status === 'Scheduled' && (
                         <div className="space-y-4">
@@ -695,7 +771,7 @@ export const ArticleEditor = () => {
                         <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Cover Preview</label>
                         <div className={cn("rounded-2xl overflow-hidden border border-white/5 bg-zinc-900 flex items-center justify-center", coverUrl ? "h-32" : "aspect-[16/9]")}>
                           {coverUrl ? (
-                            <img src={coverUrl} alt="Cover preview" className="w-full h-full object-cover" />
+                            <img src={resolvedCover} alt="Cover preview" className="w-full h-full object-cover" />
                           ) : (
                             <ImageIcon size={24} className="text-zinc-800" />
                           )}

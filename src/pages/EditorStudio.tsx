@@ -21,6 +21,7 @@ import { AdminCommunities } from '../components/admin/AdminCommunities';
 import { cn } from '../lib/utils';
 import { relativeTime } from '../lib/articleHelpers';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { AdminReviewQueue } from '../components/admin/AdminReviewQueue';
 
 const STATUS_LABEL: Record<string, string> = {
   published: 'Published',
@@ -57,6 +58,7 @@ export const EditorStudio = () => {
     if (path.startsWith('/editor/communities')) return 'communities';
     if (path.startsWith('/editor/analytics')) return 'analytics';
     if (path.startsWith('/editor/ads')) return 'ads';
+    if (path.startsWith('/editor/review')) return 'review';
     return 'dashboard';
   };
 
@@ -226,6 +228,7 @@ export const EditorStudio = () => {
       case 'analytics': return renderPerformance();
       case 'ads': return renderAds();
       case 'communities': return <AdminCommunities />;
+      case 'review': return <AdminReviewQueue />;
       default: return renderDashboard();
     }
   };

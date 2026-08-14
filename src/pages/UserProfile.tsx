@@ -5,6 +5,7 @@ import {
   Shield, 
   Palette, 
   ChevronRight, 
+  ChevronDown,
   Mail, 
   Key, 
   LayoutDashboard, 
@@ -17,6 +18,9 @@ import {
   Twitter,
   Youtube,
   Instagram,
+  MapPin,
+  Building2,
+  Phone,
   ArrowLeft,
   X as XIcon,
   Trash2
@@ -31,6 +35,7 @@ import { useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { canAccessAdmin, canAccessEditor, roleLabel } from '../lib/roles';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { COUNTRIES, NIGERIAN_STATES } from '../data/countries';
 
 const COVER_DEFAULT = 'bg-gradient-to-br from-[#1a1a1a] via-[#0d0d0d] to-black';
 
@@ -41,6 +46,11 @@ export const UserProfile = () => {
   const [displayName, setDisplayName] = useState(dbUser?.name ?? user?.name ?? '');
 
   usePageTitle('Profile');
+
+  const [phoneNumber, setPhoneNumber] = useState(dbUser?.phoneNumber ?? '');
+  const [country, setCountry] = useState(dbUser?.country ?? 'Nigeria');
+  const [state, setState] = useState(dbUser?.state ?? '');
+  const [city, setCity] = useState(dbUser?.city ?? '');
   const [cropState, setCropState] = useState<{ field: MediaField; src: string } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -99,7 +109,14 @@ export const UserProfile = () => {
     if (!dbUser) return;
     setIsSaving(true);
     try {
-      await updateProfile({ id: dbUser._id, name: displayName.trim() || dbUser.name });
+      await updateProfile({
+        id: dbUser._id,
+        name: displayName.trim() || dbUser.name,
+        phoneNumber: phoneNumber.trim() || undefined,
+        country: country || undefined,
+        state: state.trim() || undefined,
+        city: city.trim() || undefined,
+      });
       setIsEditing(false);
     } finally {
       setIsSaving(false);
@@ -120,6 +137,15 @@ export const UserProfile = () => {
       items: [
         { name: 'Notifications', value: dbUser?.preferences?.newsletter ? 'Newsletter On' : 'Newsletter Off', icon: Bell, onClick: undefined },
         { name: 'Appearance', value: dbUser?.preferences?.darkMode ? 'Dark Mode' : 'Light Mode', icon: Palette, onClick: undefined },
+      ]
+    },
+    {
+      title: 'Contact & Location',
+      items: [
+        { name: 'Country', value: dbUser?.country || '—', icon: Globe },
+        { name: 'State', value: dbUser?.state || '—', icon: MapPin },
+        { name: 'City', value: dbUser?.city || '—', icon: Building2 },
+        { name: 'Phone Number', value: dbUser?.phoneNumber || '—', icon: Phone },
       ]
     }
   ];
@@ -220,17 +246,71 @@ export const UserProfile = () => {
                   <textarea rows={3} placeholder="Tell us about yourself..." className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-3 text-white text-sm focus:outline-none focus:border-[#B8FF4D] transition-colors resize-none" />
                 </div>
                 <div className="space-y-2">
+                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Phone Number</label>
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    placeholder="+234 800 000 0000"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-3 text-white text-sm focus:outline-none focus:border-[#B8FF4D] transition-colors"
+                  />
+                </div>
+                <div className="space-y-2">
                   <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Country</label>
                   <div className="relative">
-                    <select className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-3 text-white text-sm focus:outline-none focus:border-[#B8FF4D] transition-colors appearance-none">
-                      <option>United States</option>
-                      <option>United Kingdom</option>
-                      <option>Canada</option>
-                      <option>Germany</option>
+                    <select
+                      value={country}
+                      onChange={(e) => {
+                        setCountry(e.target.value);
+                        setState('');
+                      }}
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-3 text-white text-sm focus:outline-none focus:border-[#B8FF4D] transition-colors appearance-none cursor-pointer"
+                    >
+                      {COUNTRIES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
                     </select>
                     <Globe size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-600" />
                   </div>
                 </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">State</label>
+                  {country === 'Nigeria' ? (
+                    <div className="relative">
+                      <select
+                        value={state}
+                        onChange={(e) => setState(e.target.value)}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-3 text-white text-sm focus:outline-none focus:border-[#B8FF4D] transition-colors appearance-none cursor-pointer"
+                      >
+                        <option value="">Select state</option>
+                        {NIGERIAN_STATES.map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                      <ChevronDown size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-600" />
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      value={state}
+                      onChange={(e) => setState(e.target.value)}
+                      placeholder="State / Province"
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-3 text-white text-sm focus:outline-none focus:border-[#B8FF4D] transition-colors"
+                    />
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">City</label>
+                  <input
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="e.g. Lagos"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-3 text-white text-sm focus:outline-none focus:border-[#B8FF4D] transition-colors"
+                  />
+                </div>
+              </div>
               </div>
             </div>
 

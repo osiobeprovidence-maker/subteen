@@ -8,6 +8,7 @@ import { AdminUsers } from '../components/admin/AdminUsers';
 import { AdminAds } from '../components/admin/AdminAds';
 import { AdminCommunities } from '../components/admin/AdminCommunities';
 import { AdminSettings } from '../components/admin/AdminSettings';
+import { AdminReviewQueue } from '../components/admin/AdminReviewQueue';
 import { useLocation } from 'react-router-dom';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { 
@@ -24,7 +25,8 @@ import {
   Megaphone,
   Library,
   AlertCircle,
-  Settings
+  Settings,
+  ClipboardCheck
 } from 'lucide-react';
 
 export const AdminPanel = () => {
@@ -41,6 +43,7 @@ export const AdminPanel = () => {
     if (path.startsWith('/admin/ads')) return 'ads';
     if (path.startsWith('/admin/media')) return 'media';
     if (path.startsWith('/admin/reports')) return 'reports';
+    if (path.startsWith('/admin/review-queue')) return 'review-queue';
     if (path.startsWith('/admin/settings')) return 'settings';
     if (path.startsWith('/admin/placements')) return 'placements';
     return 'dashboard';
@@ -60,6 +63,7 @@ export const AdminPanel = () => {
     placements: 'Placements',
     media: 'Media Library',
     reports: 'Reports',
+    'review-queue': 'Review Queue',
     settings: 'Settings',
   };
 
@@ -144,6 +148,7 @@ export const AdminPanel = () => {
       case 'placements': return <AdminAds initialView="Placements" />;
       case 'media': return renderMedia();
       case 'reports': return renderReports();
+      case 'review-queue': return <AdminReviewQueue />;
       case 'settings': return <AdminSettings />;
       default: return <AdminDashboard />;
     }
@@ -162,6 +167,7 @@ export const AdminPanel = () => {
       case 'placements': return <Megaphone size={24} />;
       case 'media': return <Library size={24} />;
       case 'reports': return <AlertCircle size={24} />;
+      case 'review-queue': return <ClipboardCheck size={24} />;
       case 'settings': return <Settings size={24} />;
       default: return null;
     }

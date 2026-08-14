@@ -21,4 +21,10 @@ crons.interval(
   internal.newsAutomation.autoApproveDueDrafts,
 );
 
+crons.interval(
+  'auto-approve-pending-articles',
+  { minutes: 1 },
+  internal.articles.approveOverdue,
+);
+
 export default crons;

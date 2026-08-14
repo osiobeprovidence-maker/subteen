@@ -3,6 +3,7 @@ import { LayoutDashboard, FileText, Gamepad, Settings, Plus, BarChart3, Users, I
 import { Link } from 'react-router-dom';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+import { ArticleImage } from '../components/common/ArticleImage';
 
 const STATUS_LABEL: Record<string, string> = {
   published: 'Published',
@@ -114,7 +115,7 @@ export const AdminCMS = () => {
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-lg overflow-hidden bg-zinc-900 shrink-0">
                           {article.heroImage ? (
-                            <img src={article.heroImage} className="w-full h-full object-cover" />
+                            <ArticleImage src={article.heroImage} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-zinc-700">
                               <ImageIcon size={18} />

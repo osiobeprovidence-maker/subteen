@@ -144,6 +144,10 @@ export const updateProfile = mutation({
     name: v.optional(v.string()),
     avatar: v.optional(v.string()),
     coverImage: v.optional(v.string()),
+    country: v.optional(v.string()),
+    state: v.optional(v.string()),
+    city: v.optional(v.string()),
+    phoneNumber: v.optional(v.string()),
     preferences: v.optional(
       v.object({
         darkMode: v.optional(v.boolean()),
@@ -151,12 +155,16 @@ export const updateProfile = mutation({
       }),
     ),
   },
-  handler: async (ctx, { id, name, avatar, coverImage, preferences }) => {
+  handler: async (ctx, { id, name, avatar, coverImage, country, state, city, phoneNumber, preferences }) => {
     await requireOwnUser(ctx, id);
     const patch: Record<string, unknown> = {};
     if (name !== undefined) patch.name = name;
     if (avatar !== undefined) patch.avatar = avatar;
     if (coverImage !== undefined) patch.coverImage = coverImage;
+    if (country !== undefined) patch.country = country;
+    if (state !== undefined) patch.state = state;
+    if (city !== undefined) patch.city = city;
+    if (phoneNumber !== undefined) patch.phoneNumber = phoneNumber;
     if (preferences) {
       const current = await ctx.db.get(id);
       patch.preferences = {
