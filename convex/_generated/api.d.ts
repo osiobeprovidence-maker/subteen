@@ -24,6 +24,7 @@ import type * as lib_taxonomy from "../lib/taxonomy.js";
 import type * as media from "../media.js";
 import type * as mux from "../mux.js";
 import type * as newsAutomation from "../newsAutomation.js";
+import type * as reports from "../reports.js";
 import type * as rssSources from "../rssSources.js";
 import type * as seed from "../seed.js";
 import type * as settings from "../settings.js";
@@ -53,6 +54,7 @@ declare const fullApi: ApiFromModules<{
   media: typeof media;
   mux: typeof mux;
   newsAutomation: typeof newsAutomation;
+  reports: typeof reports;
   rssSources: typeof rssSources;
   seed: typeof seed;
   settings: typeof settings;

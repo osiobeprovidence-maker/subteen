@@ -1,4 +1,5 @@
 import React from 'react';
+import { AdminLayout } from '../components/admin/AdminLayout';
 import { AdminDashboard } from '../components/admin/AdminDashboard';
 import { AdminArticles } from '../components/admin/AdminArticles';
 import { AdminCategories } from '../components/admin/AdminCategories';
@@ -10,26 +11,12 @@ import { AdminCommunities } from '../components/admin/AdminCommunities';
 import { AdminSections } from '../components/admin/AdminSections';
 import { AdminSettings } from '../components/admin/AdminSettings';
 import { AdminReviewQueue } from '../components/admin/AdminReviewQueue';
-import { useLocation } from 'react-router-dom';
-import { usePageTitle } from '../hooks/usePageTitle';
-import { 
-  TrendingUp, 
-  Image as ImageIcon, 
-  Flag, 
-  Tag as TagIcon,
-  Gamepad2,
-  Search, 
-  LayoutDashboard,
-  FileText,
-  Grid,
-  Layers,
-  Users,
-  Megaphone,
-  Library,
-  AlertCircle,
-  Settings,
-  ClipboardCheck
-} from 'lucide-react';
+import { AdminMedia } from '../components/admin/AdminMedia';
+import { AdminReports } from '../components/admin/AdminReports';
+import { AdminEvents } from '../components/admin/AdminEvents';
+import { AdminAnalytics } from '../components/admin/AdminAnalytics';
+import { Link, useLocation } from 'react-router-dom';
+import { Plus, ExternalLink } from 'lucide-react';
 
 export const AdminPanel = () => {
   const location = useLocation();
@@ -49,6 +36,8 @@ export const AdminPanel = () => {
     if (path.startsWith('/admin/review-queue')) return 'review-queue';
     if (path.startsWith('/admin/settings')) return 'settings';
     if (path.startsWith('/admin/placements')) return 'placements';
+    if (path.startsWith('/admin/events')) return 'events';
+    if (path.startsWith('/admin/analytics')) return 'analytics';
     return 'dashboard';
   };
 
@@ -69,76 +58,61 @@ export const AdminPanel = () => {
     reports: 'Reports',
     'review-queue': 'Review Queue',
     settings: 'Settings',
+    events: 'Events',
+    analytics: 'Analytics',
   };
 
-  usePageTitle(SECTION_TITLES[section] ?? 'Dashboard');
+  const SECTION_SUBTITLES: Record<string, string> = {
+    dashboard: 'Platform health and content at a glance.',
+    articles: 'Create, edit and manage every article on the platform.',
+    communities: 'Manage community hubs and their profiles.',
+    categories: 'Organize articles into editorial categories.',
+    sections: 'Control which pillars appear in the site navigation.',
+    tags: 'Manage topic tags across all articles.',
+    games: 'Track games and game coverage.',
+    users: 'Manage members, editors and their roles.',
+    ads: 'Run and manage advertising campaigns.',
+    placements: 'Configure where ad placements appear.',
+    media: 'Upload, preview and manage site-wide media assets.',
+    reports: 'Review member-reported content and keep the platform safe.',
+    'review-queue': 'Approve or reject community-submitted content.',
+    settings: 'Publication settings and brand assets.',
+    events: 'Create and manage event coverage.',
+    analytics: 'Real platform metrics, straight from your data.',
+  };
 
-  const renderMedia = () => (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between bg-zinc-950 border border-white/5 p-6 rounded-[32px]">
-        <div className="flex gap-4">
-          <button className="px-6 py-2 bg-[#B8FF4D] text-black rounded-xl font-black text-[10px] uppercase tracking-widest">Upload File</button>
-          <div className="flex items-center gap-2 p-1 bg-zinc-900 rounded-xl">
-             <button className="px-4 py-1.5 bg-zinc-800 text-white rounded-lg text-[10px] font-black uppercase tracking-widest">All</button>
-             <button className="px-4 py-1.5 text-zinc-500 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-widest">Images</button>
-             <button className="px-4 py-1.5 text-zinc-500 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-widest">Videos</button>
-          </div>
-        </div>
-        <div className="relative w-64">
-          <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" />
-          <input type="text" placeholder="Search media..." className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-4 py-2 text-xs text-white" />
-        </div>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="aspect-square bg-zinc-950 border border-white/5 rounded-3xl group relative overflow-hidden cursor-pointer hover:border-[#B8FF4D]/30 transition-all">
-            <div className="absolute inset-0 flex items-center justify-center text-zinc-800 group-hover:text-zinc-600 transition-colors">
-              <ImageIcon size={32} />
-            </div>
-            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-              <p className="text-[10px] font-bold text-white truncate w-full">image_asset_{i}.jpg</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderReports = () => (
-    <div className="bg-zinc-950 border border-white/5 rounded-[40px] overflow-x-auto">
-      <table className="w-full text-left min-w-[680px]">
-        <thead className="bg-white/[0.02] border-b border-white/5">
-          <tr>
-            <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Reason</th>
-            <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Reported Item</th>
-            <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Reporter</th>
-            <th className="px-6 sm:px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</th>
-            <th className="px-6 sm:px-8 py-6"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {[
-            { reason: 'Spam', item: 'GTA VI Leak Article', reporter: 'alex99', status: 'Pending' },
-            { reason: 'Inappropriate', item: 'User Comment #128', reporter: 'gaming_fan', status: 'Resolved' },
-          ].map((report, i) => (
-            <tr key={i} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors">
-              <td className="px-6 sm:px-8 py-6 text-sm font-bold text-white">{report.reason}</td>
-              <td className="px-6 sm:px-8 py-6 text-sm text-zinc-400">{report.item}</td>
-              <td className="px-6 sm:px-8 py-6 text-sm text-zinc-500">{report.reporter}</td>
-              <td className="px-6 sm:px-8 py-6">
-                <span className={`text-[10px] font-black uppercase tracking-widest ${report.status === 'Pending' ? 'text-red-500' : 'text-[#B8FF4D]'}`}>
-                  {report.status}
-                </span>
-              </td>
-              <td className="px-6 sm:px-8 py-6 text-right">
-                <button className="text-[10px] font-black text-zinc-500 hover:text-white uppercase tracking-widest">Resolve</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+  const renderActions = () => {
+    switch (section) {
+      case 'events':
+        return (
+          <>
+            <Link
+              to="/events"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-950 border border-white/5 text-zinc-300 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors"
+            >
+              <ExternalLink size={13} /> View Public Page
+            </Link>
+            <Link
+              to="/editor/new"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#B8FF4D] text-black text-[10px] font-black uppercase tracking-widest hover:bg-white transition-colors"
+            >
+              <Plus size={13} /> New Event
+            </Link>
+          </>
+        );
+      case 'articles':
+        return (
+          <Link
+            to="/editor/new"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#B8FF4D] text-black text-[10px] font-black uppercase tracking-widest hover:bg-white transition-colors"
+          >
+            <Plus size={13} /> New Article
+          </Link>
+        );
+      default:
+        return null;
+    }
+  };
 
   const renderContent = () => {
     switch (section) {
@@ -151,57 +125,23 @@ export const AdminPanel = () => {
       case 'users': return <AdminUsers />;
       case 'ads': return <AdminAds />;
       case 'placements': return <AdminAds initialView="Placements" />;
-      case 'media': return renderMedia();
-      case 'reports': return renderReports();
+      case 'media': return <AdminMedia />;
+      case 'reports': return <AdminReports />;
+      case 'events': return <AdminEvents />;
+      case 'analytics': return <AdminAnalytics />;
       case 'review-queue': return <AdminReviewQueue />;
       case 'settings': return <AdminSettings />;
       default: return <AdminDashboard />;
     }
   };
 
-  const getIcon = () => {
-    switch (section) {
-      case 'dashboard': return <LayoutDashboard size={24} />;
-      case 'articles': return <FileText size={24} />;
-      case 'categories': return <Grid size={24} />;
-      case 'sections': return <Layers size={24} />;
-      case 'tags': return <TagIcon size={24} />;
-      case 'communities': return <Gamepad2 size={24} />;
-      case 'games': return <Gamepad2 size={24} />;
-      case 'users': return <Users size={24} />;
-      case 'ads': return <Megaphone size={24} />;
-      case 'placements': return <Megaphone size={24} />;
-      case 'media': return <Library size={24} />;
-      case 'reports': return <AlertCircle size={24} />;
-      case 'review-queue': return <ClipboardCheck size={24} />;
-      case 'settings': return <Settings size={24} />;
-      default: return null;
-    }
-  };
-
   return (
-    <div className="pb-32 pt-32 px-4 sm:px-6">
-      <div className="max-w-7xl mx-auto space-y-12">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-white/5 pb-10">
-          <div className="space-y-4">
-             <div className="flex items-center gap-3 text-[#B8FF4D]">
-               {getIcon()}
-               <span className="text-[10px] font-black uppercase tracking-[0.4em]">Subteen CMS</span>
-             </div>
-            <div className="space-y-2">
-              <h1 className="text-4xl sm:text-5xl font-black text-white uppercase tracking-tighter">
-                {SECTION_TITLES[section] ?? 'Dashboard'}
-              </h1>
-              <p className="text-zinc-500 font-medium text-lg">Manage your publication and track platform health.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-full text-red-500 text-[10px] font-black uppercase tracking-widest">
-            <TrendingUp size={14} /> High Traffic Mode
-          </div>
-        </div>
-
-        {renderContent()}
-      </div>
-    </div>
+    <AdminLayout
+      title={SECTION_TITLES[section] ?? 'Dashboard'}
+      subtitle={SECTION_SUBTITLES[section] ?? 'Manage your publication.'}
+      actions={renderActions()}
+    >
+      {renderContent()}
+    </AdminLayout>
   );
 };

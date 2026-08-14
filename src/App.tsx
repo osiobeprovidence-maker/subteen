@@ -13,7 +13,6 @@ import { useDynamicFavicon } from './hooks/useDynamicFavicon';
 
 const ArticlePage = lazy(() => import('./pages/ArticlePage').then((m) => ({ default: m.ArticlePage })));
 const GameHub = lazy(() => import('./pages/GameHub').then((m) => ({ default: m.GameHub })));
-const AdminCMS = lazy(() => import('./pages/AdminCMS').then((m) => ({ default: m.AdminCMS })));
 const AuthorProfile = lazy(() => import('./pages/AuthorProfile').then((m) => ({ default: m.AuthorProfile })));
 const CategoryPage = lazy(() => import('./pages/CategoryPage').then((m) => ({ default: m.CategoryPage })));
 const EventsPage = lazy(() => import('./pages/EventsPage').then((m) => ({ default: m.EventsPage })));

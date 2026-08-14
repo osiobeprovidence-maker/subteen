@@ -236,6 +236,35 @@ export default defineSchema({
     autoApproveDelayMinutes: v.optional(v.number()),
   }),
 
+  mediaAssets: defineTable({
+    storageId: v.string(),
+    name: v.string(),
+    mimeType: v.string(),
+    size: v.number(),
+    kind: v.union(v.literal('image'), v.literal('video'), v.literal('file')),
+    width: v.optional(v.number()),
+    height: v.optional(v.number()),
+    uploadedBy: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index('by_created', ['createdAt']),
+
+  reports: defineTable({
+    reason: v.string(),
+    description: v.optional(v.string()),
+    targetType: v.string(),
+    targetId: v.string(),
+    targetTitle: v.optional(v.string()),
+    reporterUserId: v.optional(v.string()),
+    status: v.union(v.literal('pending'), v.literal('resolved'), v.literal('dismissed')),
+    createdAt: v.number(),
+    resolvedAt: v.optional(v.number()),
+    resolvedBy: v.optional(v.string()),
+    resolutionNote: v.optional(v.string()),
+  })
+    .index('by_status', ['status'])
+    .index('by_created', ['createdAt']),
+
   rssSources: defineTable({
     name: v.string(),
     feedUrl: v.string(),
