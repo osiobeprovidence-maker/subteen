@@ -2,6 +2,7 @@ import { query, mutation, internalMutation, QueryCtx, MutationCtx } from './_gen
 import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
 import { canAccessEditor } from './lib/roles';
+import { pillarOf } from './lib/taxonomy';
 
 const statusSchema = v.union(
   v.literal('published'),
@@ -158,6 +159,54 @@ export const listPublishedByCategory = query({
   },
 });
 
+/**
+ * Latest published articles for a pillar. Legacy stored categories are
+ * normalized to their pillar via taxonomy, and the optional `subcategory`
+ * narrows the result further.
+ */
+export const listByPillar = query({
+  args: { pillar: v.string(), subcategory: v.optional(v.string()), take: v.optional(v.number()) },
+  handler: async (ctx, { pillar, subcategory, take }) => {
+    const all = await ctx.db
+      .query('articles')
+      .withIndex('by_status', (q) => q.eq('status', 'published'))
+      .order('desc')
+      .take(take ?? 50);
+    const filtered = all.filter((a) => {
+      if (pillarOf(a.category) !== pillar) return false;
+      if (subcategory) return (a.subcategory ?? '') === subcategory;
+      return true;
+    });
+    return Promise.all(filtered.map((a) => attachAuthor(ctx, a).then((a) => attachCommunity(ctx, a)).then(toCard)));
+  },
+});
+
+/** Server-side search over published articles, optionally narrowed to a pillar. */
+export const search = query({
+  args: { query: v.string(), pillar: v.optional(v.string()), take: v.optional(v.number()) },
+  handler: async (ctx, { query, pillar, take }) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const all = await ctx.db
+      .query('articles')
+      .withIndex('by_status', (q) => q.eq('status', 'published'))
+      .order('desc')
+      .take(take ?? 60);
+    const filtered = all.filter((a) => {
+      if (pillar && pillarOf(a.category) !== pillar) return false;
+      return (
+        a.title.toLowerCase().includes(q) ||
+        (a.subtitle ?? '').toLowerCase().includes(q) ||
+        (a.excerpt ?? '').toLowerCase().includes(q) ||
+        a.category.toLowerCase().includes(q) ||
+        (a.subcategory ?? '').toLowerCase().includes(q) ||
+        a.tags.some((t) => t.toLowerCase().includes(q))
+      );
+    });
+    return Promise.all(filtered.map((a) => attachAuthor(ctx, a).then((a) => attachCommunity(ctx, a)).then(toCard)));
+  },
+});
+
 export const getBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, { slug }) => {
@@ -296,6 +345,19 @@ export const create = mutation({
     content: v.string(),
     heroImage: v.optional(v.string()),
     category: v.string(),
+    subcategory: v.optional(v.string()),
+    excerpt: v.optional(v.string()),
+    country: v.optional(v.string()),
+    region: v.optional(v.string()),
+    city: v.optional(v.string()),
+    eventDate: v.optional(v.string()),
+    eventStartTime: v.optional(v.string()),
+    eventEndTime: v.optional(v.string()),
+    venue: v.optional(v.string()),
+    organizer: v.optional(v.string()),
+    ticketUrl: v.optional(v.string()),
+    ticketInfo: v.optional(v.string()),
+    eventStatus: v.optional(v.string()),
     gameId: v.optional(v.string()),
     communityId: v.optional(v.string()),
     isFeatured: v.optional(v.boolean()),
@@ -332,6 +394,20 @@ export const create = mutation({
       content: args.content,
       heroImage: args.heroImage ?? '',
       category: args.category,
+      subcategory: args.subcategory,
+      excerpt: args.excerpt,
+      country: args.country,
+      region: args.region,
+      city: args.city,
+      eventDate: args.eventDate,
+      eventStartTime: args.eventStartTime,
+      eventEndTime: args.eventEndTime,
+      venue: args.venue,
+      organizer: args.organizer,
+      ticketUrl: args.ticketUrl,
+      ticketInfo: args.ticketInfo,
+      eventStatus: args.eventStatus,
+      contentType: args.category === 'Events' ? 'event' : undefined,
       authorName,
       authorAvatar,
       publishDate: args.publishDate ?? new Date().toISOString().slice(0, 10),
@@ -360,6 +436,19 @@ export const update = mutation({
     content: v.optional(v.string()),
     heroImage: v.optional(v.string()),
     category: v.optional(v.string()),
+    subcategory: v.optional(v.string()),
+    excerpt: v.optional(v.string()),
+    country: v.optional(v.string()),
+    region: v.optional(v.string()),
+    city: v.optional(v.string()),
+    eventDate: v.optional(v.string()),
+    eventStartTime: v.optional(v.string()),
+    eventEndTime: v.optional(v.string()),
+    venue: v.optional(v.string()),
+    organizer: v.optional(v.string()),
+    ticketUrl: v.optional(v.string()),
+    ticketInfo: v.optional(v.string()),
+    eventStatus: v.optional(v.string()),
     gameId: v.optional(v.string()),
     communityId: v.optional(v.string()),
     isFeatured: v.optional(v.boolean()),
@@ -381,6 +470,9 @@ export const update = mutation({
     if (slug) {
       const trimmed = slug.trim();
       if (trimmed) patch.slug = await ensureUniqueSlug(ctx, trimmed, id);
+    }
+    if (rest.category !== undefined) {
+      patch.contentType = rest.category === 'Events' ? 'event' : existing.contentType === 'event' ? undefined : existing.contentType;
     }
     if (rest.status === 'published') {
       patch.reviewStatus = undefined;

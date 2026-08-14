@@ -12,13 +12,18 @@ import {
   isAdminItemActive,
   isAdminGroupActive,
 } from '../../lib/adminNavigation';
+import { PILLARS, CATEGORY_SUBCATEGORIES } from '../../../convex/lib/taxonomy';
 
 const SearchOverlay = lazy(() => import('../common/SearchOverlay').then((m) => ({ default: m.SearchOverlay })));
 
-const NAV_LINKS = [
-  { name: 'News', path: '/category/news' },
-  { name: 'Reviews', path: '/category/reviews' },
-  { name: 'Guides', path: '/category/guides' },
+const PILLAR_NAV = PILLARS.map((pillar) => ({
+  name: pillar,
+  path: `/category/${pillar.toLowerCase()}`,
+  subcategories: CATEGORY_SUBCATEGORIES[pillar] ?? [],
+}));
+
+const NAV_LINKS: { name: string; path: string; subcategories?: string[] }[] = [
+  ...PILLAR_NAV,
   { name: 'Communities', path: '/communities' },
 ];
 
@@ -37,6 +42,8 @@ const navLinksFor = (role: Role | undefined) => {
   }
   return links;
 };
+
+const subSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
 const ADMIN_LINKS = [
   { name: 'Dashboard', path: '/admin' },
@@ -69,6 +76,7 @@ export const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [hoverNav, setHoverNav] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const { isLoggedIn, logout, role, user, dbUser } = useAuth();
   const location = useLocation();
@@ -77,12 +85,13 @@ export const Navbar = () => {
   const isAdminPath = location.pathname.startsWith('/admin');
   const isEditorPath = location.pathname.startsWith('/editor');
 
-  const currentLinks = isAdminPath ? ADMIN_LINKS : isEditorPath ? EDITOR_LINKS : navLinksFor(role);
+  const currentLinks: { name: string; path: string; subcategories?: string[] }[] = isAdminPath ? ADMIN_LINKS : isEditorPath ? EDITOR_LINKS : navLinksFor(role);
   const adminNav = isAdminPath ? adminNavFor(role) : [];
 
   useEffect(() => {
     setOpenMenu(null);
     setProfileOpen(false);
+    setHoverNav(null);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -204,19 +213,75 @@ export const Navbar = () => {
                 )}
               </div>
             ) : (
-              <div className="hidden lg:flex items-center gap-8">
-                {currentLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    to={link.path}
-                    className={cn(
-                      'text-sm font-medium tracking-wide transition-colors hover:text-[#B8FF4D]',
-                      location.pathname === link.path ? 'text-[#B8FF4D]' : 'text-zinc-400'
-                    )}
-                  >
-                    {link.name}
-                  </Link>
-                ))}
+              <div className="hidden lg:flex items-center gap-6">
+                {currentLinks.map((link) => {
+                  const subs = link.subcategories ?? [];
+                  if (subs.length === 0) {
+                    return (
+                      <Link
+                        key={link.name}
+                        to={link.path}
+                        className={cn(
+                          'text-sm font-medium tracking-wide transition-colors hover:text-[#B8FF4D]',
+                          location.pathname === link.path ? 'text-[#B8FF4D]' : 'text-zinc-400'
+                        )}
+                      >
+                        {link.name}
+                      </Link>
+                    );
+                  }
+                  return (
+                    <div
+                      key={link.name}
+                      className="relative"
+                      onMouseEnter={() => setHoverNav(link.name)}
+                      onMouseLeave={() => setHoverNav(null)}
+                    >
+                      <Link
+                        to={link.path}
+                        className={cn(
+                          'flex items-center gap-1 text-sm font-medium tracking-wide transition-colors hover:text-[#B8FF4D]',
+                          location.pathname.startsWith(link.path) ? 'text-[#B8FF4D]' : 'text-zinc-400'
+                        )}
+                      >
+                        {link.name}
+                        <ChevronDown size={12} className={cn('transition-transform', hoverNav === link.name && 'rotate-180')} />
+                      </Link>
+                      <AnimatePresence>
+                        {hoverNav === link.name && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 8 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute top-full left-0 pt-4 z-50"
+                          >
+                            <div className="bg-zinc-950 border border-white/10 rounded-2xl p-2 min-w-[230px] shadow-2xl shadow-black/50 overflow-hidden">
+                              <Link
+                                to={link.path}
+                                onClick={() => setHoverNav(null)}
+                                className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-black text-[#B8FF4D] hover:bg-white/[0.04] transition-colors"
+                              >
+                                {link.name} <span className="text-zinc-600">→</span>
+                              </Link>
+                              <div className="h-px bg-white/[0.06] my-1" />
+                              {subs.map((sub) => (
+                                <Link
+                                  key={sub}
+                                  to={`/category/${subSlug(sub)}`}
+                                  onClick={() => setHoverNav(null)}
+                                  className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors"
+                                >
+                                  {sub}
+                                </Link>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -333,14 +398,29 @@ export const Navbar = () => {
               className="lg:hidden absolute top-full left-0 right-0 bg-zinc-950 border-b border-white/10 p-6 flex flex-col gap-5 max-h-[calc(100vh-80px)] overflow-y-auto"
             >
               {currentLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.path}
-                  onClick={() => setIsOpen(false)}
-                  className="text-sm font-bold uppercase tracking-widest text-zinc-400 hover:text-[#B8FF4D]"
-                >
-                  {link.name}
-                </Link>
+                <div key={link.name} className="space-y-2">
+                  <Link
+                    to={link.path}
+                    onClick={() => setIsOpen(false)}
+                    className="text-sm font-bold uppercase tracking-widest text-zinc-400 hover:text-[#B8FF4D]"
+                  >
+                    {link.name}
+                  </Link>
+                  {link.subcategories && link.subcategories.length > 0 && (
+                    <div className="pl-3 border-l border-white/10 ml-1 space-y-1.5">
+                      {link.subcategories.map((sub) => (
+                        <Link
+                          key={sub}
+                          to={`/category/${subSlug(sub)}`}
+                          onClick={() => setIsOpen(false)}
+                          className="block text-xs font-medium text-zinc-600 hover:text-[#B8FF4D]"
+                        >
+                          {sub}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
               <hr className="border-white/5" />
               {!isLoggedIn ? (

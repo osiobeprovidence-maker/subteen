@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, ChevronRight, Play, Trophy, Cpu, Gamepad2, Layers, MessagesSquare } from 'lucide-react';
+import { ArrowRight, ChevronRight, Play, Trophy, Cpu, Gamepad2, Layers, MessagesSquare, Sparkles, Music, Film, Landmark, Calendar, Users } from 'lucide-react';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { ArticleCard } from '../components/common/ArticleCard';
@@ -8,6 +8,19 @@ import { CommunityImage } from '../components/common/CommunityImage';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { Link } from 'react-router-dom';
 import type { Article, Community } from '../types';
+import { PILLARS } from '../../convex/lib/taxonomy';
+
+const PILLAR_STRIP = [
+  { name: 'Gaming', icon: Gamepad2, blurb: 'Games, esports & reviews' },
+  { name: 'Anime', icon: Sparkles, blurb: 'Anime & manga' },
+  { name: 'Music', icon: Music, blurb: 'Drops & artist news' },
+  { name: 'Entertainment', icon: Film, blurb: 'Movies, TV & pop culture' },
+  { name: 'Culture', icon: Landmark, blurb: 'African culture & ideas' },
+  { name: 'Events', icon: Calendar, blurb: 'Gigs, festivals & meetups' },
+  { name: 'Youth', icon: Users, blurb: 'For young Africa' },
+];
+
+const NON_GAMING_PILLARS = PILLARS.filter((p) => p !== 'Gaming');
 
 export const Home = () => {
   usePageTitle();
@@ -16,6 +29,9 @@ export const Home = () => {
   const latestReviewsQuery = useQuery(api.articles.listPublishedByCategory, { category: 'Reviews', take: 3 });
   const communitiesQuery = useQuery(api.communities.listForPublic);
   const featuredCommunityQuery = useQuery(api.communities.featured);
+  const pillarQueries = NON_GAMING_PILLARS.map((pillar) =>
+    useQuery(api.articles.listByPillar, { pillar, take: 3 }),
+  );
   const articles = (publishedQuery ?? []) as unknown as Article[];
   const featuredArticles = (featuredQuery ?? []) as unknown as Article[];
   const latestReviews = (latestReviewsQuery ?? []) as unknown as Article[];
@@ -26,6 +42,11 @@ export const Home = () => {
   const latestNews = articles.filter(a => a.category !== 'Reviews' && a.language !== 'pidgin').slice(0, 4);
   const trendingStories = articles.filter(a => a.isTrending).slice(0, 4);
   const pidginArticles = articles.filter(a => a.language === 'pidgin').slice(0, 4);
+
+  const pillarSections = NON_GAMING_PILLARS.map((pillar, i) => ({
+    pillar,
+    articles: (pillarQueries[i] ?? []) as unknown as Article[],
+  })).filter((s) => s.articles.length > 0);
 
   return (
     <div className="space-y-16 sm:space-y-24 lg:space-y-32 pb-20 sm:pb-32">
@@ -40,6 +61,35 @@ export const Home = () => {
               <p className="text-zinc-500">Publish your first story and it will appear here instantly.</p>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Explore by Topic */}
+      <section className="px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+          <div className="flex items-center gap-3 border-b border-white/5 pb-3">
+            <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2 sm:gap-3">
+              <div className="w-1.5 sm:w-2 h-6 sm:h-8 bg-[#B8FF4D]" />
+              EXPLORE BY TOPIC
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4">
+            {PILLAR_STRIP.map((pillar) => (
+              <Link
+                key={pillar.name}
+                to={`/category/${pillar.name.toLowerCase()}`}
+                className="group bg-zinc-950 border border-white/5 rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between gap-8 hover:border-[#B8FF4D]/50 transition-colors"
+              >
+                <pillar.icon size={18} className="text-[#B8FF4D] sm:w-6 sm:h-6" />
+                <div>
+                  <h3 className="text-sm sm:text-lg font-bold text-white group-hover:text-[#B8FF4D] transition-colors">
+                    {pillar.name}
+                  </h3>
+                  <p className="text-[10px] sm:text-[11px] text-zinc-600 mt-1 hidden sm:block">{pillar.blurb}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -199,6 +249,31 @@ export const Home = () => {
           </Link>
         </div>
       </section>
+
+      {/* Non-Gaming Pillar Sections */}
+      {pillarSections.map((section) => (
+        <section key={section.pillar} className="px-4 sm:px-6">
+          <div className="max-w-7xl mx-auto space-y-6 sm:space-y-10">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3 sm:pb-4">
+              <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2 sm:gap-3">
+                <div className="w-1.5 sm:w-2 h-6 sm:h-8 bg-[#B8FF4D]" />
+                {section.pillar.toUpperCase()}
+              </h2>
+              <Link
+                to={`/category/${section.pillar.toLowerCase()}`}
+                className="text-xs sm:text-sm font-bold text-zinc-500 hover:text-white transition-colors flex items-center gap-1.5 sm:gap-2"
+              >
+                VIEW ALL <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+              {section.articles.map((article) => (
+                <ArticleCard key={article.id} article={article} variant="compact" />
+              ))}
+            </div>
+          </div>
+        </section>
+      ))}
 
       {/* Popular Communities */}
       <section className="px-4 sm:px-6">
