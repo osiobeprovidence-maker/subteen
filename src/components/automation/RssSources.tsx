@@ -15,6 +15,7 @@ import {
 import { api } from '../../../convex/_generated/api';
 import { cn } from '../../lib/utils';
 import { relativeTime } from '../../lib/articleHelpers';
+import { PILLARS, subcategoriesOf, displayCategory, pillarOf } from '../../../convex/lib/taxonomy';
 
 interface FormState {
   name: string;
@@ -23,6 +24,7 @@ interface FormState {
   logoUrl: string;
   description: string;
   defaultCategory: string;
+  defaultSubcategory: string;
   pidgin: boolean;
 }
 
@@ -32,7 +34,8 @@ const EMPTY_FORM: FormState = {
   websiteUrl: '',
   logoUrl: '',
   description: '',
-  defaultCategory: 'Gaming News',
+  defaultCategory: 'Gaming',
+  defaultSubcategory: '',
   pidgin: false,
 };
 
@@ -65,7 +68,8 @@ export const RssSources = () => {
       websiteUrl: source.websiteUrl,
       logoUrl: source.logoUrl ?? '',
       description: source.description ?? '',
-      defaultCategory: source.defaultCategory ?? 'Gaming News',
+      defaultCategory: pillarOf(source.defaultCategory),
+      defaultSubcategory: source.defaultSubcategory ?? '',
       pidgin: source.pidgin ?? false,
     });
     setFormOpen(true);
@@ -195,7 +199,7 @@ export const RssSources = () => {
                       <p className="text-sm font-bold text-white truncate">{source.name}</p>
                       <div className="flex items-center gap-2">
                         <p className="text-[10px] text-zinc-600 uppercase tracking-widest truncate">
-                          {source.defaultCategory ?? 'Gaming News'}
+                          {displayCategory(source.defaultCategory ?? 'Gaming', source.defaultSubcategory)}
                         </p>
                         {source.pidgin && (
                           <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 bg-[#B8FF4D] text-black rounded">
@@ -297,8 +301,29 @@ export const RssSources = () => {
                   <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. IGN" className={inputClass} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Default Category</label>
-                  <input value={form.defaultCategory} onChange={(e) => setForm({ ...form, defaultCategory: e.target.value })} placeholder="Gaming News" className={inputClass} />
+                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Default Pillar</label>
+                  <select
+                    value={form.defaultCategory}
+                    onChange={(e) => setForm({ ...form, defaultCategory: e.target.value, defaultSubcategory: '' })}
+                    className={cn(inputClass, 'appearance-none cursor-pointer')}
+                  >
+                    {PILLARS.map((pillar) => (
+                      <option key={pillar} value={pillar}>{pillar}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Default Subcategory</label>
+                  <select
+                    value={form.defaultSubcategory}
+                    onChange={(e) => setForm({ ...form, defaultSubcategory: e.target.value })}
+                    className={cn(inputClass, 'appearance-none cursor-pointer')}
+                  >
+                    <option value="">Auto (AI decides)</option>
+                    {(subcategoriesOf(form.defaultCategory) as string[]).map((sub) => (
+                      <option key={sub} value={sub}>{sub}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="space-y-2">

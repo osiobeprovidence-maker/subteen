@@ -63,6 +63,7 @@ export const create = mutation({
     logoUrl: v.optional(v.string()),
     description: v.optional(v.string()),
     defaultCategory: v.optional(v.string()),
+    defaultSubcategory: v.optional(v.string()),
     active: v.optional(v.boolean()),
     pidgin: v.optional(v.boolean()),
   },
@@ -82,6 +83,7 @@ export const create = mutation({
       logoUrl: args.logoUrl?.trim() || undefined,
       description: args.description?.trim() || undefined,
       defaultCategory: args.defaultCategory?.trim() || undefined,
+      defaultSubcategory: args.defaultSubcategory?.trim() || undefined,
       active: args.active ?? true,
       pidgin: args.pidgin ?? false,
       createdAt: now(),
@@ -100,6 +102,7 @@ export const update = mutation({
     logoUrl: v.optional(v.string()),
     description: v.optional(v.string()),
     defaultCategory: v.optional(v.string()),
+    defaultSubcategory: v.optional(v.string()),
     active: v.optional(v.boolean()),
     pidgin: v.optional(v.boolean()),
   },
@@ -120,6 +123,7 @@ export const update = mutation({
     }
     if ('logoUrl' in clean && clean.logoUrl === '') clean.logoUrl = undefined;
     if ('description' in clean && clean.description === '') clean.description = undefined;
+    if ('defaultSubcategory' in clean && clean.defaultSubcategory === '') clean.defaultSubcategory = undefined;
     await ctx.db.patch(id, { ...clean, updatedAt: now() } as never);
     return ctx.db.get(id);
   },
@@ -213,6 +217,7 @@ export const seedSources = mutation({
         logoUrl: source.logoUrl,
         description: source.description,
         defaultCategory: source.defaultCategory,
+        defaultSubcategory: source.defaultSubcategory,
         active: true,
         createdAt: now(),
         updatedAt: now(),
@@ -236,6 +241,7 @@ export const ensureDefaults = internalMutation({
         logoUrl: source.logoUrl,
         description: source.description,
         defaultCategory: source.defaultCategory,
+        defaultSubcategory: source.defaultSubcategory,
         active: true,
         createdAt: now(),
         updatedAt: now(),

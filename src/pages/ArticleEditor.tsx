@@ -48,6 +48,7 @@ import { MuxVideo } from '../components/common/MuxVideo';
 import { VideoUploadModal } from '../components/editor/VideoUploadModal';
 import { useAuth } from '../context/AuthContext';
 import { slugify, readingTimeFor } from '../lib/articleHelpers';
+import { PILLARS, subcategoriesOf, pillarOf } from '../../convex/lib/taxonomy';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useResolvedMedia } from '../hooks/useImageUpload';
 
@@ -72,7 +73,8 @@ export const ArticleEditor = () => {
   const [excerpt, setExcerpt] = useState('');
   const [slug, setSlug] = useState('');
   const [content, setContent] = useState('');
-  const [category, setCategory] = useState('News');
+  const [category, setCategory] = useState('Gaming');
+  const [subcategory, setSubcategory] = useState('');
   const [selectedGame, setSelectedGame] = useState('');
   const [selectedCommunity, setSelectedCommunity] = useState('');
   const [status, setStatus] = useState<'Draft' | 'Published' | 'Scheduled'>('Draft');
@@ -118,7 +120,8 @@ export const ArticleEditor = () => {
     setExcerpt('');
     setSlug(editable.slug);
     setContent(editable.content);
-    setCategory(editable.category);
+    setCategory(pillarOf(editable.category));
+    setSubcategory(editable.subcategory ?? '');
     setSelectedGame(editable.gameId ?? '');
     setSelectedCommunity(editable.communityId ?? '');
     setStatus(editable.status === 'scheduled' ? 'Scheduled' : editable.status === 'published' ? 'Published' : 'Draft');
@@ -164,6 +167,8 @@ export const ArticleEditor = () => {
       content,
       heroImage: heroImage || undefined,
       category,
+      subcategory: subcategory || undefined,
+      excerpt: excerpt || undefined,
       gameId: selectedGame || undefined,
       communityId: selectedCommunity || undefined,
       videoUrl: videoUrl || undefined,
@@ -672,17 +677,40 @@ export const ArticleEditor = () => {
                         </div>
                       )}
 
-                      {/* Category */}
+                      {/* Category (Pillar) */}
                       <div className="space-y-4">
-                        <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Category</label>
+                        <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Pillar</label>
                         <div className="relative group">
                           <select 
                             value={category}
-                            onChange={(e) => setCategory(e.target.value)}
+                            onChange={(e) => {
+                              const next = e.target.value;
+                              setCategory(next);
+                              handleChange(setCategory, next);
+                              setSubcategory('');
+                            }}
                             className="w-full appearance-none bg-zinc-900 border border-white/5 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#B8FF4D] transition-all cursor-pointer"
                           >
-                            {['News', 'Reviews', 'Guides', 'Esports', 'Deals', 'Trailers', 'Patch Notes', 'Hardware', 'Opinion', 'Features', 'Industry'].map(cat => (
-                              <option key={cat}>{cat}</option>
+                            {PILLARS.map((pillar) => (
+                              <option key={pillar} value={pillar}>{pillar}</option>
+                            ))}
+                          </select>
+                          <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none group-hover:text-white transition-colors" />
+                        </div>
+                      </div>
+
+                      {/* Subcategory */}
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Subcategory</label>
+                        <div className="relative group">
+                          <select 
+                            value={subcategory}
+                            onChange={(e) => handleChange(setSubcategory, e.target.value)}
+                            className="w-full appearance-none bg-zinc-900 border border-white/5 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#B8FF4D] transition-all cursor-pointer"
+                          >
+                            <option value="">None</option>
+                            {(subcategoriesOf(category) as string[]).map((sub) => (
+                              <option key={sub} value={sub}>{sub}</option>
                             ))}
                           </select>
                           <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none group-hover:text-white transition-colors" />

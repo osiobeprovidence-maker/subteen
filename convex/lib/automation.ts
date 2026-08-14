@@ -61,6 +61,7 @@ export const DEFAULT_RSS_SOURCES = [
     logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/IGN_2017_logo.svg/2560px-IGN_2017_logo.svg.png',
     description: 'Breaking gaming news, reviews and entertainment coverage.',
     defaultCategory: 'Gaming News',
+    defaultSubcategory: 'Gaming News',
   },
   {
     name: 'GameSpot',
@@ -69,6 +70,7 @@ export const DEFAULT_RSS_SOURCES = [
     logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/GameSpot_Logo.svg/2560px-GameSpot_Logo.svg.png',
     description: 'News, reviews, and previews from GameSpot.',
     defaultCategory: 'Gaming News',
+    defaultSubcategory: 'Gaming News',
   },
   {
     name: 'PC Gamer',
@@ -77,6 +79,7 @@ export const DEFAULT_RSS_SOURCES = [
     logoUrl: 'https://assetsio.reedpopcdn.com/pc-gamer-master-logo-square.png',
     description: 'The global authority on PC games.',
     defaultCategory: 'PC Gaming',
+    defaultSubcategory: 'PC Gaming',
   },
   {
     name: 'Eurogamer',
@@ -85,6 +88,7 @@ export const DEFAULT_RSS_SOURCES = [
     logoUrl: 'https://assetsio.reedpopcdn.com/eurogamer-logo.svg',
     description: 'European gaming news, reviews and opinion.',
     defaultCategory: 'Gaming News',
+    defaultSubcategory: 'Gaming News',
   },
   {
     name: 'Rock Paper Shotgun',
@@ -93,6 +97,7 @@ export const DEFAULT_RSS_SOURCES = [
     logoUrl: 'https://assetsio.reedpopcdn.com/rock-paper-shotgun-logo.svg',
     description: 'PC gaming news, reviews and guides.',
     defaultCategory: 'PC Gaming',
+    defaultSubcategory: 'PC Gaming',
   },
 ];
 
