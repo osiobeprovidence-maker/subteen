@@ -19,6 +19,7 @@ import {
   sanitizeHtml,
   sanitizeContent,
   slugify,
+  normalizeTitle,
   titleSimilarity,
   validateFeedUrl,
   KNOWN_CATEGORIES,
@@ -1166,51 +1167,223 @@ export const autoApproveDueDrafts = internalMutation({
   },
 });
 
+/** Title similarity threshold used by dedupe checks (mirrors findDuplicate). */
+const DEDUPE_TITLE_SIMILARITY = 0.85;
+
+/** Light URL normalization for dedupe keys (host + path, lowercase, no trailing slash). */
+function normalizeUrlKey(url?: string): string {
+  return (url ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/\/+$/, '');
+}
+
+/** Tokenize a title the same way titleSimilarity does. */
+function titleTokenSet(title: string): Set<string> {
+  return new Set(normalizeTitle(title).split(' ').filter(Boolean));
+}
+
+/** titleSimilarity(draftTitle, titleOf(tokens)). */
+function similarityToTokenSet(title: string, tokens: Set<string>): number {
+  const a = titleTokenSet(title);
+  if (a.size === 0 || tokens.size === 0) return 0;
+  const intersection = [...a].filter((t) => tokens.has(t)).length;
+  const union = new Set([...a, ...tokens]).size;
+  return intersection / union;
+}
+
+type PendingDuplicate = {
+  draftId: Id<'automatedNewsDrafts'>;
+  title: string;
+  reason: string;
+  kind: 'published' | 'queue';
+};
+
+/**
+ * Read-only dedupe pass over the PENDING_REVIEW queue. Classifies every draft
+ * as either eligible (safe to publish) or a duplicate of an already-published
+ * article or of another draft earlier in the queue. Mirrors the offline scan:
+ * originalUrl match first, then normalized-title similarity (>= 0.85).
+ */
+async function analyzePendingDrafts(
+  ctx: QueryCtx | MutationCtx,
+): Promise<{ eligible: Doc<'automatedNewsDrafts'>[]; skipped: PendingDuplicate[] }> {
+  const drafts = await ctx.db
+    .query('automatedNewsDrafts')
+    .withIndex('by_status', (q) => q.eq('status', 'PENDING_REVIEW'))
+    .order('asc')
+    .take(1000);
+
+  const publishedArticles = await ctx.db
+    .query('articles')
+    .withIndex('by_status', (q) => q.eq('status', 'published'))
+    .order('desc')
+    .take(500);
+  const publishedTokenSets: Set<string>[] = [];
+  for (const a of publishedArticles) {
+    if (a.title) publishedTokenSets.push(titleTokenSet(a.title));
+    if (a.originalTitle) publishedTokenSets.push(titleTokenSet(a.originalTitle));
+  }
+
+  const eligible: Doc<'automatedNewsDrafts'>[] = [];
+  const skipped: PendingDuplicate[] = [];
+  const keptUrls = new Set<string>();
+  const keptTokenSets: Set<string>[] = [];
+
+  for (const draft of drafts) {
+    const imported = draft.importedNewsId ? await ctx.db.get(draft.importedNewsId) : null;
+    const originalUrl = imported?.originalUrl;
+    const urlKey = normalizeUrlKey(originalUrl);
+
+    // 1. exact originalUrl already published
+    if (urlKey) {
+      const existing = await ctx.db
+        .query('articles')
+        .withIndex('by_originalUrl', (q) => q.eq('originalUrl', originalUrl))
+        .first();
+      if (existing) {
+        skipped.push({ draftId: draft._id, title: draft.title, reason: 'originalUrl already published', kind: 'published' });
+        continue;
+      }
+    }
+
+    if (draft.title) {
+      // 2. normalized-title similarity vs published articles
+      let dupVsPublished = false;
+      for (const tokens of publishedTokenSets) {
+        if (similarityToTokenSet(draft.title, tokens) >= DEDUPE_TITLE_SIMILARITY) {
+          dupVsPublished = true;
+          break;
+        }
+      }
+      if (dupVsPublished) {
+        skipped.push({ draftId: draft._id, title: draft.title, reason: 'title matches an already-published article', kind: 'published' });
+        continue;
+      }
+
+      // 3. duplicate of a draft earlier in this queue
+      if (urlKey && keptUrls.has(urlKey)) {
+        skipped.push({ draftId: draft._id, title: draft.title, reason: 'same originalUrl as another pending draft', kind: 'queue' });
+        continue;
+      }
+      let dupWithinQueue = false;
+      for (const tokens of keptTokenSets) {
+        if (similarityToTokenSet(draft.title, tokens) >= DEDUPE_TITLE_SIMILARITY) {
+          dupWithinQueue = true;
+          break;
+        }
+      }
+      if (dupWithinQueue) {
+        skipped.push({ draftId: draft._id, title: draft.title, reason: 'title matches another pending draft', kind: 'queue' });
+        continue;
+      }
+    }
+
+    if (urlKey) keptUrls.add(urlKey);
+    if (draft.title) keptTokenSets.push(titleTokenSet(draft.title));
+    eligible.push(draft);
+  }
+
+  return { eligible, skipped };
+}
+
+/** Shared publish loop for the eligible drafts of a dedupe pass. */
+async function runBulkPublish(
+  ctx: MutationCtx,
+  eligible: Doc<'automatedNewsDrafts'>[],
+): Promise<{
+  published: { title: string; articleId?: Id<'articles'> }[];
+  failed: { title: string; error: string }[];
+}> {
+  const published: { title: string; articleId?: Id<'articles'> }[] = [];
+  const failed: { title: string; error: string }[] = [];
+  for (const draft of eligible) {
+    try {
+      const articleId = await publishDraftInternal(ctx, draft._id);
+      published.push({ title: draft.title, articleId: articleId ?? undefined });
+    } catch (e) {
+      failed.push({ title: draft.title, error: e instanceof Error ? e.message : String(e) });
+    }
+  }
+  return { published, failed };
+}
+
+/**
+ * Public: summary of the pending queue for the bulk-publish UI. Returns how
+ * many drafts are eligible vs. duplicates of published articles or of other
+ * pending drafts, so the button can read "Publish N Unique Drafts".
+ */
+export const publishSummary = query({
+  args: {},
+  handler: async (ctx) => {
+    const role = await getRole(ctx);
+    if (!canAccessEditor(role)) {
+      throw new Error('You need editor access to view the publish summary.');
+    }
+    const { eligible, skipped } = await analyzePendingDrafts(ctx);
+    const duplicatesVsPublished = skipped.filter((s) => s.kind === 'published').length;
+    const duplicatesWithinQueue = skipped.filter((s) => s.kind === 'queue').length;
+    return {
+      totalPending: eligible.length + skipped.length,
+      uniqueEligible: eligible.length,
+      duplicatesVsPublished,
+      duplicatesWithinQueue,
+    };
+  },
+});
+
+/**
+ * Public (admin): bulk-publish every eligible PENDING_REVIEW draft. Performs a
+ * final duplicate check inside the transaction before each article insert, so
+ * a stale scan can never publish a story that already exists.
+ */
+export const publishAllPending = mutation({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx);
+    const { eligible, skipped } = await analyzePendingDrafts(ctx);
+    const { published, failed } = await runBulkPublish(ctx, eligible);
+    if (published.length > 0 || failed.length > 0 || skipped.length > 0) {
+      await log(ctx, {
+        action: 'BULK_PUBLISH',
+        status: failed.length === 0 ? 'success' : 'warning',
+        message: `Bulk publish: ${published.length} published, ${skipped.length} skipped as duplicates, ${failed.length} failed.`,
+      });
+    }
+    return {
+      total: eligible.length,
+      published: published.length,
+      skipped: skipped.length,
+      skippedDuplicates: skipped,
+      failed,
+    };
+  },
+});
+
 /**
  * Internal: publish every draft currently in PENDING_REVIEW regardless of
- * age. Used by admins to bulk-clear the editorial review queue.
+ * age. Used by admins to bulk-clear the editorial review queue. Runs the same
+ * final dedupe pass so it never publishes a story that already exists.
  */
 export const publishAllPendingReview = internalMutation({
   args: {},
   handler: async (ctx) => {
-    const drafts = await ctx.db
-      .query('automatedNewsDrafts')
-      .withIndex('by_status', (q) => q.eq('status', 'PENDING_REVIEW'))
-      .order('asc')
-      .take(1000);
-
-    const results: {
-      title: string;
-      status: 'published' | 'failed';
-      articleId?: Id<'articles'>;
-      error?: string;
-    }[] = [];
-    let published = 0;
-    for (const draft of drafts) {
-      try {
-        const articleId = await publishDraftInternal(ctx, draft._id);
-        published += 1;
-        results.push({ title: draft.title, status: 'published', articleId: articleId ?? undefined });
-      } catch (e) {
-        results.push({
-          title: draft.title,
-          status: 'failed',
-          error: e instanceof Error ? e.message : String(e),
-        });
-      }
-    }
-    if (drafts.length > 0) {
+    const { eligible, skipped } = await analyzePendingDrafts(ctx);
+    const { published, failed } = await runBulkPublish(ctx, eligible);
+    if (published.length > 0 || failed.length > 0) {
       await log(ctx, {
         action: 'BULK_PUBLISH',
-        status: published > 0 ? 'success' : 'error',
-        message: `Bulk publish pass: ${published} published, ${results.length - published} failed.`,
+        status: failed.length === 0 ? 'success' : 'warning',
+        message: `Bulk publish pass: ${published.length} published, ${skipped.length} skipped as duplicates, ${failed.length} failed.`,
       });
     }
     return {
-      total: drafts.length,
-      published,
-      failed: results.filter((r) => r.status === 'failed'),
-      results,
+      total: eligible.length,
+      published: published.length,
+      skipped: skipped.length,
+      failed,
     };
   },
 });

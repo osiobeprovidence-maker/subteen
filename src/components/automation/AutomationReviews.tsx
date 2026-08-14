@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, FileText, AlertCircle } from 'lucide-react';
+import { ChevronRight, FileText, AlertCircle, Loader2, Send } from 'lucide-react';
 import { api } from '../../../convex/_generated/api';
 import { StatusBadge } from './StatusBadge';
 import { relativeTime } from '../../lib/articleHelpers';
@@ -19,7 +19,31 @@ const FILTERS = [
 export const AutomationReviews = () => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState('PENDING_REVIEW');
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [lastResult, setLastResult] = useState<string | null>(null);
   const drafts = useQuery(api.newsAutomation.listDrafts, filter ? { status: filter as any } : undefined) ?? [];
+  const summary = useQuery(api.newsAutomation.publishSummary) ?? null;
+  const publishAllPending = useMutation(api.newsAutomation.publishAllPending);
+
+  const unique = summary?.uniqueEligible ?? 0;
+  const skippedTotal = (summary?.duplicatesVsPublished ?? 0) + (summary?.duplicatesWithinQueue ?? 0);
+
+  const handlePublish = async () => {
+    setBusy(true);
+    setLastResult(null);
+    try {
+      const result = await publishAllPending();
+      setLastResult(
+        `Published ${result.published} · ${result.skipped} duplicate(s) skipped · ${result.failed.length} failed`,
+      );
+    } catch (e) {
+      setLastResult(`Publish failed: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setBusy(false);
+      setConfirmOpen(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -28,9 +52,29 @@ export const AutomationReviews = () => {
           <h2 className="text-lg font-black text-white uppercase tracking-tight">Editorial Review Queue</h2>
           <p className="text-xs text-zinc-500 mt-1">AI drafts awaiting editorial sign-off before publishing.</p>
         </div>
-        <div className="flex items-center gap-2 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-          <AlertCircle size={14} className="text-amber-400" />
-          {drafts.length} draft(s) in {filter === 'PENDING_REVIEW' ? 'pending review' : filter.toLowerCase()}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+            <AlertCircle size={14} className="text-amber-400" />
+            {drafts.length} draft(s) in {filter === 'PENDING_REVIEW' ? 'pending review' : filter.toLowerCase()}
+          </div>
+          {lastResult && (
+            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{lastResult}</span>
+          )}
+          {filter === 'PENDING_REVIEW' && (
+            <button
+              onClick={() => setConfirmOpen(true)}
+              disabled={busy || unique === 0 || summary === null}
+              className={cn(
+                "inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border",
+                unique > 0 && !busy
+                  ? "bg-[#B8FF4D] text-black border-[#B8FF4D] hover:brightness-110"
+                  : "bg-zinc-900 border-white/5 text-zinc-600 cursor-not-allowed",
+              )}
+            >
+              {busy ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+              Publish {unique} Unique Drafts
+            </button>
+          )}
         </div>
       </div>
 
@@ -50,6 +94,46 @@ export const AutomationReviews = () => {
           </button>
         ))}
       </div>
+
+      {confirmOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-zinc-950 border border-white/10 rounded-[32px] p-8 max-w-md w-full space-y-6">
+            <div className="w-12 h-12 rounded-2xl bg-[#B8FF4D]/10 border border-[#B8FF4D]/20 flex items-center justify-center">
+              <Send size={20} className="text-[#B8FF4D]" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-white uppercase tracking-tight">Publish Automation Drafts</h3>
+              <p className="text-sm text-zinc-400 mt-3 leading-relaxed">
+                You are about to publish{' '}
+                <span className="text-white font-bold">{unique}</span> AI-generated drafts to Subteen. This action will
+                make all eligible drafts public immediately.
+              </p>
+              {skippedTotal > 0 && (
+                <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mt-3">
+                  {skippedTotal} duplicate draft(s) will be skipped and left in the queue.
+                </p>
+              )}
+            </div>
+            <div className="flex gap-3 justify-end pt-2">
+              <button
+                onClick={() => setConfirmOpen(false)}
+                disabled={busy}
+                className="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-zinc-900 border border-white/5 text-zinc-400 hover:text-white hover:border-white/20 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePublish}
+                disabled={busy}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#B8FF4D] text-black hover:brightness-110 transition-all"
+              >
+                {busy ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                {busy ? 'Publishing…' : `Publish ${unique} Drafts`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {drafts.length === 0 ? (
         <div className="bg-zinc-950 border border-white/5 rounded-[40px] p-16 text-center">
