@@ -25,6 +25,7 @@ import {
   KNOWN_CATEGORIES,
 } from './lib/automation';
 import type { QueryCtx, MutationCtx } from './_generated/server';
+import { normalizeCategoryPair, pillarOf, allSubcategories } from './lib/taxonomy';
 
 const now = () => Date.now();
 
@@ -89,6 +90,7 @@ export async function getSettingsDoc(ctx: QueryCtx | MutationCtx) {
     autoPublish: false,
     trustedSources: [],
     trustedCategories: [],
+    trustedSubcategories: [],
     autoApprove: false,
     autoApproveDelayMinutes: DEFAULT_AUTO_APPROVE_DELAY_MINUTES,
     defaultStatus: DEFAULT_DRAFT_STATUS,
@@ -110,6 +112,7 @@ export async function ensureSettingsDoc(ctx: MutationCtx) {
     autoPublish: false,
     trustedSources: [],
     trustedCategories: [],
+    trustedSubcategories: [],
     autoApprove: false,
     autoApproveDelayMinutes: DEFAULT_AUTO_APPROVE_DELAY_MINUTES,
     defaultStatus: DEFAULT_DRAFT_STATUS,
@@ -411,9 +414,10 @@ export const processQueue = internalMutation({
         await ctx.scheduler.runAfter(0, internal.newsAutomation.processItemAction, {
           importedNewsId: imported._id,
           sourceId: source._id,
-          sourceName: source.name,
-          defaultCategory: source.defaultCategory ?? 'Gaming News',
-          material: {
+    sourceName: source.name,
+    defaultCategory: source.defaultCategory ?? 'Gaming News',
+    defaultSubcategory: source.defaultSubcategory,
+    material: {
             title: imported.originalTitle,
             description: imported.originalDescription ?? '',
             author: imported.originalAuthor ?? '',
@@ -426,6 +430,7 @@ export const processQueue = internalMutation({
         });
       } else {
         const description = imported.originalDescription ?? '';
+        const pair = normalizeCategoryPair(source.defaultCategory ?? 'Gaming News', source.defaultSubcategory);
         await ctx.db.insert('automatedNewsDrafts', {
           importedNewsId: imported._id,
           sourceId: source._id,
@@ -433,7 +438,8 @@ export const processQueue = internalMutation({
           subtitle: undefined,
           summary: undefined,
           body: description ? `# ${imported.originalTitle}\n\n${description}` : `# ${imported.originalTitle}`,
-          category: source.defaultCategory ?? 'Gaming News',
+          category: pair.category,
+          subcategory: pair.subcategory,
           tags: [],
           seoTitle: imported.originalTitle.slice(0, 60),
           seoDescription: undefined,
@@ -474,6 +480,7 @@ export const processItemAction = internalAction({
     sourceId: v.id('rssSources'),
     sourceName: v.string(),
     defaultCategory: v.string(),
+    defaultSubcategory: v.optional(v.string()),
     material: v.object({
       title: v.string(),
       description: v.string(),
@@ -498,6 +505,7 @@ export const processItemAction = internalAction({
       sourceId: args.sourceId,
       sourceName: args.sourceName,
       defaultCategory: args.defaultCategory,
+      defaultSubcategory: args.defaultSubcategory,
       videoUrl: args.material.videoUrl,
       language: args.material.language,
       ...(result ? { result } : { error: error ?? 'AI processing failed' }),
@@ -512,6 +520,7 @@ export const finishProcessing = internalMutation({
     sourceId: v.id('rssSources'),
     sourceName: v.string(),
     defaultCategory: v.string(),
+    defaultSubcategory: v.optional(v.string()),
     videoUrl: v.optional(v.string()),
     language: v.optional(v.string()),
     result: v.optional(
@@ -521,6 +530,7 @@ export const finishProcessing = internalMutation({
         summary: v.string(),
         body: v.string(),
         category: v.string(),
+        subcategory: v.optional(v.string()),
         tags: v.array(v.string()),
         seoTitle: v.string(),
         seoDescription: v.string(),
@@ -548,6 +558,10 @@ export const finishProcessing = internalMutation({
     const result = args.result;
     const settings = await getSettingsDoc(ctx);
     const defaultStatus = (settings.defaultStatus as Doc<'automatedNewsDrafts'>['status']) ?? 'PENDING_REVIEW';
+    const pair = normalizeCategoryPair(
+      result.category || args.defaultCategory || 'Gaming News',
+      result.subcategory,
+    );
 
     const draftId = await ctx.db.insert('automatedNewsDrafts', {
       importedNewsId: args.importedNewsId,
@@ -556,7 +570,8 @@ export const finishProcessing = internalMutation({
       subtitle: result.subheadline || undefined,
       summary: result.summary || undefined,
       body: sanitizeContent(result.body) || `# ${result.headline || imported.originalTitle}`,
-      category: result.category || args.defaultCategory,
+      category: pair.category,
+      subcategory: pair.subcategory,
       tags: result.tags ?? [],
       seoTitle: result.seoTitle || undefined,
       seoDescription: result.seoDescription || undefined,
@@ -571,7 +586,12 @@ export const finishProcessing = internalMutation({
       updatedAt: now(),
     });
 
-    await ctx.db.patch(args.importedNewsId, { status: defaultStatus, updatedAt: now() });
+    await ctx.db.patch(args.importedNewsId, {
+      status: defaultStatus,
+      category: pair.category,
+      subcategory: pair.subcategory,
+      updatedAt: now(),
+    });
 
     await log(ctx, {
       sourceId: args.sourceId,
@@ -584,7 +604,9 @@ export const finishProcessing = internalMutation({
     const autoPublish =
       settings.autoPublish &&
       (settings.trustedSources.includes(args.sourceName) ||
-        settings.trustedCategories.includes(result.category));
+        settings.trustedCategories.includes(pair.category) ||
+        (pair.subcategory !== undefined &&
+          (settings.trustedSubcategories ?? []).includes(pair.subcategory)));
 
     if (autoPublish) {
       await publishDraftInternal(ctx, draftId as Id<'automatedNewsDrafts'>, undefined, true);
@@ -624,6 +646,10 @@ async function publishDraftInternal(
     content: body,
     heroImage: draft.featuredImage ?? draft.sourceImageUrl ?? '',
     category: draft.category,
+    subcategory: draft.subcategory,
+    excerpt: draft.summary,
+    country: draft.country,
+    city: draft.city,
     authorName: 'Subteen Newsroom',
     publishDate: new Date().toISOString().slice(0, 10),
     readingTime,
@@ -727,6 +753,7 @@ export const settings = query({
       ...doc,
       knownSources: sources.map((s) => s.name),
       knownCategories: KNOWN_CATEGORIES,
+      knownSubcategories: allSubcategories(),
     };
   },
 });
@@ -1043,6 +1070,7 @@ export const updateSettings = mutation({
     autoPublish: v.optional(v.boolean()),
     trustedSources: v.optional(v.array(v.string())),
     trustedCategories: v.optional(v.array(v.string())),
+    trustedSubcategories: v.optional(v.array(v.string())),
     autoApprove: v.optional(v.boolean()),
     autoApproveDelayMinutes: v.optional(v.number()),
     defaultStatus: v.optional(v.string()),

@@ -33,6 +33,7 @@ export const AutomationSettings = () => {
   const [autoPublish, setAutoPublish] = useState(false);
   const [trustedSources, setTrustedSources] = useState<string[]>([]);
   const [trustedCategories, setTrustedCategories] = useState<string[]>([]);
+  const [trustedSubcategories, setTrustedSubcategories] = useState<string[]>([]);
   const [autoApprove, setAutoApprove] = useState(false);
   const [autoApproveDelayMinutes, setAutoApproveDelayMinutes] = useState(30);
   const [maxStoriesPerSync, setMaxStoriesPerSync] = useState(20);
@@ -45,6 +46,7 @@ export const AutomationSettings = () => {
     setAutoPublish(settings.autoPublish ?? false);
     setTrustedSources(settings.trustedSources ?? []);
     setTrustedCategories(settings.trustedCategories ?? []);
+    setTrustedSubcategories(settings.trustedSubcategories ?? []);
     setAutoApprove(settings.autoApprove ?? false);
     setAutoApproveDelayMinutes(settings.autoApproveDelayMinutes ?? 30);
     setMaxStoriesPerSync(settings.maxStoriesPerSync ?? 20);
@@ -61,6 +63,7 @@ export const AutomationSettings = () => {
         autoPublish,
         trustedSources,
         trustedCategories,
+        trustedSubcategories,
         autoApprove,
         autoApproveDelayMinutes,
         maxStoriesPerSync,
@@ -190,6 +193,25 @@ export const AutomationSettings = () => {
                     )}
                   >
                     {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-3">
+              <label className={labelClass}>Trusted Subcategories</label>
+              <div className="flex flex-wrap gap-2">
+                {(settings?.knownSubcategories ?? []).map((sub) => (
+                  <button
+                    key={sub}
+                    onClick={() => setTrustedSubcategories(toggleInList(trustedSubcategories, sub))}
+                    className={cn(
+                      'px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all',
+                      trustedSubcategories.includes(sub)
+                        ? 'bg-[#B8FF4D] text-black border-[#B8FF4D]'
+                        : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white',
+                    )}
+                  >
+                    {sub}
                   </button>
                 ))}
               </div>

@@ -19,6 +19,7 @@ import type * as lib_ai from "../lib/ai.js";
 import type * as lib_automation from "../lib/automation.js";
 import type * as lib_roles from "../lib/roles.js";
 import type * as lib_rss from "../lib/rss.js";
+import type * as lib_taxonomy from "../lib/taxonomy.js";
 import type * as media from "../media.js";
 import type * as mux from "../mux.js";
 import type * as newsAutomation from "../newsAutomation.js";
@@ -46,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   "lib/automation": typeof lib_automation;
   "lib/roles": typeof lib_roles;
   "lib/rss": typeof lib_rss;
+  "lib/taxonomy": typeof lib_taxonomy;
   media: typeof media;
   mux: typeof mux;
   newsAutomation: typeof newsAutomation;

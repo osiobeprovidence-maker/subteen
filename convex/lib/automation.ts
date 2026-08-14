@@ -1,4 +1,5 @@
 import { v } from 'convex/values';
+import { PILLARS, allSubcategories, LEGACY_GAMING_CATEGORIES } from './taxonomy';
 
 /**
  * Shared status model for the news automation pipeline.
@@ -41,21 +42,15 @@ export const SYNC_FREQUENCY_OPTIONS = [
   { label: 'Manual only', value: 0 },
 ];
 
-/** Recognized Subteen categories the AI should classify into. */
+/**
+ * Recognized Subteen categories the AI may classify into: every pillar plus
+ * every approved subcategory (and legacy gaming values still in circulation).
+ * The AI must never create arbitrary category names.
+ */
 export const KNOWN_CATEGORIES = [
-  'Gaming News',
-  'PlayStation',
-  'Xbox',
-  'Nintendo',
-  'PC Gaming',
-  'Mobile Gaming',
-  'Esports',
-  'Game Releases',
-  'Updates',
-  'Industry',
-  'Business',
-  'Reviews',
-  'Hardware',
+  ...PILLARS,
+  ...allSubcategories(),
+  ...LEGACY_GAMING_CATEGORIES,
 ];
 
 export const DEFAULT_RSS_SOURCES = [

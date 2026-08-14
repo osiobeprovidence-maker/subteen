@@ -72,6 +72,19 @@ export default defineSchema({
     content: v.string(),
     heroImage: v.optional(v.string()),
     category: v.string(),
+    subcategory: v.optional(v.string()),
+    excerpt: v.optional(v.string()),
+    country: v.optional(v.string()),
+    region: v.optional(v.string()),
+    city: v.optional(v.string()),
+    eventDate: v.optional(v.string()),
+    eventStartTime: v.optional(v.string()),
+    eventEndTime: v.optional(v.string()),
+    venue: v.optional(v.string()),
+    organizer: v.optional(v.string()),
+    ticketUrl: v.optional(v.string()),
+    ticketInfo: v.optional(v.string()),
+    eventStatus: v.optional(v.string()),
     authorId: v.optional(v.id('authors')),
     authorName: v.optional(v.string()),
     authorAvatar: v.optional(v.string()),
@@ -107,6 +120,7 @@ export default defineSchema({
   })
     .index('by_slug', ['slug'])
     .index('by_category', ['category'])
+    .index('by_subcategory', ['subcategory'])
     .index('by_author', ['authorId'])
     .index('by_status', ['status'])
     .index('by_community', ['communityId'])
@@ -219,6 +233,7 @@ export default defineSchema({
     logoUrl: v.optional(v.string()),
     description: v.optional(v.string()),
     defaultCategory: v.optional(v.string()),
+    defaultSubcategory: v.optional(v.string()),
     active: v.boolean(),
     pidgin: v.optional(v.boolean()),
     lastSyncedAt: v.optional(v.number()),
@@ -249,6 +264,8 @@ export default defineSchema({
     originalImageUrl: v.optional(v.string()),
     videoUrl: v.optional(v.string()),
     language: v.optional(v.string()),
+    category: v.optional(v.string()),
+    subcategory: v.optional(v.string()),
     status: automationStatusSchema,
     duplicateOf: v.optional(v.id('importedNews')),
     duplicateReason: v.optional(v.string()),
@@ -268,6 +285,9 @@ export default defineSchema({
     summary: v.optional(v.string()),
     body: v.string(),
     category: v.string(),
+    subcategory: v.optional(v.string()),
+    country: v.optional(v.string()),
+    city: v.optional(v.string()),
     tags: v.array(v.string()),
     seoTitle: v.optional(v.string()),
     seoDescription: v.optional(v.string()),
@@ -307,6 +327,7 @@ export default defineSchema({
     autoPublish: v.boolean(),
     trustedSources: v.array(v.string()),
     trustedCategories: v.array(v.string()),
+    trustedSubcategories: v.optional(v.array(v.string())),
     autoApprove: v.optional(v.boolean()),
     autoApproveDelayMinutes: v.optional(v.number()),
     autoApproveEnabledAt: v.optional(v.number()),

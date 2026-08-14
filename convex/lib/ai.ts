@@ -2,6 +2,7 @@
  * Thin client for the Gemini API used by the news automation pipeline.
  * Uses the REST endpoint so it works inside Convex's Node runtime.
  */
+import { taxonomyPrompt, pillarOf, normalizeCategoryPair, isPillar, isValidSubcategory, DEFAULT_PILLAR } from './taxonomy';
 
 export const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
 export const IMAGE_MODEL = 'gemini-2.5-flash-image';
@@ -109,6 +110,7 @@ export interface DraftGenerationResult {
   summary: string;
   body: string;
   category: string;
+  subcategory?: string;
   tags: string[];
   seoTitle: string;
   seoDescription: string;
@@ -138,13 +140,16 @@ STRICT RULES:
 - Never include HTML, markdown link syntax to external articles, or scripts in the body. Plain markdown headings, lists, and emphasis are fine.
 - Keep the body concise (150 to 320 words) with a clear intro, 2-3 short sections, and a short closing.
 - Do not use clickbait. Headlines must be clear and accurate.
-- Classify into one of these categories only: Gaming News, PlayStation, Xbox, Nintendo, PC Gaming, Mobile Gaming, Esports, Game Releases, Updates, Industry, Business, Reviews, Hardware. Choose the best single match. If the story is a game/product review (has a score, rating or verdict), you MUST choose Reviews.
-- Return ONLY valid JSON with exactly these keys: headline, subheadline, summary, body, category, tags, seoTitle, seoDescription, slug, keywords.
+- Classify into ONE pillar (category) and ONE subcategory from the Subteen taxonomy below. Choose the best single match. Never invent a category or subcategory.
+${taxonomyPrompt()}
+- If the story is a game/product review (has a score, rating or verdict), the subcategory MUST be Reviews.
+- Return ONLY valid JSON with exactly these keys: headline, subheadline, summary, body, category, subcategory, tags, seoTitle, seoDescription, slug, keywords.
   - headline: string
   - subheadline: one sentence explaining the significance
   - summary: short original summary (max 2 sentences)
   - body: markdown string
-  - category: one of the categories above
+  - category: one of the pillars above
+  - subcategory: one of the approved subcategories for the chosen pillar (omit if none fits)
   - tags: array of 3-6 short relevant tags (no commas inside tags)
   - seoTitle: under 60 chars
   - seoDescription: under 160 chars
@@ -163,13 +168,16 @@ STRICT RULES:
 - Never include HTML, markdown link syntax to external articles, or scripts in the body. Plain markdown headings, lists, and emphasis are fine.
 - Keep the body concise (150 to 320 words) with a clear intro, 2-3 short sections, and a short closing.
 - Do not use clickbait. Headlines must be clear and accurate (headline can be in Pidgin).
-- Classify into one of these categories only: Gaming News, PlayStation, Xbox, Nintendo, PC Gaming, Mobile Gaming, Esports, Game Releases, Updates, Industry, Business, Reviews, Hardware. Choose the best single match. If the story is a game/product review (has a score, rating or verdict), you MUST choose Reviews.
-- Return ONLY valid JSON with exactly these keys: headline, subheadline, summary, body, category, tags, seoTitle, seoDescription, slug, keywords.
+- Classify into ONE pillar (category) and ONE subcategory from the Subteen taxonomy below. Choose the best single match. Never invent a category or subcategory.
+${taxonomyPrompt()}
+- If the story is a game/product review (has a score, rating or verdict), the subcategory MUST be Reviews.
+- Return ONLY valid JSON with exactly these keys: headline, subheadline, summary, body, category, subcategory, tags, seoTitle, seoDescription, slug, keywords.
   - headline: string
   - subheadline: one sentence explaining the significance
   - summary: short original summary (max 2 sentences)
   - body: markdown string
-  - category: one of the categories above
+  - category: one of the pillars above
+  - subcategory: one of the approved subcategories for the chosen pillar (omit if none fits)
   - tags: array of 3-6 short relevant tags (no commas inside tags)
   - seoTitle: under 60 chars
   - seoDescription: under 160 chars
@@ -241,17 +249,23 @@ export async function generateNewsDraft(
 
   const headline = clean(parsed?.headline) || material.title;
   const body = clean(parsed?.body) || `# ${headline}\n\nA report based on recent coverage from ${material.sourceName}.`;
-  let category = clean(parsed?.category) || 'Gaming News';
+  const rawCategory = clean(parsed?.category) || 'Gaming News';
+  const rawSubcategory = clean(parsed?.subcategory);
+  let category = pillarOf(rawCategory);
+  let subcategory = isValidSubcategory(category, rawSubcategory) ? rawSubcategory : undefined;
   if (isLikelyReview(material)) {
-    category = 'Reviews';
+    if (!isPillar(category)) category = DEFAULT_PILLAR;
+    subcategory = 'Reviews';
   }
+  const normalized = normalizeCategoryPair(category, subcategory);
 
   return {
     headline,
     subheadline: clean(parsed?.subheadline),
     summary: clean(parsed?.summary),
     body,
-    category,
+    category: normalized.category,
+    subcategory: normalized.subcategory,
     tags: toTags(parsed?.tags),
     seoTitle: clean(parsed?.seoTitle).slice(0, 60) || headline.slice(0, 60),
     seoDescription: clean(parsed?.seoDescription).slice(0, 160),
