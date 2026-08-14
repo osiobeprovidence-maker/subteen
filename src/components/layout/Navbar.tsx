@@ -61,6 +61,7 @@ const EDITOR_LINKS = [
   { name: 'Drafts', path: '/editor/drafts' },
   { name: 'Published', path: '/editor/published' },
   { name: 'Scheduled', path: '/editor/scheduled' },
+  { name: 'Automation', path: '/admin/automation' },
 ];
 
 export const Navbar = () => {
@@ -85,8 +86,9 @@ export const Navbar = () => {
     ? ADMIN_LINKS
     : isEditorPath
       ? EDITOR_LINKS
-      : [...publicLinks, ...roleLinksFor(role)];
+      : publicLinks;
   const adminNav = isAdminPath ? adminNavFor(role) : [];
+  const managementLinks = roleLinksFor(role).filter((l) => l.path === '/editor' || l.path === '/admin');
 
   useEffect(() => {
     setOpenMenu(null);
@@ -318,54 +320,68 @@ export const Navbar = () => {
                     </Link>
                   </>
                 )}
-                {isAdminPath ? (
-                  <div className="relative" data-admin-profile>
-                    <button
-                      onClick={() => setProfileOpen(!profileOpen)}
-                      className="flex items-center gap-1.5 p-1 rounded-xl hover:bg-white/[0.05] transition-colors"
-                      aria-label="Account menu"
-                      aria-expanded={profileOpen}
-                    >
-                      <Avatar src={dbUser?.avatar ?? user?.photoURL} name={user?.name} size={34} />
-                      <ChevronDown size={12} className={cn('text-zinc-400 transition-transform hidden sm:block', profileOpen && 'rotate-180')} />
-                    </button>
-                    <AnimatePresence>
-                      {profileOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 8 }}
-                          transition={{ duration: 0.15 }}
-                          className="absolute top-full right-0 pt-3 z-50"
-                        >
-                          <div className="bg-zinc-950 border border-white/10 rounded-2xl p-2 min-w-[200px] shadow-2xl shadow-black/50 overflow-hidden">
-                            <div className="px-4 pt-3 pb-2 border-b border-white/[0.06] mb-1">
-                              <p className="text-sm font-bold text-white truncate">{user?.name ?? 'Account'}</p>
-                              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{role}</p>
-                            </div>
-                            <Link
-                              to="/profile"
-                              onClick={() => setProfileOpen(false)}
-                              className="block px-4 py-2.5 rounded-xl text-sm font-bold text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors"
-                            >
-                              Profile
-                            </Link>
-                            <button
-                              onClick={handleLogout}
-                              className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold text-red-500 hover:text-red-400 hover:bg-red-500/[0.06] transition-colors"
-                            >
-                              Logout
-                            </button>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ) : (
-                  <Link to="/profile" className="block">
+                <div className="relative" data-admin-profile>
+                  <button
+                    onClick={() => setProfileOpen(!profileOpen)}
+                    className="flex items-center gap-1.5 p-1 rounded-xl hover:bg-white/[0.05] transition-colors"
+                    aria-label="Account menu"
+                    aria-expanded={profileOpen}
+                  >
                     <Avatar src={dbUser?.avatar ?? user?.photoURL} name={user?.name} size={34} />
-                  </Link>
-                )}
+                    <ChevronDown size={12} className={cn('text-zinc-400 transition-transform hidden sm:block', profileOpen && 'rotate-180')} />
+                  </button>
+                  <AnimatePresence>
+                    {profileOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute top-full right-0 pt-3 z-50"
+                      >
+                        <div className="bg-zinc-950 border border-white/10 rounded-2xl p-2 min-w-[220px] shadow-2xl shadow-black/50 overflow-hidden">
+                          <div className="px-4 pt-3 pb-2 border-b border-white/[0.06] mb-1">
+                            <p className="text-sm font-bold text-white truncate">{user?.name ?? 'Account'}</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{role}</p>
+                          </div>
+                          <Link
+                            to="/profile"
+                            onClick={() => setProfileOpen(false)}
+                            className="block px-4 py-2.5 rounded-xl text-sm font-bold text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors"
+                          >
+                            Profile
+                          </Link>
+                          {managementLinks.length > 0 && (
+                            <>
+                              <div className="h-px bg-white/[0.06] my-1" />
+                              <p className="px-4 pt-1 pb-1.5 text-[9px] font-black uppercase tracking-widest text-zinc-600">Management</p>
+                              {managementLinks.map((link) => (
+                                <Link
+                                  key={link.name}
+                                  to={link.path}
+                                  onClick={() => setProfileOpen(false)}
+                                  className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors"
+                                >
+                                  {link.name}
+                                  {isAdminItemActive(location.pathname, link.path) && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#B8FF4D] shrink-0" />
+                                  )}
+                                </Link>
+                              ))}
+                            </>
+                          )}
+                          <div className="h-px bg-white/[0.06] my-1" />
+                          <button
+                            onClick={handleLogout}
+                            className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold text-red-500 hover:text-red-400 hover:bg-red-500/[0.06] transition-colors"
+                          >
+                            Logout
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             ) : (
               <div className="flex items-center gap-4 sm:gap-6">
@@ -433,11 +449,9 @@ export const Navbar = () => {
                   <Link to="/profile" onClick={() => setIsOpen(false)} className="text-sm font-bold uppercase tracking-widest text-zinc-400">Profile</Link>
                   <Link to="/bookmarks" onClick={() => setIsOpen(false)} className="text-sm font-bold uppercase tracking-widest text-zinc-400">Bookmarks</Link>
                   <Link to="/history" onClick={() => setIsOpen(false)} className="text-sm font-bold uppercase tracking-widest text-zinc-400">Reading History</Link>
-                  {roleLinksFor(role)
-                    .filter((link) => link.path === '/editor' || link.path === '/admin')
-                    .map((link) => (
-                      <Link key={link.name} to={link.path} onClick={() => setIsOpen(false)} className="text-sm font-bold uppercase tracking-widest text-zinc-400">{link.name}</Link>
-                    ))}
+                  {managementLinks.map((link) => (
+                    <Link key={link.name} to={link.path} onClick={() => setIsOpen(false)} className="text-sm font-bold uppercase tracking-widest text-zinc-400">{link.name}</Link>
+                  ))}
                   <button onClick={() => { logout(); setIsOpen(false); }} className="text-left text-sm font-bold uppercase tracking-widest text-red-500">Sign Out</button>
                 </div>
               )}
