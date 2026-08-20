@@ -9,6 +9,7 @@ import { Home } from './pages/Home';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { BrandLogo } from './components/common/BrandLogo';
+import { BootScreen } from './components/common/BootScreen';
 import { useDynamicFavicon } from './hooks/useDynamicFavicon';
 
 const ArticlePage = lazy(() => import('./pages/ArticlePage').then((m) => ({ default: m.ArticlePage })));
@@ -49,6 +50,7 @@ export default function App() {
   useDynamicFavicon();
   return (
     <AuthProvider>
+      <BootScreen />
       <BrowserRouter>
       <div className="min-h-screen bg-[#0A0A0A] text-[#F5F5F5] selection:bg-[#B8FF4D] selection:text-black">
         <ScrollToTop />

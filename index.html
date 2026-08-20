@@ -21,7 +21,15 @@
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;background:#0A0A0A;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
+        <div style="font-weight:900;letter-spacing:-0.05em;font-size:34px;color:#F5F5F5;line-height:1;">SUB<span style="color:#B8FF4D">TEEN</span></div>
+        <div style="width:148px;height:2px;background:rgba(255,255,255,.1);border-radius:9999px;overflow:hidden;">
+          <div style="width:40%;height:100%;background:#B8FF4D;border-radius:9999px;animation:st-sweep 1.1s ease-in-out infinite;"></div>
+        </div>
+        <style>@keyframes st-sweep{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}</style>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
