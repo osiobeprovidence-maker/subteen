@@ -5,25 +5,25 @@ const crons = cronJobs();
 
 crons.interval(
   'publish-scheduled-articles',
-  { minutes: 5 },
+  { minutes: 15 },
   internal.articles.publishScheduled,
 );
 
 crons.interval(
   'news-automation-sync',
-  { minutes: 5 },
+  { hours: 1 },
   internal.newsAutomation.scheduledSync,
 );
 
 crons.interval(
   'news-automation-auto-approve',
-  { minutes: 1 },
+  { minutes: 15 },
   internal.newsAutomation.autoApproveDueDrafts,
 );
 
 crons.interval(
   'auto-approve-pending-articles',
-  { minutes: 1 },
+  { minutes: 15 },
   internal.articles.approveOverdue,
 );
 
