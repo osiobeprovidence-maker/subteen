@@ -361,7 +361,7 @@ export const init = mutation({
         publishDate: article.publishDate,
         readingTime: article.readingTime,
         tags: article.tags,
-        gameId: article.gameId,
+        gameId: gameIds.get(article.gameId),
         isFeatured: article.isFeatured,
         isTrending: article.isTrending,
         reviewScore: article.reviewScore,

@@ -342,18 +342,21 @@ export const listGames = query({
 export const getGame = query({
   args: { id: v.union(v.id('games'), v.string()) },
   handler: async (ctx, { id }) => {
-    if (id.startsWith('game_') || id.startsWith('g_')) {
-      return ctx.db
+    const bySlug = () =>
+      ctx.db
         .query('games')
         .withIndex('by_slug', (q) => q.eq('slug', id))
         .first();
+    if (id.startsWith('game_') || id.startsWith('g_')) {
+      return bySlug();
     }
-    const byId = await ctx.db.get(id as Id<'games'>);
-    if (byId) return byId;
-    return ctx.db
-      .query('games')
-      .withIndex('by_slug', (q) => q.eq('slug', id))
-      .first();
+    let byId: Doc<'games'> | null = null;
+    try {
+      byId = await ctx.db.get(id as Id<'games'>);
+    } catch {
+      byId = null;
+    }
+    return byId ?? (await bySlug());
   },
 });
 
