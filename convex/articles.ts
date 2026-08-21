@@ -276,7 +276,7 @@ export const counts = query({
   handler: async (ctx) => {
     const role = await getRole(ctx);
     if (!canAccessEditor(role)) {
-      throw new Error('You need editor access to view statistics.');
+      return null;
     }
     const all = await ctx.db.query('articles').order('desc').take(1000);
     return {

@@ -1,4 +1,4 @@
-import { query, mutation, internalMutation, internalAction } from './_generated/server';
+﻿import { query, mutation, internalMutation, internalAction } from './_generated/server';
 import { v } from 'convex/values';
 import { internal } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
@@ -365,7 +365,7 @@ export const applySyncResult = internalMutation({
       sourceId,
       action: 'SOURCE_CHECK',
       status: 'success',
-      message: `${sourceName} sync complete — ${newStories} new, ${duplicates} duplicates, ${failed} failed.`,
+      message: `${sourceName} sync complete â€” ${newStories} new, ${duplicates} duplicates, ${failed} failed.`,
       metadata: { newStories, duplicates, failed, processingTimeMs: now() - startedAt },
     });
 
@@ -695,7 +695,7 @@ export const overview = query({
   handler: async (ctx) => {
     const role = await getRole(ctx);
     if (!canAccessEditor(role)) {
-      throw new Error('You need editor access to view the automation dashboard.');
+      return null;
     }
     const [sources, imported, drafts, logs] = await Promise.all([
       ctx.db.query('rssSources').collect(),
@@ -901,7 +901,7 @@ export const reviewDraft = mutation({
         sourceId: draft.sourceId,
         action: 'EDITORIAL_REVIEW',
         status: 'success',
-        message: `Editorial review completed — approved: ${draft.title.slice(0, 80)}`,
+        message: `Editorial review completed â€” approved: ${draft.title.slice(0, 80)}`,
         metadata: { role },
       });
       return ctx.db.get(draftId);
