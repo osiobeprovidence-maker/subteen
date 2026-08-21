@@ -1,11 +1,13 @@
 /**
  * Subteen content taxonomy.
  *
- * The platform is organized around editorial pillars (Gaming, Anime, Music,
- * Entertainment, Culture, Events, Youth), each with a fixed set of approved
- * subcategories. Legacy gaming categories that predate this taxonomy are
- * mapped back to the Gaming pillar so existing articles, automation records
- * and URLs keep working without any data migration.
+ * The platform launches focused on two editorial pillars (Gaming and Anime).
+ * The remaining pillars (Music, Entertainment, Culture, Events, Youth) keep
+ * their approved subcategories below so they can be re-enabled later by
+ * adding them back to PILLARS — no other change is required. Legacy gaming
+ * categories that predate this taxonomy are mapped back to the Gaming pillar
+ * so existing articles, automation records and URLs keep working without any
+ * data migration.
  *
  * This file has no Convex runtime imports so it can be shared by the backend
  * (convex) and the frontend (src) as the single source of truth.
@@ -14,11 +16,6 @@
 export const PILLARS = [
   'Gaming',
   'Anime',
-  'Music',
-  'Entertainment',
-  'Culture',
-  'Events',
-  'Youth',
 ] as const;
 
 export type Pillar = (typeof PILLARS)[number];

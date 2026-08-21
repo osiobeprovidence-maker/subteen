@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, ChevronRight, Play, Trophy, Cpu, Gamepad2, Layers, MessagesSquare, Sparkles, Music, Film, Landmark, Calendar, Users } from 'lucide-react';
+import { ArrowRight, ChevronRight, Play, Trophy, Cpu, Gamepad2, Layers, MessagesSquare, Sparkles } from 'lucide-react';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { ArticleCard } from '../components/common/ArticleCard';
@@ -13,11 +13,6 @@ import { PILLARS } from '../../convex/lib/taxonomy';
 const PILLAR_STRIP = [
   { name: 'Gaming', icon: Gamepad2, blurb: 'Games, esports & reviews' },
   { name: 'Anime', icon: Sparkles, blurb: 'Anime & manga' },
-  { name: 'Music', icon: Music, blurb: 'Drops & artist news' },
-  { name: 'Entertainment', icon: Film, blurb: 'Movies, TV & pop culture' },
-  { name: 'Culture', icon: Landmark, blurb: 'African culture & ideas' },
-  { name: 'Events', icon: Calendar, blurb: 'Gigs, festivals & meetups' },
-  { name: 'Youth', icon: Users, blurb: 'For young Africa' },
 ];
 
 const NON_GAMING_PILLARS = PILLARS.filter((p) => p !== 'Gaming');

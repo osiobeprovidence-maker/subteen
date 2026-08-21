@@ -1,4 +1,4 @@
-import { query, mutation } from './_generated/server';
+import { query, mutation, internalMutation } from './_generated/server';
 import { v } from 'convex/values';
 import { canAccessAdmin } from './lib/roles';
 import { pillarOf } from './lib/taxonomy';
@@ -28,8 +28,8 @@ export type EditorialSection = {
 export const DEFAULT_SECTIONS: EditorialSection[] = [
   { slug: 'gaming', name: 'Gaming', active: true, isDefault: true, order: 0 },
   { slug: 'anime', name: 'Anime', active: true, isDefault: true, order: 1 },
-  { slug: 'events', name: 'Events', active: true, isDefault: true, order: 2 },
-  { slug: 'community', name: 'Community', active: true, isDefault: true, order: 3 },
+  { slug: 'events', name: 'Events', active: false, isDefault: false, order: 2 },
+  { slug: 'community', name: 'Community', active: false, isDefault: false, order: 3 },
   { slug: 'music', name: 'Music', active: false, isDefault: false, order: 4 },
   { slug: 'entertainment', name: 'Entertainment', active: false, isDefault: false, order: 5 },
   { slug: 'culture', name: 'Culture', active: false, isDefault: false, order: 6 },
@@ -146,5 +146,26 @@ export const setActive = mutation({
     const existing = await ctx.db.get(id);
     if (!existing) throw new Error('Section not found.');
     await ctx.db.patch(id, { active });
+  },
+});
+
+/**
+ * Internal ops tool: activate exactly the given slugs and deactivate every
+ * other section. Not exposed to clients; run via the CLI.
+ */
+export const setActiveBySlugs = internalMutation({
+  args: { slugs: v.array(v.string()) },
+  handler: async (ctx, { slugs }) => {
+    const wanted = new Set(slugs);
+    const rows = await ctx.db.query('editorialSections').collect();
+    let changed = 0;
+    for (const row of rows) {
+      const active = wanted.has(row.slug);
+      if (row.active !== active) {
+        await ctx.db.patch(row._id, { active });
+        changed += 1;
+      }
+    }
+    return { changed, active: slugs };
   },
 });
