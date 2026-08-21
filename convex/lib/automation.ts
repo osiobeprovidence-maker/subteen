@@ -99,6 +99,46 @@ export const DEFAULT_RSS_SOURCES = [
     defaultCategory: 'PC Gaming',
     defaultSubcategory: 'PC Gaming',
   },
+  {
+    name: 'Anime News Network',
+    feedUrl: 'https://www.animenewsnetwork.com/all/rss.xml?ann-edition=us',
+    websiteUrl: 'https://www.animenewsnetwork.com',
+    description: 'Anime and manga news, reviews and industry coverage.',
+    defaultCategory: 'Anime',
+    defaultSubcategory: 'Anime News',
+  },
+  {
+    name: 'Crunchyroll News',
+    feedUrl: 'https://www.crunchyroll.com/news/rss?all=true',
+    websiteUrl: 'https://www.crunchyroll.com/news',
+    description: 'Anime announcements, simulcast news and interviews.',
+    defaultCategory: 'Anime',
+    defaultSubcategory: 'Anime News',
+  },
+  {
+    name: 'MyAnimeList',
+    feedUrl: 'https://myanimelist.net/rss/news.xml',
+    websiteUrl: 'https://myanimelist.net',
+    description: 'Anime database news, season previews and industry updates.',
+    defaultCategory: 'Anime',
+    defaultSubcategory: 'Anime News',
+  },
+  {
+    name: 'Anime Corner',
+    feedUrl: 'https://animecorner.me/feed/',
+    websiteUrl: 'https://animecorner.me',
+    description: 'Anime rankings, seasonal coverage and community polls.',
+    defaultCategory: 'Anime',
+    defaultSubcategory: 'Anime News',
+  },
+  {
+    name: 'Otaku USA',
+    feedUrl: 'https://otakuusamagazine.com/feed/',
+    websiteUrl: 'https://otakuusamagazine.com',
+    description: 'Anime, manga and Japanese pop culture magazine.',
+    defaultCategory: 'Anime',
+    defaultSubcategory: 'Anime Culture',
+  },
 ];
 
 export function sanitizeHtml(input: string): string {
